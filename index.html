@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#0A2540">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="description" content="Appasamy Associates - Product Commitment Entry System">
+    <link rel="manifest" href="manifest.json">
+    <title>Product Commitment | Appasamy Associates</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Offline Banner -->
+    <div class="offline-banner" id="offlineBanner">
+        <i class="fas fa-wifi-slash"></i>
+        <span>You're offline. Changes will sync when connected.</span>
+    </div>
+    
+    <!-- App Container -->
+    <div class="app">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-inner">
+                <div class="header-left">
+                    <div class="logo-box">
+                        <img src="../../assets/images/appasamy-logo.png" alt="Appasamy" class="logo-image">
+                    </div>
+                    <div class="header-title">
+                        <h1>Product Commitment</h1>
+                        <div class="header-subtitle">
+                            <span class="fiscal-badge"><i class="fas fa-calendar-alt"></i> FY 2025-26</span>
+                            <span class="territory-badge"><i class="fas fa-map-marker-alt"></i> Central Delhi</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <button class="icon-btn" onclick="refreshData()" title="Refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="icon-btn" onclick="toggleTheme()" title="Toggle Theme">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-chip">
+                        <div class="user-avatar">
+                            <span>VC</span>
+                            <span class="status-dot online"></span>
+                        </div>
+                        <div class="user-info">
+                            <span class="user-name">Vasanthakumar C</span>
+                            <span class="user-role">Sales Representative</span>
+                        </div>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Progress Bar -->
+            <div class="progress-section">
+                <div class="progress-stats">
+                    <div class="progress-stat">
+                        <span class="progress-label">Completion</span>
+                        <span class="progress-value" id="completionPercent">0%</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="progress-label">Submitted</span>
+                        <span class="progress-value" id="submittedCount">0/20</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="progress-label">Approved</span>
+                        <span class="progress-value approved" id="approvedCount">0</span>
+                    </div>
+                    <div class="progress-stat">
+                        <span class="progress-label">Pending</span>
+                        <span class="progress-value pending" id="pendingCount">0</span>
+                    </div>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Stats Cards -->
+            <div class="stats-row">
+                <div class="stat-card glass">
+                    <div class="stat-icon"><i class="fas fa-boxes-stacked"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Products</span>
+                        <span class="stat-value" id="totalProducts">--</span>
+                    </div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-icon blue"><i class="fas fa-history"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-label">LY Units</span>
+                        <span class="stat-value" id="lyUnits">--</span>
+                    </div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-icon green"><i class="fas fa-bullseye"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-label">CY Commitment</span>
+                        <span class="stat-value" id="cyUnits">--</span>
+                    </div>
+                </div>
+                <div class="stat-card glass">
+                    <div class="stat-icon orange"><i class="fas fa-chart-line"></i></div>
+                    <div class="stat-content">
+                        <span class="stat-label">Overall Growth</span>
+                        <span class="stat-value growth" id="overallGrowth">--</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <div class="search-wrapper">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search products by name or code...">
+                    <button class="search-clear" id="searchClear" onclick="clearSearch()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="toolbar-actions">
+                    <div class="filter-dropdown">
+                        <button class="filter-btn" id="statusFilter">
+                            <i class="fas fa-filter"></i>
+                            <span>All Status</span>
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                        <div class="filter-menu" id="statusMenu">
+                            <button class="filter-option active" data-status="all">All Products</button>
+                            <button class="filter-option" data-status="draft"><i class="fas fa-edit"></i> Draft</button>
+                            <button class="filter-option" data-status="submitted"><i class="fas fa-clock"></i> Submitted</button>
+                            <button class="filter-option" data-status="approved"><i class="fas fa-check-circle"></i> Approved</button>
+                            <button class="filter-option" data-status="rejected"><i class="fas fa-times-circle"></i> Rejected</button>
+                        </div>
+                    </div>
+                    <button class="toolbar-btn" id="expandAllBtn" onclick="toggleAllCategories()">
+                        <i class="fas fa-expand-alt"></i>
+                        <span>Expand All</span>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Category List -->
+            <div class="category-list" id="categoryList">
+                <!-- Categories rendered by JS -->
+            </div>
+        </main>
+        
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-summary">
+                <div class="footer-stat">
+                    <span class="footer-label">LY Total</span>
+                    <span class="footer-value" id="footerLy">--</span>
+                </div>
+                <div class="footer-stat">
+                    <span class="footer-label">CY Total</span>
+                    <span class="footer-value" id="footerCy">--</span>
+                </div>
+                <div class="footer-stat">
+                    <span class="footer-label">Growth</span>
+                    <span class="footer-value growth" id="footerGrowth">--</span>
+                </div>
+            </div>
+            <div class="footer-actions">
+                <button class="btn btn-secondary" onclick="saveAllDrafts()">
+                    <i class="fas fa-save"></i>
+                    <span>Save All Drafts</span>
+                </button>
+                <button class="btn btn-primary" onclick="submitAllPending()">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Submit All Pending</span>
+                    <span class="btn-badge" id="pendingBadge">0</span>
+                </button>
+            </div>
+        </footer>
+    </div>
+    
+    <!-- Product Detail Slide Panel -->
+    <div class="slide-panel" id="productPanel">
+        <div class="panel-overlay" onclick="closeProductPanel()"></div>
+        <div class="panel-content">
+            <div class="panel-header">
+                <div class="panel-title">
+                    <h2 id="panelProductName">Product Name</h2>
+                    <span class="panel-code" id="panelProductCode">CODE</span>
+                </div>
+                <button class="panel-close" onclick="closeProductPanel()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="panel-body" id="panelBody">
+                <!-- Panel content rendered by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+    
+    <!-- Confirmation Modal -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-backdrop" onclick="closeModal()"></div>
+        <div class="modal-content">
+            <div class="modal-icon" id="modalIcon">
+                <i class="fas fa-question-circle"></i>
+            </div>
+            <h3 id="modalTitle">Confirm Action</h3>
+            <p id="modalMessage">Are you sure you want to proceed?</p>
+            <div class="modal-actions">
+                <button class="btn btn-secondary" onclick="closeModal()">Cancel</button>
+                <button class="btn btn-primary" id="modalConfirmBtn" onclick="confirmModalAction()">Confirm</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="app.js"></script>
+</body>
+</html>
