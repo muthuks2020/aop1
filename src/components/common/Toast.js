@@ -1,34 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 
-function Toast({ id, title, message, type = 'success', onClose }) {
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      setIsVisible(true);
-    });
-  }, []);
-
+function Toast({ id, title, message, type, onClose }) {
   const icons = {
     success: 'fa-check-circle',
-    warning: 'fa-exclamation-triangle',
     error: 'fa-times-circle',
+    warning: 'fa-exclamation-triangle',
     info: 'fa-info-circle'
   };
 
-  const handleClose = () => {
-    setIsVisible(false);
-    setTimeout(() => onClose(), 300);
-  };
-
   return (
-    <div className={`toast ${type} ${isVisible ? 'show' : ''}`}>
-      <i className={`toast-icon fas ${icons[type]}`}></i>
+    <div className={`toast ${type}`}>
+      <div className="toast-icon">
+        <i className={`fas ${icons[type] || icons.info}`}></i>
+      </div>
       <div className="toast-content">
         <div className="toast-title">{title}</div>
         <div className="toast-message">{message}</div>
       </div>
-      <button className="toast-close" onClick={handleClose}>
+      <button className="toast-close" onClick={() => onClose(id)}>
         <i className="fas fa-times"></i>
       </button>
     </div>

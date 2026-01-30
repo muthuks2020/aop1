@@ -52,47 +52,50 @@ function Header({
               onClick={() => setShowUserMenu(!showUserMenu)}
             >
               <div className="user-avatar">
-                <span>{Utils.getInitials(user?.name)}</span>
-                <span className="status-dot online"></span>
+                {Utils.getInitials(user?.name)}
               </div>
               <div className="user-info">
                 <span className="user-name">{user?.name}</span>
                 <span className="user-role">{user?.roleLabel}</span>
               </div>
-              <i className="fas fa-chevron-down"></i>
+              <i className={`fas fa-chevron-${showUserMenu ? 'up' : 'down'}`}></i>
             </div>
             
             {showUserMenu && (
-              <div className="user-menu" style={{
-                position: 'absolute',
-                top: '100%',
-                right: 0,
-                marginTop: '0.5rem',
-                background: 'var(--surface)',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow-lg)',
-                minWidth: '200px',
-                zIndex: 100,
-                overflow: 'hidden'
-              }}>
-                <div style={{ 
-                  padding: '1rem', 
-                  borderBottom: '1px solid var(--border)',
-                  background: 'var(--surface-alt)'
-                }}>
+              <div 
+                className="user-menu"
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  right: 0,
+                  marginTop: '0.5rem',
+                  background: 'var(--surface)',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow-lg)',
+                  border: '1px solid var(--border)',
+                  minWidth: '200px',
+                  zIndex: 1000,
+                  overflow: 'hidden'
+                }}
+              >
+                <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{user?.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>{user?.roleLabel}</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
+                    <i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>
+                    {user?.territory}
+                  </div>
                 </div>
-                <button 
+                <button
                   onClick={handleLogout}
                   style={{
                     width: '100%',
                     padding: '0.75rem 1rem',
-                    border: 'none',
-                    background: 'transparent',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '0.625rem',
+                    gap: '0.5rem',
+                    border: 'none',
+                    background: 'transparent',
                     color: 'var(--danger)',
                     cursor: 'pointer',
                     fontFamily: 'var(--font-sans)',

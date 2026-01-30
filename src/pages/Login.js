@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth, ROLE_LABELS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import '../styles/login.css';
 
 function Login() {
@@ -56,20 +56,17 @@ function Login() {
 
   return (
     <div className="login-page">
-      {/* Background Pattern */}
       <div className="login-bg-pattern">
         <div className="pattern-circle pattern-1"></div>
         <div className="pattern-circle pattern-2"></div>
         <div className="pattern-circle pattern-3"></div>
       </div>
 
-      {/* Main Container */}
       <div className="login-container">
-        {/* Left Panel - Branding */}
         <div className="login-branding">
           <div className="branding-content">
             <div className="brand-logo">
-              <img src={process.env.PUBLIC_URL + '/appasamy-logo.png'} alt="Appasamy Associates" className="brand-logo-img" />
+              <img src={process.env.PUBLIC_URL + '/appasamy-logo.png'} alt="Appasamy Associates" className="brand-logo-img" onError={(e) => e.target.style.display='none'} />
             </div>
             
             <h1 className="brand-headline">
@@ -84,109 +81,73 @@ function Login() {
             
             <div className="brand-features">
               <div className="feature-item">
-                <i className="fas fa-microscope"></i>
-                <span>Advanced Equipment</span>
+                <i className="fas fa-chart-line"></i>
+                <span>Monthly Target Entry</span>
               </div>
               <div className="feature-item">
-                <i className="fas fa-eye-dropper"></i>
-                <span>Premium IOLs</span>
+                <i className="fas fa-check-circle"></i>
+                <span>Approval Workflow</span>
               </div>
               <div className="feature-item">
-                <i className="fas fa-flask"></i>
-                <span>Quality OVDs</span>
-              </div>
-              <div className="feature-item">
-                <i className="fas fa-tools"></i>
-                <span>Surgical Instruments</span>
+                <i className="fas fa-calendar"></i>
+                <span>Q/Y Growth Tracking</span>
               </div>
             </div>
-
-            <div className="brand-stats">
-              <div className="stat-item">
-                <span className="stat-value">40+</span>
-                <span className="stat-label">Years of Excellence</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">1000+</span>
-                <span className="stat-label">Products</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-value">50+</span>
-                <span className="stat-label">Countries</span>
-              </div>
-            </div>
-          </div>
-          
-          <div className="branding-footer">
-            <span>© 2025 Appasamy Associates. All rights reserved.</span>
           </div>
         </div>
 
-        {/* Right Panel - Login Form */}
-        <div className="login-form-panel">
-          <div className="form-container">
+        <div className="login-form-section">
+          <div className="login-form-container">
             <div className="form-header">
-              <h2>Product Commitment System</h2>
-              <p>Sign in to access your dashboard</p>
+              <h2>Welcome Back</h2>
+              <p>Sign in to your account to continue</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="login-form">
-              {error && (
-                <div className="error-message">
-                  <i className="fas fa-exclamation-circle"></i>
-                  <span>{error}</span>
-                </div>
-              )}
+            {error && (
+              <div className="error-alert">
+                <i className="fas fa-exclamation-circle"></i>
+                <span>{error}</span>
+              </div>
+            )}
 
+            <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label htmlFor="username">
+                <label htmlFor="username">Username</label>
+                <div className="input-wrapper">
                   <i className="fas fa-user"></i>
-                  Username
-                </label>
-                <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="Enter your username"
-                  autoComplete="username"
-                  disabled={loading}
-                />
+                  <input
+                    type="text"
+                    id="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Enter your username"
+                    disabled={loading}
+                    autoComplete="username"
+                  />
+                </div>
               </div>
 
               <div className="form-group">
-                <label htmlFor="password">
+                <label htmlFor="password">Password</label>
+                <div className="input-wrapper">
                   <i className="fas fa-lock"></i>
-                  Password
-                </label>
-                <div className="password-input-wrapper">
                   <input
                     type={showPassword ? 'text' : 'password'}
                     id="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    autoComplete="current-password"
                     disabled={loading}
+                    autoComplete="current-password"
                   />
                   <button
                     type="button"
-                    className="password-toggle"
+                    className="toggle-password"
                     onClick={() => setShowPassword(!showPassword)}
-                    tabIndex={-1}
                   >
                     <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                   </button>
                 </div>
-              </div>
-
-              <div className="form-options">
-                <label className="remember-me">
-                  <input type="checkbox" />
-                  <span className="checkmark"></span>
-                  Remember me
-                </label>
-                <a href="#forgot" className="forgot-link">Forgot password?</a>
               </div>
 
               <button type="submit" className="login-btn" disabled={loading}>
@@ -204,7 +165,6 @@ function Login() {
               </button>
             </form>
 
-            {/* Demo Credentials Section */}
             <div className="demo-section">
               <div className="demo-header">
                 <span className="demo-divider"></span>
@@ -237,16 +197,6 @@ function Login() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* PWA Install Banner */}
-      <div className="pwa-banner" id="pwaBanner">
-        <i className="fas fa-mobile-alt"></i>
-        <span>Install this app for offline access</span>
-        <button className="pwa-install-btn" id="pwaInstallBtn">Install</button>
-        <button className="pwa-dismiss-btn" id="pwaDismissBtn">
-          <i className="fas fa-times"></i>
-        </button>
       </div>
     </div>
   );

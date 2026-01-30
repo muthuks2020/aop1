@@ -4,9 +4,6 @@ import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import SalesRepDashboard from './pages/SalesRep/Dashboard';
 import TBMDashboard from './pages/TBM/Dashboard';
-import ABMDashboard from './pages/ABM/Dashboard';
-import ZBMDashboard from './pages/ZBM/Dashboard';
-import SalesHeadDashboard from './pages/SalesHead/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -17,13 +14,10 @@ function App() {
       case 'sales_rep':
         return <SalesRepDashboard />;
       case 'tbm':
-        return <TBMDashboard />;
       case 'abm':
-        return <ABMDashboard />;
       case 'zbm':
-        return <ZBMDashboard />;
       case 'sales_head':
-        return <SalesHeadDashboard />;
+        return <TBMDashboard />;
       default:
         return <SalesRepDashboard />;
     }

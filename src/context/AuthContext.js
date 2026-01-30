@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
-// User roles configuration
 export const USER_ROLES = {
   SALES_REP: 'sales_rep',
   TBM: 'tbm',
@@ -19,7 +18,6 @@ export const ROLE_LABELS = {
   sales_head: 'Sales Head'
 };
 
-// Dummy users for development
 const DUMMY_USERS = [
   { id: 1, username: 'salesrep', password: 'demo123', name: 'Vasanthakumar C', role: USER_ROLES.SALES_REP, territory: 'Central Delhi' },
   { id: 2, username: 'tbm', password: 'demo123', name: 'Rajesh Kumar', role: USER_ROLES.TBM, territory: 'North Zone' },
@@ -33,7 +31,6 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session
     const savedUser = localStorage.getItem('appasamy_user');
     if (savedUser) {
       try {
@@ -46,7 +43,6 @@ export function AuthProvider({ children }) {
   }, []);
 
   const login = async (username, password) => {
-    // Simulate API call delay
     await new Promise(resolve => setTimeout(resolve, 800));
     
     const foundUser = DUMMY_USERS.find(

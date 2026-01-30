@@ -8,9 +8,28 @@ function ProtectedRoute({ children, allowedRoles }) {
 
   if (loading) {
     return (
-      <div className="loading-screen">
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
+      <div className="loading-screen" style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        height: '100vh',
+        background: 'var(--background)'
+      }}>
+        <div className="loading-spinner" style={{
+          width: '48px',
+          height: '48px',
+          border: '4px solid var(--gray-200)',
+          borderTopColor: 'var(--accent)',
+          borderRadius: '50%',
+          animation: 'spin 1s linear infinite'
+        }}></div>
+        <p style={{ marginTop: '1rem', color: 'var(--gray-600)' }}>Loading...</p>
+        <style>{`
+          @keyframes spin {
+            to { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     );
   }

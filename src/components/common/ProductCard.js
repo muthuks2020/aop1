@@ -2,7 +2,8 @@ import React from 'react';
 import { Utils } from '../../utils/helpers';
 
 function ProductCard({ product, onOpenProduct, onSubmitProduct }) {
-  const growth = Utils.calcGrowth(product.lyQty, product.cyQty);
+  const qtyGrowth = Utils.calcGrowth(product.lyQty, product.cyQty);
+  const revGrowth = Utils.calcGrowth(product.lyRev, product.cyRev);
   const canSubmit = product.status === 'draft' || product.status === 'rejected';
   const canEdit = product.status !== 'approved';
   const isNew = product.lyQty === 0;
@@ -24,38 +25,45 @@ function ProductCard({ product, onOpenProduct, onSubmitProduct }) {
       </div>
       
       <div className="product-data">
-        <div className="data-cell">
-          <span className="data-label">LY Qty</span>
-          <span className="data-value">
-            {isNew ? '-' : Utils.formatNumber(product.lyQty)}
-          </span>
+        <div className="data-row">
+          <div className="data-cell">
+            <span className="data-label">LY Qty</span>
+            <span className="data-value">
+              {isNew ? '-' : Utils.formatNumber(product.lyQty)}
+            </span>
+          </div>
+          <div className="data-cell highlight">
+            <span className="data-label">CY Qty</span>
+            <span className="data-value editable">
+              {Utils.formatNumber(product.cyQty)}
+            </span>
+          </div>
+          <div className="data-cell">
+            <span className="data-label">Qty Growth</span>
+            <span className={`data-value growth ${qtyGrowth >= 0 ? 'positive' : 'negative'}`}>
+              {isNew ? 'NEW' : Utils.formatGrowth(qtyGrowth)}
+            </span>
+          </div>
         </div>
-        <div className="data-cell highlight">
-          <span className="data-label">CY Qty</span>
-          <span className="data-value editable">
-            {Utils.formatNumber(product.cyQty)}
-          </span>
-        </div>
-        <div className="data-cell">
-          <span className="data-label">Growth</span>
-          <span className={`data-value growth ${growth >= 0 ? 'positive' : 'negative'}`}>
-            {isNew ? 'NEW' : Utils.formatGrowth(growth)}
-          </span>
-        </div>
-        <div className="data-cell">
-          <span className="data-label">Variance</span>
-          <span className="data-value">
-            {isNew 
-              ? '+' + Utils.formatNumber(product.cyQty) 
-              : (product.cyQty - product.lyQty >= 0 ? '+' : '') + Utils.formatNumber(product.cyQty - product.lyQty)
-            }
-          </span>
-        </div>
-        <div className="data-cell">
-          <span className="data-label">Target %</span>
-          <span className="data-value">
-            {isNew ? '-' : ((product.cyQty / product.lyQty) * 100).toFixed(0) + '%'}
-          </span>
+        <div className="data-row">
+          <div className="data-cell">
+            <span className="data-label">LY Rev</span>
+            <span className="data-value">
+              {isNew ? '-' : Utils.formatShortCurrency(product.lyRev)}
+            </span>
+          </div>
+          <div className="data-cell highlight">
+            <span className="data-label">CY Rev</span>
+            <span className="data-value editable">
+              {Utils.formatShortCurrency(product.cyRev)}
+            </span>
+          </div>
+          <div className="data-cell">
+            <span className="data-label">Rev Growth</span>
+            <span className={`data-value growth ${revGrowth >= 0 ? 'positive' : 'negative'}`}>
+              {isNew ? 'NEW' : Utils.formatGrowth(revGrowth)}
+            </span>
+          </div>
         </div>
       </div>
       
@@ -63,10 +71,9 @@ function ProductCard({ product, onOpenProduct, onSubmitProduct }) {
         <button 
           className="product-btn edit"
           onClick={() => onOpenProduct(product.id)}
-          disabled={!canEdit && product.status !== 'approved'}
         >
           <i className={`fas fa-${canEdit ? 'edit' : 'eye'}`}></i>
-          <span>{canEdit ? 'Edit' : 'View'}</span>
+          <span>{canEdit ? 'Edit Targets' : 'View'}</span>
         </button>
         
         {canSubmit ? (
@@ -82,7 +89,7 @@ function ProductCard({ product, onOpenProduct, onSubmitProduct }) {
             className="product-btn view"
             onClick={() => onOpenProduct(product.id)}
           >
-            <i className="fas fa-info-circle"></i>
+            <i className="fas fa-chart-line"></i>
             <span>Details</span>
           </button>
         )}

@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { Utils } from '../../utils/helpers';
 
 function Toolbar({ 
   searchTerm, 
@@ -7,70 +6,74 @@ function Toolbar({
   statusFilter, 
   onStatusFilterChange,
   allExpanded,
-  onToggleAll 
+  onToggleAll
 }) {
-  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [showFilterMenu, setShowFilterMenu] = useState(false);
 
   const filterOptions = [
-    { value: 'all', label: 'All Products', icon: null },
+    { value: 'all', label: 'All Status', icon: 'fa-list' },
     { value: 'draft', label: 'Draft', icon: 'fa-edit' },
-    { value: 'submitted', label: 'Submitted', icon: 'fa-clock' },
+    { value: 'submitted', label: 'Pending Approval', icon: 'fa-clock' },
     { value: 'approved', label: 'Approved', icon: 'fa-check-circle' },
     { value: 'rejected', label: 'Rejected', icon: 'fa-times-circle' }
   ];
 
-  const handleFilterSelect = (value) => {
-    onStatusFilterChange(value);
-    setIsFilterOpen(false);
-  };
+  const currentFilter = filterOptions.find(f => f.value === statusFilter);
 
   return (
     <div className="toolbar">
       <div className="search-wrapper">
-        <i className="fas fa-search"></i>
-        <input 
-          type="text" 
-          placeholder="Search products by name or code..."
+        <i className="fas fa-search search-icon"></i>
+        <input
+          type="text"
+          className="search-input"
+          placeholder="Search products, codes, categories..."
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
         />
         {searchTerm && (
           <button 
-            className="search-clear visible"
+            className="search-clear"
             onClick={() => onSearchChange('')}
           >
             <i className="fas fa-times"></i>
           </button>
         )}
       </div>
-      
+
       <div className="toolbar-actions">
-        <div className="filter-dropdown">
+        <div className="filter-dropdown" style={{ position: 'relative' }}>
           <button 
             className="filter-btn"
-            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            onClick={() => setShowFilterMenu(!showFilterMenu)}
           >
-            <i className="fas fa-filter"></i>
-            <span>{statusFilter === 'all' ? 'All Status' : Utils.getStatusLabel(statusFilter)}</span>
+            <i className={`fas ${currentFilter?.icon}`}></i>
+            <span>{currentFilter?.label}</span>
             <i className="fas fa-chevron-down"></i>
           </button>
           
-          <div className={`filter-menu ${isFilterOpen ? 'open' : ''}`}>
+          <div className={`filter-menu ${showFilterMenu ? 'open' : ''}`}>
             {filterOptions.map(option => (
               <button
                 key={option.value}
                 className={`filter-option ${statusFilter === option.value ? 'active' : ''}`}
-                onClick={() => handleFilterSelect(option.value)}
+                onClick={() => {
+                  onStatusFilterChange(option.value);
+                  setShowFilterMenu(false);
+                }}
               >
-                {option.icon && <i className={`fas ${option.icon}`}></i>}
-                {option.label}
+                <i className={`fas ${option.icon}`}></i>
+                <span>{option.label}</span>
               </button>
             ))}
           </div>
         </div>
-        
-        <button className="toolbar-btn" onClick={onToggleAll}>
-          <i className={`fas ${allExpanded ? 'fa-compress-alt' : 'fa-expand-alt'}`}></i>
+
+        <button 
+          className="toolbar-btn"
+          onClick={onToggleAll}
+        >
+          <i className={`fas fa-${allExpanded ? 'compress-alt' : 'expand-alt'}`}></i>
           <span>{allExpanded ? 'Collapse All' : 'Expand All'}</span>
         </button>
       </div>

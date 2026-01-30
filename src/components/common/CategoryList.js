@@ -28,9 +28,21 @@ function CategoryList({
 
   const calculateCategoryTotals = (categoryId) => {
     const categoryProducts = products.filter(p => p.categoryId === categoryId);
-    let ly = 0, cy = 0;
-    categoryProducts.forEach(p => { ly += p.lyQty; cy += p.cyQty; });
-    return { ly, cy, growth: Utils.calcGrowth(ly, cy) };
+    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+    categoryProducts.forEach(p => { 
+      lyQty += p.lyQty || 0; 
+      cyQty += p.cyQty || 0;
+      lyRev += p.lyRev || 0;
+      cyRev += p.cyRev || 0;
+    });
+    return { 
+      lyQty, 
+      cyQty, 
+      lyRev,
+      cyRev,
+      qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
+      revGrowth: Utils.calcGrowth(lyRev, cyRev)
+    };
   };
 
   const groupBySubcategory = (prods) => {
@@ -108,17 +120,19 @@ function CategoryList({
               
               <div className="cat-stats">
                 <div className="cat-stat">
-                  <span className="cat-stat-label">LY Qty</span>
-                  <span className="cat-stat-value">{Utils.formatNumber(totals.ly)}</span>
+                  <span className="cat-stat-label">CY Qty</span>
+                  <span className="cat-stat-value">{Utils.formatNumber(totals.cyQty)}</span>
+                  <span className={`cat-stat-growth ${totals.qtyGrowth >= 0 ? 'positive' : 'negative'}`}>
+                    {Utils.formatGrowth(totals.qtyGrowth)}
+                  </span>
                 </div>
                 <div className="cat-stat">
-                  <span className="cat-stat-label">CY Qty</span>
-                  <span className="cat-stat-value">{Utils.formatNumber(totals.cy)}</span>
+                  <span className="cat-stat-label">CY Rev</span>
+                  <span className="cat-stat-value">{Utils.formatShortCurrency(totals.cyRev)}</span>
+                  <span className={`cat-stat-growth ${totals.revGrowth >= 0 ? 'positive' : 'negative'}`}>
+                    {Utils.formatGrowth(totals.revGrowth)}
+                  </span>
                 </div>
-              </div>
-              
-              <div className={`cat-growth ${totals.growth >= 0 ? 'positive' : 'negative'}`}>
-                {Utils.formatGrowth(totals.growth)}
               </div>
               
               <div className="cat-chevron">

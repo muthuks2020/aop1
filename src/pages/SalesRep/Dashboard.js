@@ -111,15 +111,23 @@ function SalesRepDashboard() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Calculate stats
+  // Calculate stats with Qty and Revenue
   const calculateTotals = useCallback(() => {
-    let ly = 0, cy = 0;
-    products.forEach(p => { ly += p.lyQty; cy += p.cyQty; });
+    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+    products.forEach(p => { 
+      lyQty += p.lyQty || 0; 
+      cyQty += p.cyQty || 0;
+      lyRev += p.lyRev || 0;
+      cyRev += p.cyRev || 0;
+    });
     return { 
       count: products.length, 
-      ly, 
-      cy, 
-      growth: Utils.calcGrowth(ly, cy) 
+      lyQty, 
+      cyQty, 
+      qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
+      lyRev,
+      cyRev,
+      revGrowth: Utils.calcGrowth(lyRev, cyRev)
     };
   }, [products]);
 
@@ -186,18 +194,68 @@ function SalesRepDashboard() {
     setSelectedProduct(null);
   }, []);
 
-  const updateProductQty = useCallback((productId, value) => {
-    setProducts(prev => prev.map(p => 
-      p.id === productId ? { ...p, cyQty: parseInt(value) || 0 } : p
-    ));
-  }, []);
+  // Update monthly target for a product
+  const updateMonthlyTarget = useCallback((productId, month, values) => {
+    setProducts(prev => prev.map(p => {
+      if (p.id === productId) {
+        const updatedMonthlyTargets = {
+          ...p.monthlyTargets,
+          [month]: {
+            ...p.monthlyTargets?.[month],
+            cyQty: values.cyQty,
+            cyRev: values.cyRev
+          }
+        };
+        
+        // Recalculate yearly totals from monthly data
+        const yearlyData = Utils.calculateYearlyTotals(updatedMonthlyTargets);
+        
+        return {
+          ...p,
+          monthlyTargets: updatedMonthlyTargets,
+          cyQty: yearlyData.cyQty,
+          cyRev: yearlyData.cyRev
+        };
+      }
+      return p;
+    }));
+
+    // Update selected product if it's the one being edited
+    setSelectedProduct(prev => {
+      if (prev && prev.id === productId) {
+        const updatedMonthlyTargets = {
+          ...prev.monthlyTargets,
+          [month]: {
+            ...prev.monthlyTargets?.[month],
+            cyQty: values.cyQty,
+            cyRev: values.cyRev
+          }
+        };
+        const yearlyData = Utils.calculateYearlyTotals(updatedMonthlyTargets);
+        
+        return {
+          ...prev,
+          monthlyTargets: updatedMonthlyTargets,
+          cyQty: yearlyData.cyQty,
+          cyRev: yearlyData.cyRev
+        };
+      }
+      return prev;
+    });
+
+    showToast('Updated', `${month} target updated successfully`, 'success');
+  }, [showToast]);
 
   const handleSaveProductDraft = useCallback(async (productId) => {
     const product = products.find(p => p.id === productId);
     if (!product) return;
     
     try {
-      await ApiService.saveProductDraft(productId, { cyQty: product.cyQty });
+      await ApiService.saveProductDraft(productId, { 
+        cyQty: product.cyQty,
+        cyRev: product.cyRev,
+        monthlyTargets: product.monthlyTargets
+      });
       showToast('Draft Saved', `${product.name} saved successfully`, 'success');
     } catch (error) {
       showToast('Error', 'Failed to save draft', 'error');
@@ -211,7 +269,7 @@ function SalesRepDashboard() {
     setModalConfig({
       isOpen: true,
       title: 'Submit for Approval',
-      message: `Are you sure you want to submit "${product.name}" for approval?`,
+      message: `Are you sure you want to submit "${product.name}" for approval? This will lock the targets for review.`,
       type: 'warning',
       onConfirm: async () => {
         try {
@@ -222,13 +280,14 @@ function SalesRepDashboard() {
               : p
           ));
           showToast('Submitted', `${product.name} submitted for approval`, 'success');
+          closeProductPanel();
         } catch (error) {
           showToast('Error', 'Failed to submit product', 'error');
         }
         setModalConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
-  }, [products, showToast]);
+  }, [products, showToast, closeProductPanel]);
 
   const handleSaveAllDrafts = useCallback(async () => {
     const drafts = products.filter(p => p.status === 'draft' || p.status === 'rejected');
@@ -255,7 +314,7 @@ function SalesRepDashboard() {
     setModalConfig({
       isOpen: true,
       title: 'Submit All Pending',
-      message: `Are you sure you want to submit ${pending.length} products for approval?`,
+      message: `Are you sure you want to submit ${pending.length} products for approval? This will lock all targets for review.`,
       type: 'warning',
       onConfirm: async () => {
         try {
@@ -320,9 +379,12 @@ function SalesRepDashboard() {
       <main className="main">
         <StatsRow 
           totalProducts={totals.count}
-          lyUnits={totals.ly}
-          cyUnits={totals.cy}
-          overallGrowth={totals.growth}
+          lyQty={totals.lyQty}
+          cyQty={totals.cyQty}
+          qtyGrowth={totals.qtyGrowth}
+          lyRev={totals.lyRev}
+          cyRev={totals.cyRev}
+          revGrowth={totals.revGrowth}
         />
 
         <Toolbar 
@@ -347,9 +409,12 @@ function SalesRepDashboard() {
       </main>
 
       <Footer 
-        lyTotal={totals.ly}
-        cyTotal={totals.cy}
-        growth={totals.growth}
+        lyQty={totals.lyQty}
+        cyQty={totals.cyQty}
+        qtyGrowth={totals.qtyGrowth}
+        lyRev={totals.lyRev}
+        cyRev={totals.cyRev}
+        revGrowth={totals.revGrowth}
         pendingCount={statusCounts.draft}
         onSaveAllDrafts={handleSaveAllDrafts}
         onSubmitAllPending={handleSubmitAllPending}
@@ -360,7 +425,7 @@ function SalesRepDashboard() {
         product={selectedProduct}
         categories={categories}
         onClose={closeProductPanel}
-        onUpdateQty={updateProductQty}
+        onUpdateMonthlyTarget={updateMonthlyTarget}
         onSaveDraft={handleSaveProductDraft}
         onSubmit={handleSubmitProduct}
       />

@@ -2,9 +2,12 @@ import React from 'react';
 import { Utils } from '../../utils/helpers';
 
 function Footer({ 
-  lyTotal, 
-  cyTotal, 
-  growth, 
+  lyQty, 
+  cyQty, 
+  qtyGrowth,
+  lyRev,
+  cyRev,
+  revGrowth,
   pendingCount, 
   onSaveAllDrafts, 
   onSubmitAllPending 
@@ -12,19 +15,42 @@ function Footer({
   return (
     <footer className="footer">
       <div className="footer-summary">
-        <div className="footer-stat">
-          <span className="footer-label">LY Total</span>
-          <span className="footer-value">{Utils.formatNumber(lyTotal)}</span>
+        <div className="footer-stat-group">
+          <span className="footer-group-label">Quantity</span>
+          <div className="footer-stat">
+            <span className="footer-label">LY</span>
+            <span className="footer-value">{Utils.formatNumber(lyQty)}</span>
+          </div>
+          <div className="footer-stat">
+            <span className="footer-label">CY</span>
+            <span className="footer-value highlight">{Utils.formatNumber(cyQty)}</span>
+          </div>
+          <div className="footer-stat">
+            <span className="footer-label">Growth</span>
+            <span className={`footer-value growth ${qtyGrowth < 0 ? 'negative' : ''}`}>
+              {Utils.formatGrowth(qtyGrowth)}
+            </span>
+          </div>
         </div>
-        <div className="footer-stat">
-          <span className="footer-label">CY Total</span>
-          <span className="footer-value">{Utils.formatNumber(cyTotal)}</span>
-        </div>
-        <div className="footer-stat">
-          <span className="footer-label">Growth</span>
-          <span className={`footer-value growth ${growth < 0 ? 'negative' : ''}`}>
-            {Utils.formatGrowth(growth)}
-          </span>
+        
+        <div className="footer-divider"></div>
+        
+        <div className="footer-stat-group">
+          <span className="footer-group-label">Revenue</span>
+          <div className="footer-stat">
+            <span className="footer-label">LY</span>
+            <span className="footer-value">{Utils.formatShortCurrency(lyRev)}</span>
+          </div>
+          <div className="footer-stat">
+            <span className="footer-label">CY</span>
+            <span className="footer-value highlight">{Utils.formatShortCurrency(cyRev)}</span>
+          </div>
+          <div className="footer-stat">
+            <span className="footer-label">Growth</span>
+            <span className={`footer-value growth ${revGrowth < 0 ? 'negative' : ''}`}>
+              {Utils.formatGrowth(revGrowth)}
+            </span>
+          </div>
         </div>
       </div>
       
