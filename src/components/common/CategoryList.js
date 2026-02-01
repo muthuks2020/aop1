@@ -1,169 +1,98 @@
 import React from 'react';
-import { Utils } from '../../utils/helpers';
 import ProductCard from './ProductCard';
+import { Utils } from '../../utils/helpers';
 
-function CategoryList({ 
-  categories, 
-  products, 
-  expandedCategories, 
-  searchTerm, 
-  statusFilter,
-  onToggleCategory,
-  onOpenProduct,
-  onSubmitProduct
-}) {
-  const search = searchTerm.toLowerCase();
-
-  const getCategoryProducts = (categoryId) => {
-    return products.filter(p => {
-      const matchCat = p.categoryId === categoryId;
-      const matchSearch = !search || 
+function CategoryList({ categories, products, expandedCategories, searchTerm, statusFilter, onToggleCategory, onOpenProduct, onSubmitProduct }) {
+  const filterProducts = (productList) => {
+    let filtered = productList;
+    if (searchTerm) {
+      const search = searchTerm.toLowerCase();
+      filtered = filtered.filter(p => 
         p.name.toLowerCase().includes(search) || 
-        p.code.toLowerCase().includes(search) || 
-        (p.subcategory && p.subcategory.toLowerCase().includes(search));
-      const matchStatus = statusFilter === 'all' || p.status === statusFilter;
-      return matchCat && matchSearch && matchStatus;
-    });
+        p.code.toLowerCase().includes(search) ||
+        (p.subcategory && p.subcategory.toLowerCase().includes(search))
+      );
+    }
+    if (statusFilter && statusFilter !== 'all') {
+      filtered = filtered.filter(p => p.status === statusFilter);
+    }
+    return filtered;
   };
 
-  const calculateCategoryTotals = (categoryId) => {
+  const getSubcategories = (categoryId) => {
     const categoryProducts = products.filter(p => p.categoryId === categoryId);
-    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-    categoryProducts.forEach(p => { 
-      lyQty += p.lyQty || 0; 
-      cyQty += p.cyQty || 0;
-      lyRev += p.lyRev || 0;
-      cyRev += p.cyRev || 0;
-    });
-    return { 
-      lyQty, 
-      cyQty, 
-      lyRev,
-      cyRev,
-      qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
-      revGrowth: Utils.calcGrowth(lyRev, cyRev)
-    };
+    const subcats = [...new Set(categoryProducts.map(p => p.subcategory).filter(Boolean))];
+    return subcats;
   };
 
-  const groupBySubcategory = (prods) => {
-    const groups = {};
-    prods.forEach(p => {
-      const subcat = p.subcategory || 'General';
-      if (!groups[subcat]) groups[subcat] = [];
-      groups[subcat].push(p);
+  const getCategoryTotals = (categoryId) => {
+    const categoryProducts = products.filter(p => p.categoryId === categoryId);
+    let lyQty = 0, cyQty = 0;
+    categoryProducts.forEach(p => {
+      if (p.monthlyTargets) {
+        Object.values(p.monthlyTargets).forEach(m => {
+          lyQty += m.lyQty || 0;
+          cyQty += m.cyQty || 0;
+        });
+      }
     });
-    return groups;
+    return { lyQty, cyQty, growth: Utils.calcGrowth(lyQty, cyQty), count: categoryProducts.length };
   };
-
-  const filteredCategories = categories.filter(cat => {
-    const prods = getCategoryProducts(cat.id);
-    return prods.length > 0;
-  });
-
-  if (filteredCategories.length === 0) {
-    return (
-      <div className="empty-state">
-        <div className="empty-state-icon">
-          <i className="fas fa-search"></i>
-        </div>
-        <h3>No products found</h3>
-        <p>Try adjusting your search or filter criteria</p>
-      </div>
-    );
-  }
 
   return (
     <div className="category-list">
-      {filteredCategories.map(cat => {
-        const categoryProducts = getCategoryProducts(cat.id);
-        const totals = calculateCategoryTotals(cat.id);
-        const isExpanded = expandedCategories.has(cat.id);
-        const pendingCount = categoryProducts.filter(
-          p => p.status === 'draft' || p.status === 'rejected'
-        ).length;
-        const subcategoryGroups = groupBySubcategory(categoryProducts);
+      {categories.map(category => {
+        const isExpanded = expandedCategories.has(category.id);
+        const subcategories = getSubcategories(category.id);
+        const categoryTotals = getCategoryTotals(category.id);
+        const categoryProducts = filterProducts(products.filter(p => p.categoryId === category.id));
+
+        if (categoryProducts.length === 0 && (searchTerm || statusFilter !== 'all')) return null;
 
         return (
-          <div 
-            key={cat.id}
-            className={`category-card ${isExpanded ? 'expanded' : ''}`}
-          >
-            <div 
-              className="category-header"
-              onClick={() => onToggleCategory(cat.id)}
-            >
-              <div className="cat-icon-wrapper">
-                <div className={`cat-icon ${cat.color}`}>
-                  <i className={`fas ${cat.icon}`}></i>
-                </div>
-                {pendingCount > 0 && (
-                  <span className="cat-count">{pendingCount}</span>
-                )}
-              </div>
-              
-              <div className="cat-info">
-                <div className="cat-name">{cat.name}</div>
-                <div className="cat-meta">
-                  <span>
-                    <i className="fas fa-box"></i> {categoryProducts.length} Products
-                  </span>
-                  <span>
-                    <i className="fas fa-check-circle"></i> 
-                    {categoryProducts.filter(p => p.status === 'approved').length} Approved
-                  </span>
-                  <span>
-                    <i className="fas fa-layer-group"></i> 
-                    {Object.keys(subcategoryGroups).length} Groups
-                  </span>
+          <div key={category.id} className={`category-section ${isExpanded ? 'expanded' : ''}`}>
+            <div className="category-header" onClick={() => onToggleCategory(category.id)}>
+              <div className="category-info">
+                <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} category-chevron`}></i>
+                <div className={`category-icon ${category.color}`}><i className={`fas ${category.icon}`}></i></div>
+                <div className="category-details">
+                  <span className="category-name">{category.name}</span>
+                  <span className="category-count">{categoryTotals.count} products</span>
                 </div>
               </div>
-              
-              <div className="cat-stats">
-                <div className="cat-stat">
-                  <span className="cat-stat-label">CY Qty</span>
-                  <span className="cat-stat-value">{Utils.formatNumber(totals.cyQty)}</span>
-                  <span className={`cat-stat-growth ${totals.qtyGrowth >= 0 ? 'positive' : 'negative'}`}>
-                    {Utils.formatGrowth(totals.qtyGrowth)}
-                  </span>
-                </div>
-                <div className="cat-stat">
-                  <span className="cat-stat-label">CY Rev</span>
-                  <span className="cat-stat-value">{Utils.formatShortCurrency(totals.cyRev)}</span>
-                  <span className={`cat-stat-growth ${totals.revGrowth >= 0 ? 'positive' : 'negative'}`}>
-                    {Utils.formatGrowth(totals.revGrowth)}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="cat-chevron">
-                <i className="fas fa-chevron-down"></i>
+              <div className="category-stats">
+                <div className="category-stat"><span className="stat-label">LY</span><span className="stat-value">{Utils.formatNumber(categoryTotals.lyQty)}</span></div>
+                <div className="category-stat highlight"><span className="stat-label">CY</span><span className="stat-value">{Utils.formatNumber(categoryTotals.cyQty)}</span></div>
+                <div className={`category-growth ${categoryTotals.growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(categoryTotals.growth)}</div>
               </div>
             </div>
             
-            <div className="cat-content">
-              <div className="products-container">
-                {Object.entries(subcategoryGroups).map(([subcat, prods]) => (
-                  <div key={subcat} className="subcategory-section">
-                    <div className="subcategory-header">
-                      <span className="subcategory-name">
-                        <i className="fas fa-folder"></i> {subcat}
-                      </span>
-                      <span className="subcategory-count">{prods.length} items</span>
-                    </div>
-                    <div className="product-grid">
-                      {prods.map(product => (
-                        <ProductCard 
-                          key={product.id}
-                          product={product}
-                          onOpenProduct={onOpenProduct}
-                          onSubmitProduct={onSubmitProduct}
-                        />
-                      ))}
-                    </div>
+            {isExpanded && (
+              <div className="category-content">
+                {subcategories.length > 0 ? (
+                  subcategories.map(subcategory => {
+                    const subcatProducts = filterProducts(categoryProducts.filter(p => p.subcategory === subcategory));
+                    if (subcatProducts.length === 0) return null;
+                    return (
+                      <div key={subcategory} className="subcategory-section">
+                        <div className="subcategory-header"><i className="fas fa-folder-open"></i><span>{subcategory}</span><span className="subcategory-count">{subcatProducts.length}</span></div>
+                        <div className="product-grid">
+                          {subcatProducts.map(product => (
+                            <ProductCard key={product.id} product={product} onOpen={onOpenProduct} onSubmit={onSubmitProduct} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="product-grid">
+                    {categoryProducts.map(product => (
+                      <ProductCard key={product.id} product={product} onOpen={onOpenProduct} onSubmit={onSubmitProduct} />
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
+            )}
           </div>
         );
       })}

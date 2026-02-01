@@ -3,15 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Utils } from '../../utils/helpers';
 
-function Header({ 
-  user, 
-  onRefresh, 
-  completionPercent, 
-  submittedCount, 
-  totalCount, 
-  approvedCount, 
-  pendingCount 
-}) {
+function Header({ user, onRefresh, completionPercent, submittedCount, totalCount, approvedCount, pendingCount }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -26,34 +18,23 @@ function Header({
       <div className="header-inner">
         <div className="header-left">
           <div className="logo-box">
-            <img src={process.env.PUBLIC_URL + '/appasamy-logo.png'} alt="Appasamy Associates" className="logo-image" />
+            <img src={process.env.PUBLIC_URL + '/appasamy-logo.png'} alt="Appasamy Associates" className="logo-image" onError={(e) => e.target.style.display='none'} />
           </div>
           <div className="header-title">
             <h1>Product Commitment</h1>
             <div className="header-subtitle">
-              <span className="fiscal-badge">
-                <i className="fas fa-calendar-alt"></i> FY 2025-26
-              </span>
-              <span className="territory-badge">
-                <i className="fas fa-map-marker-alt"></i> {user?.territory || 'Territory'}
-              </span>
+              <span className="fiscal-badge"><i className="fas fa-calendar-alt"></i> FY 2025-26</span>
+              <span className="territory-badge"><i className="fas fa-map-marker-alt"></i> {user?.territory || 'Territory'}</span>
             </div>
           </div>
         </div>
         
         <div className="header-right">
-          <button className="icon-btn" onClick={onRefresh} title="Refresh">
-            <i className="fas fa-sync-alt"></i>
-          </button>
+          <button className="icon-btn" onClick={onRefresh} title="Refresh"><i className="fas fa-sync-alt"></i></button>
           
           <div className="user-chip-wrapper" style={{ position: 'relative' }}>
-            <div 
-              className="user-chip" 
-              onClick={() => setShowUserMenu(!showUserMenu)}
-            >
-              <div className="user-avatar">
-                {Utils.getInitials(user?.name)}
-              </div>
+            <div className="user-chip" onClick={() => setShowUserMenu(!showUserMenu)}>
+              <div className="user-avatar">{Utils.getInitials(user?.name)}</div>
               <div className="user-info">
                 <span className="user-name">{user?.name}</span>
                 <span className="user-role">{user?.roleLabel}</span>
@@ -62,52 +43,14 @@ function Header({
             </div>
             
             {showUserMenu && (
-              <div 
-                className="user-menu"
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  right: 0,
-                  marginTop: '0.5rem',
-                  background: 'var(--surface)',
-                  borderRadius: 'var(--radius)',
-                  boxShadow: 'var(--shadow-lg)',
-                  border: '1px solid var(--border)',
-                  minWidth: '200px',
-                  zIndex: 1000,
-                  overflow: 'hidden'
-                }}
-              >
+              <div className="user-menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: '0.5rem', background: 'var(--surface)', borderRadius: 'var(--radius)', boxShadow: 'var(--shadow-lg)', border: '1px solid var(--border)', minWidth: '200px', zIndex: 1000, overflow: 'hidden' }}>
                 <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
                   <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>{user?.name}</div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--gray-500)' }}>{user?.roleLabel}</div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
-                    <i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>
-                    {user?.territory}
-                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}><i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>{user?.territory}</div>
                 </div>
-                <button
-                  onClick={handleLogout}
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem 1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    border: 'none',
-                    background: 'transparent',
-                    color: 'var(--danger)',
-                    cursor: 'pointer',
-                    fontFamily: 'var(--font-sans)',
-                    fontSize: '0.875rem',
-                    fontWeight: 500,
-                    transition: 'var(--transition)'
-                  }}
-                  onMouseOver={(e) => e.currentTarget.style.background = 'var(--danger-light)'}
-                  onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
-                >
-                  <i className="fas fa-sign-out-alt"></i>
-                  Sign Out
+                <button onClick={handleLogout} style={{ width: '100%', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: 'none', background: 'transparent', color: 'var(--danger)', cursor: 'pointer', fontFamily: 'var(--font-sans)', fontSize: '0.875rem', fontWeight: 500 }}>
+                  <i className="fas fa-sign-out-alt"></i> Sign Out
                 </button>
               </div>
             )}
@@ -115,31 +58,12 @@ function Header({
         </div>
       </div>
       
-      {/* Progress Section */}
-      <div className="progress-section">
+      <div className="header-progress">
+        <div className="progress-bar"><div className="progress-fill" style={{ width: `${completionPercent || 0}%` }}></div></div>
         <div className="progress-stats">
-          <div className="progress-stat">
-            <span className="progress-label">Completion</span>
-            <span className="progress-value">{completionPercent}%</span>
-          </div>
-          <div className="progress-stat">
-            <span className="progress-label">Submitted</span>
-            <span className="progress-value">{submittedCount}/{totalCount}</span>
-          </div>
-          <div className="progress-stat">
-            <span className="progress-label">Approved</span>
-            <span className="progress-value approved">{approvedCount}</span>
-          </div>
-          <div className="progress-stat">
-            <span className="progress-label">Pending</span>
-            <span className="progress-value pending">{pendingCount}</span>
-          </div>
-        </div>
-        <div className="progress-bar">
-          <div 
-            className="progress-fill" 
-            style={{ width: `${completionPercent}%` }}
-          ></div>
+          <span className="progress-stat"><i className="fas fa-check-circle text-success"></i> {approvedCount || 0} Approved</span>
+          <span className="progress-stat"><i className="fas fa-clock text-warning"></i> {submittedCount || 0} Pending</span>
+          <span className="progress-stat"><i className="fas fa-edit text-info"></i> {pendingCount || 0} Draft</span>
         </div>
       </div>
     </header>

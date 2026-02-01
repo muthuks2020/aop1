@@ -4,7 +4,9 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import { AuthProvider } from './context/AuthContext';
 import './styles/index.css';
-import './styles/TargetEntryGridStyles.css'; 
+import './styles/login.css';
+import './styles/targetEntryGrid.css';
+import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -16,3 +18,6 @@ root.render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+// Register service worker for PWA functionality
+serviceWorkerRegistration.register();

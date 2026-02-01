@@ -1,96 +1,72 @@
 import React from 'react';
 import { Utils } from '../../utils/helpers';
 
-function ProductCard({ product, onOpenProduct, onSubmitProduct }) {
-  const qtyGrowth = Utils.calcGrowth(product.lyQty, product.cyQty);
-  const revGrowth = Utils.calcGrowth(product.lyRev, product.cyRev);
-  const canSubmit = product.status === 'draft' || product.status === 'rejected';
-  const canEdit = product.status !== 'approved';
-  const isNew = product.lyQty === 0;
+function ProductCard({ product, onOpen, onSubmit }) {
+  const calculateTotals = () => {
+    if (!product.monthlyTargets) return { lyQty: 0, cyQty: 0 };
+    return Object.values(product.monthlyTargets).reduce((acc, m) => {
+      acc.lyQty += m.lyQty || 0;
+      acc.cyQty += m.cyQty || 0;
+      return acc;
+    }, { lyQty: 0, cyQty: 0 });
+  };
+
+  const totals = calculateTotals();
+  const growth = Utils.calcGrowth(totals.lyQty, totals.cyQty);
+
+  const statusConfig = {
+    draft: { icon: 'fa-edit', label: 'Draft', class: 'draft' },
+    submitted: { icon: 'fa-clock', label: 'Pending', class: 'submitted' },
+    approved: { icon: 'fa-check-circle', label: 'Approved', class: 'approved' },
+    rejected: { icon: 'fa-times-circle', label: 'Rejected', class: 'rejected' }
+  };
+
+  const status = statusConfig[product.status] || statusConfig.draft;
 
   return (
-    <div className={`product-card ${product.status}`}>
-      <div className="product-header">
+    <div className={`product-card ${status.class}`} onClick={() => onOpen(product.id)}>
+      <div className="card-header">
         <div className="product-info">
-          <div className="product-name">
-            {product.name}
-            {isNew && <span className="new-badge">NEW</span>}
-          </div>
-          <div className="product-code">{product.code}</div>
+          <span className="product-name">{product.name}</span>
+          <span className="product-code">{product.code}</span>
         </div>
-        <div className={`product-status ${product.status}`}>
-          <i className={`fas ${Utils.getStatusIcon(product.status)}`}></i>
-          <span>{Utils.getStatusLabel(product.status)}</span>
-        </div>
+        <span className={`status-badge ${status.class}`}>
+          <i className={`fas ${status.icon}`}></i>
+          {status.label}
+        </span>
       </div>
       
-      <div className="product-data">
-        <div className="data-row">
-          <div className="data-cell">
-            <span className="data-label">LY Qty</span>
-            <span className="data-value">
-              {isNew ? '-' : Utils.formatNumber(product.lyQty)}
-            </span>
+      <div className="card-body">
+        <div className="qty-row">
+          <div className="qty-item">
+            <span className="qty-label">LY Qty</span>
+            <span className="qty-value">{Utils.formatNumber(totals.lyQty)}</span>
           </div>
-          <div className="data-cell highlight">
-            <span className="data-label">CY Qty</span>
-            <span className="data-value editable">
-              {Utils.formatNumber(product.cyQty)}
-            </span>
+          <div className="qty-item highlight">
+            <span className="qty-label">CY Target</span>
+            <span className="qty-value">{Utils.formatNumber(totals.cyQty)}</span>
           </div>
-          <div className="data-cell">
-            <span className="data-label">Qty Growth</span>
-            <span className={`data-value growth ${qtyGrowth >= 0 ? 'positive' : 'negative'}`}>
-              {isNew ? 'NEW' : Utils.formatGrowth(qtyGrowth)}
-            </span>
-          </div>
-        </div>
-        <div className="data-row">
-          <div className="data-cell">
-            <span className="data-label">LY Rev</span>
-            <span className="data-value">
-              {isNew ? '-' : Utils.formatShortCurrency(product.lyRev)}
-            </span>
-          </div>
-          <div className="data-cell highlight">
-            <span className="data-label">CY Rev</span>
-            <span className="data-value editable">
-              {Utils.formatShortCurrency(product.cyRev)}
-            </span>
-          </div>
-          <div className="data-cell">
-            <span className="data-label">Rev Growth</span>
-            <span className={`data-value growth ${revGrowth >= 0 ? 'positive' : 'negative'}`}>
-              {isNew ? 'NEW' : Utils.formatGrowth(revGrowth)}
-            </span>
+          <div className={`growth-badge ${growth >= 0 ? 'positive' : 'negative'}`}>
+            {Utils.formatGrowth(growth)}
           </div>
         </div>
       </div>
       
-      <div className="product-actions">
-        <button 
-          className="product-btn edit"
-          onClick={() => onOpenProduct(product.id)}
-        >
-          <i className={`fas fa-${canEdit ? 'edit' : 'eye'}`}></i>
-          <span>{canEdit ? 'Edit Targets' : 'View'}</span>
-        </button>
-        
-        {canSubmit ? (
-          <button 
-            className="product-btn submit"
-            onClick={() => onSubmitProduct(product.id)}
-          >
-            <i className="fas fa-paper-plane"></i>
-            <span>Submit</span>
+      <div className="card-footer">
+        {product.status === 'draft' && (
+          <button className="card-action" onClick={(e) => { e.stopPropagation(); onSubmit(product.id); }}>
+            <i className="fas fa-paper-plane"></i> Submit
           </button>
-        ) : (
-          <button 
-            className="product-btn view"
-            onClick={() => onOpenProduct(product.id)}
-          >
-            <i className="fas fa-chart-line"></i>
-            <span>Details</span>
+        )}
+        {product.status === 'submitted' && (
+          <span className="pending-text"><i className="fas fa-hourglass-half"></i> Awaiting Approval</span>
+        )}
+        {product.status === 'approved' && (
+          <span className="approved-text"><i className="fas fa-check"></i> Target Locked</span>
+        )}
+        {product.status === 'rejected' && (
+          <button className="card-action danger" onClick={(e) => { e.stopPropagation(); onOpen(product.id); }}>
+            <i className="fas fa-redo"></i> Revise
           </button>
         )}
       </div>

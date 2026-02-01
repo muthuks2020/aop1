@@ -1,176 +1,149 @@
 /**
- * Utility Functions
- * Updated: Using lowercase month keys for consistency
+ * Utility functions for Product Commitment PWA
  */
 
 export const Utils = {
-  // Growth calculation
-  calcGrowth(ly, cy) {
-    if (ly === 0) return cy > 0 ? 100 : 0;
-    return ((cy - ly) / ly * 100);
+  /**
+   * Format number with comma separators
+   */
+  formatNumber: (num) => {
+    if (num === null || num === undefined) return '-';
+    return num.toLocaleString('en-IN');
   },
 
-  // Format growth percentage
-  formatGrowth(value) {
-    const formatted = value.toFixed(1);
-    return (value >= 0 ? '+' : '') + formatted + '%';
+  /**
+   * Format currency in Indian Rupees
+   */
+  formatCurrency: (amount) => {
+    if (amount === null || amount === undefined) return '-';
+    return '₹' + amount.toLocaleString('en-IN');
   },
 
-  // Format number with Indian locale
-  formatNumber(n) {
-    if (n === null || n === undefined) return '-';
-    return n.toLocaleString('en-IN');
-  },
-
-  // Format currency (INR)
-  formatCurrency(n) {
-    if (n >= 10000000) {
-      return '₹' + (n / 10000000).toFixed(2) + ' Cr';
-    } else if (n >= 100000) {
-      return '₹' + (n / 100000).toFixed(2) + ' L';
-    } else if (n >= 1000) {
-      return '₹' + (n / 1000).toFixed(1) + ' K';
+  /**
+   * Format large currency values (Lakhs/Crores)
+   */
+  formatShortCurrency: (amount) => {
+    if (amount === null || amount === undefined) return '-';
+    if (amount >= 10000000) {
+      return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
+    } else if (amount >= 100000) {
+      return '₹' + (amount / 100000).toFixed(2) + ' L';
+    } else if (amount >= 1000) {
+      return '₹' + (amount / 1000).toFixed(1) + ' K';
     }
-    return '₹' + n.toLocaleString('en-IN');
+    return '₹' + amount.toLocaleString('en-IN');
   },
 
-  // Format short currency for display
-  formatShortCurrency(n) {
-    if (n >= 10000000) {
-      return (n / 10000000).toFixed(1) + 'Cr';
-    } else if (n >= 100000) {
-      return (n / 100000).toFixed(1) + 'L';
-    } else if (n >= 1000) {
-      return (n / 1000).toFixed(0) + 'K';
-    }
-    return n.toString();
+  /**
+   * Calculate growth percentage
+   */
+  calcGrowth: (ly, cy) => {
+    if (!ly || ly === 0) return cy > 0 ? 100 : 0;
+    return ((cy - ly) / ly) * 100;
   },
 
-  // Status icon mapping
-  getStatusIcon(status) {
-    const icons = { 
-      draft: 'fa-edit', 
-      submitted: 'fa-clock', 
-      approved: 'fa-check-circle', 
-      rejected: 'fa-times-circle' 
-    };
-    return icons[status] || 'fa-circle';
+  /**
+   * Format growth percentage
+   */
+  formatGrowth: (growth) => {
+    if (growth === null || growth === undefined || isNaN(growth)) return '-';
+    const sign = growth >= 0 ? '+' : '';
+    return sign + growth.toFixed(1) + '%';
   },
 
-  // Status label mapping
-  getStatusLabel(status) {
-    const labels = { 
-      draft: 'Draft', 
-      submitted: 'Pending Approval', 
-      approved: 'Approved', 
-      rejected: 'Rejected' 
-    };
-    return labels[status] || status;
-  },
-
-  // Format date
-  formatDate(dateStr) {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-IN', { 
-      day: 'numeric', 
-      month: 'short', 
-      year: 'numeric' 
-    });
-  },
-
-  // Get user initials
-  getInitials(name) {
-    if (!name) return '';
+  /**
+   * Get initials from name
+   */
+  getInitials: (name) => {
+    if (!name) return '?';
     return name
       .split(' ')
-      .map(n => n[0])
+      .map(word => word[0])
       .join('')
       .toUpperCase()
-      .substring(0, 2);
+      .slice(0, 2);
   },
 
-  // Get fiscal year months in order (lowercase)
-  getFiscalMonths() {
-    return ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
-  },
-
-  // Get quarter configuration
-  getQuarters() {
-    return [
-      { id: 'Q1', name: 'Q1 (Apr-Jun)', months: ['apr', 'may', 'jun'] },
-      { id: 'Q2', name: 'Q2 (Jul-Sep)', months: ['jul', 'aug', 'sep'] },
-      { id: 'Q3', name: 'Q3 (Oct-Dec)', months: ['oct', 'nov', 'dec'] },
-      { id: 'Q4', name: 'Q4 (Jan-Mar)', months: ['jan', 'feb', 'mar'] }
-    ];
-  },
-
-  // Calculate quarterly totals from monthly data
-  calculateQuarterlyTotals(monthlyTargets) {
-    const quarters = this.getQuarters();
-    const quarterlyData = {};
-
-    quarters.forEach(quarter => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      
-      quarter.months.forEach(month => {
-        if (monthlyTargets && monthlyTargets[month]) {
-          lyQty += monthlyTargets[month].lyQty || 0;
-          cyQty += monthlyTargets[month].cyQty || 0;
-          lyRev += monthlyTargets[month].lyRev || 0;
-          cyRev += monthlyTargets[month].cyRev || 0;
-        }
-      });
-
-      quarterlyData[quarter.id] = {
-        lyQty,
-        cyQty,
-        lyRev,
-        cyRev,
-        qtyGrowth: this.calcGrowth(lyQty, cyQty),
-        revGrowth: this.calcGrowth(lyRev, cyRev)
-      };
-    });
-
-    return quarterlyData;
-  },
-
-  // Calculate yearly totals from monthly data
-  calculateYearlyTotals(monthlyTargets) {
-    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+  /**
+   * Calculate yearly totals from monthly targets
+   */
+  calculateYearlyTotals: (monthlyTargets) => {
+    if (!monthlyTargets) return { lyQty: 0, cyQty: 0, lyRev: 0, cyRev: 0 };
     
-    this.getFiscalMonths().forEach(month => {
-      if (monthlyTargets && monthlyTargets[month]) {
-        lyQty += monthlyTargets[month].lyQty || 0;
-        cyQty += monthlyTargets[month].cyQty || 0;
-        lyRev += monthlyTargets[month].lyRev || 0;
-        cyRev += monthlyTargets[month].cyRev || 0;
-      }
-    });
+    return Object.values(monthlyTargets).reduce((acc, month) => {
+      acc.lyQty += month.lyQty || 0;
+      acc.cyQty += month.cyQty || 0;
+      acc.lyRev += month.lyRev || 0;
+      acc.cyRev += month.cyRev || 0;
+      return acc;
+    }, { lyQty: 0, cyQty: 0, lyRev: 0, cyRev: 0 });
+  },
 
-    return {
-      lyQty,
-      cyQty,
-      lyRev,
-      cyRev,
-      qtyGrowth: this.calcGrowth(lyQty, cyQty),
-      revGrowth: this.calcGrowth(lyRev, cyRev)
+  /**
+   * Format date to locale string
+   */
+  formatDate: (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric'
+    });
+  },
+
+  /**
+   * Format date with time
+   */
+  formatDateTime: (dateString) => {
+    if (!dateString) return '-';
+    return new Date(dateString).toLocaleString('en-IN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  },
+
+  /**
+   * Debounce function
+   */
+  debounce: (func, wait) => {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
     };
   },
 
-  // Get current fiscal quarter
-  getCurrentQuarter() {
-    const month = new Date().getMonth();
-    if (month >= 3 && month <= 5) return 'Q1';
-    if (month >= 6 && month <= 8) return 'Q2';
-    if (month >= 9 && month <= 11) return 'Q3';
-    return 'Q4';
+  /**
+   * Get status color class
+   */
+  getStatusColor: (status) => {
+    const colors = {
+      draft: 'status-draft',
+      submitted: 'status-submitted',
+      approved: 'status-approved',
+      rejected: 'status-rejected'
+    };
+    return colors[status] || 'status-draft';
   },
 
-  // Get current fiscal month (lowercase)
-  getCurrentFiscalMonth() {
-    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
-    return months[new Date().getMonth()];
+  /**
+   * Get quarter from month
+   */
+  getQuarter: (month) => {
+    const quarters = {
+      apr: 'Q1', may: 'Q1', jun: 'Q1',
+      jul: 'Q2', aug: 'Q2', sep: 'Q2',
+      oct: 'Q3', nov: 'Q3', dec: 'Q3',
+      jan: 'Q4', feb: 'Q4', mar: 'Q4'
+    };
+    return quarters[month.toLowerCase()] || 'Q1';
   }
 };
 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import '../styles/login.css';
 
 function Login() {
   const [username, setUsername] = useState('');
@@ -13,7 +12,6 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
   const from = location.state?.from?.pathname || '/dashboard';
 
   const handleSubmit = async (e) => {
@@ -68,30 +66,12 @@ function Login() {
             <div className="brand-logo">
               <img src={process.env.PUBLIC_URL + '/appasamy-logo.png'} alt="Appasamy Associates" className="brand-logo-img" onError={(e) => e.target.style.display='none'} />
             </div>
-            
-            <h1 className="brand-headline">
-              Empowering Vision,<br />
-              <span>Transforming Lives</span>
-            </h1>
-            
-            <p className="brand-tagline">
-              Leading manufacturer of ophthalmic products, committed to excellence 
-              in eye care for over four decades.
-            </p>
-            
+            <h1 className="brand-headline">Empowering Vision,<br /><span>Transforming Lives</span></h1>
+            <p className="brand-tagline">Leading manufacturer of ophthalmic products, committed to excellence in eye care for over four decades.</p>
             <div className="brand-features">
-              <div className="feature-item">
-                <i className="fas fa-chart-line"></i>
-                <span>Monthly Target Entry</span>
-              </div>
-              <div className="feature-item">
-                <i className="fas fa-check-circle"></i>
-                <span>Approval Workflow</span>
-              </div>
-              <div className="feature-item">
-                <i className="fas fa-calendar"></i>
-                <span>Q/Y Growth Tracking</span>
-              </div>
+              <div className="feature-item"><i className="fas fa-chart-line"></i><span>Monthly Target Entry</span></div>
+              <div className="feature-item"><i className="fas fa-check-circle"></i><span>Approval Workflow</span></div>
+              <div className="feature-item"><i className="fas fa-calendar"></i><span>Q/Y Growth Tracking</span></div>
             </div>
           </div>
         </div>
@@ -115,15 +95,7 @@ function Login() {
                 <label htmlFor="username">Username</label>
                 <div className="input-wrapper">
                   <i className="fas fa-user"></i>
-                  <input
-                    type="text"
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your username"
-                    disabled={loading}
-                    autoComplete="username"
-                  />
+                  <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username" disabled={loading} autoComplete="username" />
                 </div>
               </div>
 
@@ -131,37 +103,15 @@ function Login() {
                 <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
                   <i className="fas fa-lock"></i>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
-                    disabled={loading}
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="toggle-password"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
+                  <input type={showPassword ? 'text' : 'password'} id="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" disabled={loading} autoComplete="current-password" />
+                  <button type="button" className="toggle-password" onClick={() => setShowPassword(!showPassword)}>
                     <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
                   </button>
                 </div>
               </div>
 
               <button type="submit" className="login-btn" disabled={loading}>
-                {loading ? (
-                  <>
-                    <span className="btn-spinner"></span>
-                    Signing in...
-                  </>
-                ) : (
-                  <>
-                    <span>Sign In</span>
-                    <i className="fas fa-arrow-right"></i>
-                  </>
-                )}
+                {loading ? (<><span className="btn-spinner"></span>Signing in...</>) : (<><span>Sign In</span><i className="fas fa-arrow-right"></i></>)}
               </button>
             </form>
 
@@ -171,16 +121,9 @@ function Login() {
                 <span className="demo-text">Demo Accounts</span>
                 <span className="demo-divider"></span>
               </div>
-              
               <div className="demo-credentials">
                 {demoCredentials.map((cred) => (
-                  <button
-                    key={cred.username}
-                    type="button"
-                    className="demo-btn"
-                    onClick={() => handleDemoLogin(cred.username)}
-                    disabled={loading}
-                  >
+                  <button key={cred.username} type="button" className="demo-btn" onClick={() => handleDemoLogin(cred.username)} disabled={loading}>
                     <i className="fas fa-user-circle"></i>
                     <div className="demo-info">
                       <span className="demo-role">{cred.role}</span>
@@ -189,11 +132,7 @@ function Login() {
                   </button>
                 ))}
               </div>
-              
-              <p className="demo-note">
-                <i className="fas fa-info-circle"></i>
-                Password for all demo accounts: <code>demo123</code>
-              </p>
+              <p className="demo-note"><i className="fas fa-info-circle"></i>Password for all demo accounts: <code>demo123</code></p>
             </div>
           </div>
         </div>
