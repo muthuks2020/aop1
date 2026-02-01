@@ -1,6 +1,6 @@
 /**
  * Utility Functions
- * Updated: Added Quarter/Yearly calculation helpers
+ * Updated: Using lowercase month keys for consistency
  */
 
 export const Utils = {
@@ -18,6 +18,7 @@ export const Utils = {
 
   // Format number with Indian locale
   formatNumber(n) {
+    if (n === null || n === undefined) return '-';
     return n.toLocaleString('en-IN');
   },
 
@@ -89,18 +90,18 @@ export const Utils = {
       .substring(0, 2);
   },
 
-  // Get fiscal year months in order
+  // Get fiscal year months in order (lowercase)
   getFiscalMonths() {
-    return ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+    return ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
   },
 
   // Get quarter configuration
   getQuarters() {
     return [
-      { id: 'Q1', name: 'Q1 (Apr-Jun)', months: ['Apr', 'May', 'Jun'] },
-      { id: 'Q2', name: 'Q2 (Jul-Sep)', months: ['Jul', 'Aug', 'Sep'] },
-      { id: 'Q3', name: 'Q3 (Oct-Dec)', months: ['Oct', 'Nov', 'Dec'] },
-      { id: 'Q4', name: 'Q4 (Jan-Mar)', months: ['Jan', 'Feb', 'Mar'] }
+      { id: 'Q1', name: 'Q1 (Apr-Jun)', months: ['apr', 'may', 'jun'] },
+      { id: 'Q2', name: 'Q2 (Jul-Sep)', months: ['jul', 'aug', 'sep'] },
+      { id: 'Q3', name: 'Q3 (Oct-Dec)', months: ['oct', 'nov', 'dec'] },
+      { id: 'Q4', name: 'Q4 (Jan-Mar)', months: ['jan', 'feb', 'mar'] }
     ];
   },
 
@@ -113,7 +114,7 @@ export const Utils = {
       let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
       
       quarter.months.forEach(month => {
-        if (monthlyTargets[month]) {
+        if (monthlyTargets && monthlyTargets[month]) {
           lyQty += monthlyTargets[month].lyQty || 0;
           cyQty += monthlyTargets[month].cyQty || 0;
           lyRev += monthlyTargets[month].lyRev || 0;
@@ -139,7 +140,7 @@ export const Utils = {
     let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
     
     this.getFiscalMonths().forEach(month => {
-      if (monthlyTargets[month]) {
+      if (monthlyTargets && monthlyTargets[month]) {
         lyQty += monthlyTargets[month].lyQty || 0;
         cyQty += monthlyTargets[month].cyQty || 0;
         lyRev += monthlyTargets[month].lyRev || 0;
@@ -157,48 +158,6 @@ export const Utils = {
     };
   },
 
-  // Calculate aggregate totals for multiple products
-  calculateAggregateMonthlyTotals(products) {
-    const months = this.getFiscalMonths();
-    const aggregated = {};
-
-    months.forEach(month => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      
-      products.forEach(product => {
-        if (product.monthlyTargets && product.monthlyTargets[month]) {
-          lyQty += product.monthlyTargets[month].lyQty || 0;
-          cyQty += product.monthlyTargets[month].cyQty || 0;
-          lyRev += product.monthlyTargets[month].lyRev || 0;
-          cyRev += product.monthlyTargets[month].cyRev || 0;
-        }
-      });
-
-      aggregated[month] = {
-        lyQty,
-        cyQty,
-        lyRev,
-        cyRev,
-        qtyGrowth: this.calcGrowth(lyQty, cyQty),
-        revGrowth: this.calcGrowth(lyRev, cyRev)
-      };
-    });
-
-    return aggregated;
-  },
-
-  // Calculate aggregate quarterly totals for multiple products
-  calculateAggregateQuarterlyTotals(products) {
-    const aggregatedMonthly = this.calculateAggregateMonthlyTotals(products);
-    return this.calculateQuarterlyTotals(aggregatedMonthly);
-  },
-
-  // Calculate aggregate yearly totals for multiple products
-  calculateAggregateYearlyTotals(products) {
-    const aggregatedMonthly = this.calculateAggregateMonthlyTotals(products);
-    return this.calculateYearlyTotals(aggregatedMonthly);
-  },
-
   // Get current fiscal quarter
   getCurrentQuarter() {
     const month = new Date().getMonth();
@@ -208,9 +167,9 @@ export const Utils = {
     return 'Q4';
   },
 
-  // Get current fiscal month
+  // Get current fiscal month (lowercase)
   getCurrentFiscalMonth() {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
     return months[new Date().getMonth()];
   }
 };

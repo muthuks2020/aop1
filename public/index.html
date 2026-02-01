@@ -2,25 +2,99 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0A2540" />
-    <meta name="description" content="Appasamy Associates - Product Commitment Entry System" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#1B4D7A" />
+    <meta name="description" content="Product Commitment Entry System - Appasamy Associates" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <meta name="apple-mobile-web-app-title" content="Appasamy PC" />
+    
+    <link rel="icon" type="image/png" href="%PUBLIC_URL%/favicon.png" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/appasamy-logo.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" />
     
     <title>Product Commitment | Appasamy Associates</title>
+    
+    <style>
+      /* Initial loading screen */
+      .initial-loader {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0A2540 0%, #1B4D7A 100%);
+        z-index: 9999;
+      }
+      .initial-loader.hidden {
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s ease, visibility 0.3s ease;
+      }
+      .loader-logo {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+      }
+      .loader-logo img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+      }
+      .loader-spinner {
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255,255,255,0.2);
+        border-top-color: #00C4BC;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      .loader-text {
+        margin-top: 16px;
+        color: rgba(255,255,255,0.8);
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 14px;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+    </style>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
+    
+    <!-- Initial loading screen -->
+    <div class="initial-loader" id="initial-loader">
+      <div class="loader-logo">
+        <img src="%PUBLIC_URL%/appasamy-logo.png" alt="Appasamy" onerror="this.style.display='none'" />
+      </div>
+      <div class="loader-spinner"></div>
+      <div class="loader-text">Loading...</div>
+    </div>
+    
     <div id="root"></div>
+    
+    <script>
+      // Hide loader when app is ready
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var loader = document.getElementById('initial-loader');
+          if (loader) loader.classList.add('hidden');
+        }, 500);
+      });
+    </script>
   </body>
 </html>

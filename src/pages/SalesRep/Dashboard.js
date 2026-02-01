@@ -3,32 +3,19 @@ import { useAuth } from '../../context/AuthContext';
 import { ApiService } from '../../services/api';
 import { Utils } from '../../utils/helpers';
 import Header from '../../components/common/Header';
-import StatsRow from '../../components/common/StatsRow';
-import Toolbar from '../../components/common/Toolbar';
-import CategoryList from '../../components/common/CategoryList';
-import Footer from '../../components/common/Footer';
-import ProductPanel from '../../components/common/ProductPanel';
+import OverviewStats from '../../components/common/OverviewStats';
+import TargetEntryGrid from '../../components/common/TargetEntryGrid';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 
 function SalesRepDashboard() {
   const { user } = useAuth();
   
-  // State
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [expandedCategories, setExpandedCategories] = useState(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [allExpanded, setAllExpanded] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview'); // 'overview' or 'entry'
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  
-  // Toast state
   const [toasts, setToasts] = useState([]);
-  
-  // Modal state
   const [modalConfig, setModalConfig] = useState({
     isOpen: false,
     title: '',
@@ -37,7 +24,6 @@ function SalesRepDashboard() {
     onConfirm: null
   });
 
-  // Load data
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -47,58 +33,30 @@ function SalesRepDashboard() {
         ]);
         setCategories(cats);
         setProducts(prods);
-        
-        // Expand first category by default
-        if (cats.length > 0) {
-          setExpandedCategories(new Set([cats[0].id]));
-        }
       } catch (error) {
         showToast('Error', 'Failed to load data', 'error');
       }
     };
-    
     loadData();
   }, []);
 
-  // Online/Offline handlers
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
       showToast('Online', 'Connection restored', 'success');
     };
-    
     const handleOffline = () => {
       setIsOnline(false);
       showToast('Offline', 'You are now offline', 'warning');
     };
-    
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
-    
     return () => {
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
 
-  // Keyboard shortcuts
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') {
-        setIsPanelOpen(false);
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-      }
-      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
-        e.preventDefault();
-        handleSaveAllDrafts();
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [products]);
-
-  // Toast functions
   const showToast = useCallback((title, message, type = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, title, message, type }]);
@@ -111,23 +69,20 @@ function SalesRepDashboard() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // Calculate stats with Qty and Revenue
   const calculateTotals = useCallback(() => {
-    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-    products.forEach(p => { 
-      lyQty += p.lyQty || 0; 
-      cyQty += p.cyQty || 0;
-      lyRev += p.lyRev || 0;
-      cyRev += p.cyRev || 0;
+    let lyQty = 0, cyQty = 0;
+    products.forEach(p => {
+      if (p.monthlyTargets) {
+        Object.values(p.monthlyTargets).forEach(m => {
+          lyQty += m.lyQty || 0;
+          cyQty += m.cyQty || 0;
+        });
+      }
     });
     return { 
       count: products.length, 
-      lyQty, 
-      cyQty, 
-      qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
-      lyRev,
-      cyRev,
-      revGrowth: Utils.calcGrowth(lyRev, cyRev)
+      lyQty, cyQty, 
+      qtyGrowth: Utils.calcGrowth(lyQty, cyQty)
     };
   }, [products]);
 
@@ -139,195 +94,59 @@ function SalesRepDashboard() {
     return counts;
   }, [products]);
 
-  // Category handlers
-  const toggleCategory = useCallback((categoryId) => {
-    setExpandedCategories(prev => {
-      const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-      return next;
-    });
-  }, []);
-
-  const toggleAllCategories = useCallback(() => {
-    if (allExpanded) {
-      setExpandedCategories(new Set());
-      setAllExpanded(false);
-    } else {
-      setExpandedCategories(new Set(categories.map(c => c.id)));
-      setAllExpanded(true);
-    }
-  }, [allExpanded, categories]);
-
-  // Search handler
-  const handleSearch = useCallback((term) => {
-    setSearchTerm(term);
-    if (term) {
-      const matchingCategories = new Set();
-      products.forEach(p => {
-        const matchesSearch = 
-          p.name.toLowerCase().includes(term.toLowerCase()) ||
-          p.code.toLowerCase().includes(term.toLowerCase()) ||
-          (p.subcategory && p.subcategory.toLowerCase().includes(term.toLowerCase()));
-        if (matchesSearch) {
-          matchingCategories.add(p.categoryId);
-        }
-      });
-      setExpandedCategories(matchingCategories);
-    }
-  }, [products]);
-
-  // Product handlers
-  const openProductPanel = useCallback((productId) => {
-    const product = products.find(p => p.id === productId);
-    if (product) {
-      setSelectedProduct(product);
-      setIsPanelOpen(true);
-    }
-  }, [products]);
-
-  const closeProductPanel = useCallback(() => {
-    setIsPanelOpen(false);
-    setSelectedProduct(null);
-  }, []);
-
-  // Update monthly target for a product
-  const updateMonthlyTarget = useCallback((productId, month, values) => {
+  const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
         const updatedMonthlyTargets = {
           ...p.monthlyTargets,
           [month]: {
             ...p.monthlyTargets?.[month],
-            cyQty: values.cyQty,
-            cyRev: values.cyRev
+            cyQty: value
           }
         };
-        
-        // Recalculate yearly totals from monthly data
         const yearlyData = Utils.calculateYearlyTotals(updatedMonthlyTargets);
-        
         return {
           ...p,
           monthlyTargets: updatedMonthlyTargets,
-          cyQty: yearlyData.cyQty,
-          cyRev: yearlyData.cyRev
+          cyQty: yearlyData.cyQty
         };
       }
       return p;
     }));
+  }, []);
 
-    // Update selected product if it's the one being edited
-    setSelectedProduct(prev => {
-      if (prev && prev.id === productId) {
-        const updatedMonthlyTargets = {
-          ...prev.monthlyTargets,
-          [month]: {
-            ...prev.monthlyTargets?.[month],
-            cyQty: values.cyQty,
-            cyRev: values.cyRev
-          }
-        };
-        const yearlyData = Utils.calculateYearlyTotals(updatedMonthlyTargets);
-        
-        return {
-          ...prev,
-          monthlyTargets: updatedMonthlyTargets,
-          cyQty: yearlyData.cyQty,
-          cyRev: yearlyData.cyRev
-        };
-      }
-      return prev;
-    });
-
-    showToast('Updated', `${month} target updated successfully`, 'success');
-  }, [showToast]);
-
-  const handleSaveProductDraft = useCallback(async (productId) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    
+  const handleSaveAll = useCallback(async () => {
     try {
-      await ApiService.saveProductDraft(productId, { 
-        cyQty: product.cyQty,
-        cyRev: product.cyRev,
-        monthlyTargets: product.monthlyTargets
-      });
-      showToast('Draft Saved', `${product.name} saved successfully`, 'success');
+      await ApiService.saveAllDrafts(products);
+      showToast('Saved', 'All targets saved as draft', 'success');
     } catch (error) {
-      showToast('Error', 'Failed to save draft', 'error');
+      showToast('Error', 'Failed to save', 'error');
     }
   }, [products, showToast]);
 
-  const handleSubmitProduct = useCallback((productId) => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return;
-    
+  const handleSubmitAll = useCallback(() => {
+    const draftProducts = products.filter(p => p.status === 'draft');
+    if (draftProducts.length === 0) {
+      showToast('Info', 'No draft targets to submit', 'info');
+      return;
+    }
+
     setModalConfig({
       isOpen: true,
       title: 'Submit for Approval',
-      message: `Are you sure you want to submit "${product.name}" for approval? This will lock the targets for review.`,
+      message: `Are you sure you want to submit ${draftProducts.length} product targets for approval? This will lock the values for manager review.`,
       type: 'warning',
       onConfirm: async () => {
         try {
-          await ApiService.submitProduct(productId);
+          await ApiService.submitMultipleProducts(draftProducts.map(p => p.id));
           setProducts(prev => prev.map(p => 
-            p.id === productId 
-              ? { ...p, status: 'submitted', submittedDate: new Date().toISOString() } 
-              : p
-          ));
-          showToast('Submitted', `${product.name} submitted for approval`, 'success');
-          closeProductPanel();
-        } catch (error) {
-          showToast('Error', 'Failed to submit product', 'error');
-        }
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-      }
-    });
-  }, [products, showToast, closeProductPanel]);
-
-  const handleSaveAllDrafts = useCallback(async () => {
-    const drafts = products.filter(p => p.status === 'draft' || p.status === 'rejected');
-    if (drafts.length === 0) {
-      showToast('Info', 'No drafts to save', 'info');
-      return;
-    }
-    
-    try {
-      await ApiService.saveAllDrafts(drafts);
-      showToast('Saved', `${drafts.length} drafts saved successfully`, 'success');
-    } catch (error) {
-      showToast('Error', 'Failed to save drafts', 'error');
-    }
-  }, [products, showToast]);
-
-  const handleSubmitAllPending = useCallback(() => {
-    const pending = products.filter(p => p.status === 'draft');
-    if (pending.length === 0) {
-      showToast('Info', 'No products to submit', 'info');
-      return;
-    }
-    
-    setModalConfig({
-      isOpen: true,
-      title: 'Submit All Pending',
-      message: `Are you sure you want to submit ${pending.length} products for approval? This will lock all targets for review.`,
-      type: 'warning',
-      onConfirm: async () => {
-        try {
-          const productIds = pending.map(p => p.id);
-          await ApiService.submitMultipleProducts(productIds);
-          setProducts(prev => prev.map(p => 
-            pending.find(pen => pen.id === p.id)
+            p.status === 'draft'
               ? { ...p, status: 'submitted', submittedDate: new Date().toISOString() }
               : p
           ));
-          showToast('Submitted', `${pending.length} products submitted for approval`, 'success');
+          showToast('Submitted', `${draftProducts.length} products submitted for approval`, 'success');
         } catch (error) {
-          showToast('Error', 'Failed to submit products', 'error');
+          showToast('Error', 'Failed to submit', 'error');
         }
         setModalConfig(prev => ({ ...prev, isOpen: false }));
       }
@@ -343,9 +162,9 @@ function SalesRepDashboard() {
       ]);
       setCategories(cats);
       setProducts(prods);
-      showToast('Updated', 'Data refreshed successfully', 'success');
+      showToast('Updated', 'Data refreshed', 'success');
     } catch (error) {
-      showToast('Error', 'Failed to refresh data', 'error');
+      showToast('Error', 'Failed to refresh', 'error');
     }
   }, [showToast]);
 
@@ -353,12 +172,10 @@ function SalesRepDashboard() {
     setModalConfig(prev => ({ ...prev, isOpen: false }));
   }, []);
 
-  const totals = calculateTotals();
   const statusCounts = getStatusCounts();
 
   return (
-    <div className="app">
-      {/* Offline Banner */}
+    <div className="app excel-mode">
       {!isOnline && (
         <div className="offline-banner show">
           <i className="fas fa-wifi-slash"></i>
@@ -376,72 +193,48 @@ function SalesRepDashboard() {
         pendingCount={statusCounts.draft + statusCounts.rejected}
       />
 
-      <main className="main">
-        <StatsRow 
-          totalProducts={totals.count}
-          lyQty={totals.lyQty}
-          cyQty={totals.cyQty}
-          qtyGrowth={totals.qtyGrowth}
-          lyRev={totals.lyRev}
-          cyRev={totals.cyRev}
-          revGrowth={totals.revGrowth}
-        />
+      {/* Tab Navigation */}
+      <div className="main-tabs">
+        <button 
+          className={`main-tab ${activeTab === 'overview' ? 'active' : ''}`}
+          onClick={() => setActiveTab('overview')}
+        >
+          <i className="fas fa-chart-pie"></i>
+          Overview & Summary
+        </button>
+        <button 
+          className={`main-tab ${activeTab === 'entry' ? 'active' : ''}`}
+          onClick={() => setActiveTab('entry')}
+        >
+          <i className="fas fa-table"></i>
+          Target Entry Grid
+        </button>
+      </div>
 
-        <Toolbar 
-          searchTerm={searchTerm}
-          onSearchChange={handleSearch}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          allExpanded={allExpanded}
-          onToggleAll={toggleAllCategories}
-        />
-
-        <CategoryList 
-          categories={categories}
-          products={products}
-          expandedCategories={expandedCategories}
-          searchTerm={searchTerm}
-          statusFilter={statusFilter}
-          onToggleCategory={toggleCategory}
-          onOpenProduct={openProductPanel}
-          onSubmitProduct={handleSubmitProduct}
-        />
+      <main className="main excel-main">
+        {activeTab === 'overview' ? (
+          <OverviewStats 
+            products={products}
+            categories={categories}
+          />
+        ) : (
+          <TargetEntryGrid
+            categories={categories}
+            products={products}
+            onUpdateTarget={handleUpdateTarget}
+            onSaveAll={handleSaveAll}
+            onSubmitAll={handleSubmitAll}
+            userRole={user?.role}
+          />
+        )}
       </main>
 
-      <Footer 
-        lyQty={totals.lyQty}
-        cyQty={totals.cyQty}
-        qtyGrowth={totals.qtyGrowth}
-        lyRev={totals.lyRev}
-        cyRev={totals.cyRev}
-        revGrowth={totals.revGrowth}
-        pendingCount={statusCounts.draft}
-        onSaveAllDrafts={handleSaveAllDrafts}
-        onSubmitAllPending={handleSubmitAllPending}
-      />
-
-      <ProductPanel 
-        isOpen={isPanelOpen}
-        product={selectedProduct}
-        categories={categories}
-        onClose={closeProductPanel}
-        onUpdateMonthlyTarget={updateMonthlyTarget}
-        onSaveDraft={handleSaveProductDraft}
-        onSubmit={handleSubmitProduct}
-      />
-
-      {/* Toast Container */}
       <div className="toast-container">
         {toasts.map(toast => (
-          <Toast 
-            key={toast.id}
-            {...toast}
-            onClose={() => closeToast(toast.id)}
-          />
+          <Toast key={toast.id} {...toast} onClose={() => closeToast(toast.id)} />
         ))}
       </div>
 
-      {/* Modal */}
       <Modal 
         isOpen={modalConfig.isOpen}
         title={modalConfig.title}
