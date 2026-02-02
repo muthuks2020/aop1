@@ -1,0 +1,140 @@
+/* ==================== EDITABLE CELL INPUT STYLING ==================== */
+/* 
+ * All editable cells (Draft/Rejected status) show input box with teal border by default
+ * This makes it immediately clear which cells the user can fill in
+ * Version 2.2.0
+ */
+
+/* Base style for ALL editable cells - shows teal border by default */
+.editable-cell-input {
+  width: 100%;
+  height: 100%;
+  min-height: 26px;
+  padding: 0.25rem 0.375rem;
+  border: 2px solid var(--accent, #00A19B);
+  border-radius: 4px;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  text-align: center;
+  background: rgba(0, 161, 155, 0.06);
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.15s ease;
+  color: var(--accent, #00A19B);
+  font-weight: 600;
+}
+
+/* Placeholder styling */
+.editable-cell-input::placeholder {
+  color: #CBD5E1;
+  font-weight: 400;
+  opacity: 0.7;
+}
+
+/* Hover state */
+.editable-cell-input:hover {
+  border-color: var(--accent, #00A19B);
+  background: rgba(0, 161, 155, 0.1);
+  transform: scale(1.02);
+}
+
+/* Active/Focused state - enhanced glow when clicked */
+.editable-cell-input:focus,
+.editable-cell-input.active {
+  border-color: var(--accent, #00A19B);
+  background: rgba(0, 161, 155, 0.12);
+  box-shadow: 0 0 0 3px rgba(0, 161, 155, 0.2);
+  transform: scale(1);
+}
+
+/* When input has value */
+.editable-cell-input:not(:placeholder-shown) {
+  color: var(--accent, #00A19B);
+  font-weight: 700;
+}
+
+/* Revenue input cells */
+.editable-revenue .editable-cell-input {
+  min-height: 30px;
+  font-size: 0.875rem;
+}
+
+/* Ensure month cells properly contain the inputs */
+.month-cell .editable-cell-input {
+  margin: 0;
+  display: block;
+}
+
+/* Override the old cell-value.editable styles */
+.cell-value.editable {
+  display: none;
+}
+
+/* ==================== LOCKED CELL STYLING ==================== */
+
+/* Locked cells (submitted/approved) - no border, grayed out */
+.cell-value.locked {
+  color: #64748B;
+  cursor: not-allowed;
+  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.cell-value.ly-value {
+  color: #94A3B8;
+  font-weight: 400;
+}
+
+.lock-icon {
+  font-size: 0.5rem;
+  margin-left: 0.25rem;
+  color: #94A3B8;
+  opacity: 0.6;
+}
+
+/* ==================== RESPONSIVE ADJUSTMENTS ==================== */
+
+@media (max-width: 1400px) {
+  .editable-cell-input {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.25rem;
+    min-height: 24px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .editable-cell-input {
+    font-size: 0.7rem;
+    padding: 0.15rem 0.2rem;
+    min-height: 22px;
+    border-width: 1.5px;
+  }
+  
+  .editable-cell-input:focus,
+  .editable-cell-input.active {
+    box-shadow: 0 0 0 2px rgba(0, 161, 155, 0.2);
+  }
+}
+
+/* ==================== STATUS-BASED ROW STYLING ==================== */
+
+/* Draft rows - editable cells with teal border */
+.product-rows.status-draft .month-cell .editable-cell-input {
+  background: rgba(0, 161, 155, 0.05);
+}
+
+/* Rejected rows - editable cells with teal border */
+.product-rows.status-rejected .month-cell .editable-cell-input {
+  background: rgba(0, 161, 155, 0.05);
+  border-color: var(--accent, #00A19B);
+}
+
+/* Submitted/Approved rows don't show input boxes */
+.product-rows.status-submitted .month-cell .editable-cell-input,
+.product-rows.status-approved .month-cell .editable-cell-input {
+  display: none;
+}

@@ -1089,3 +1089,130 @@
     transform: none;
   }
 }
+/* ==================== EDITABLE CELL BORDER BOX STYLING ==================== */
+/* 
+ * ADD THIS CSS TO THE VERY END OF YOUR TargetEntryGridStyles.css FILE
+ * This adds visible border boxes around ALL editable cells
+ * 
+ * Version 2.2.0
+ */
+
+/* ==========================================================================
+   IMPORTANT: These styles add teal border boxes around editable cells
+   so sales team can easily see where to enter values
+   ========================================================================== */
+
+/* Style for editable cells - Draft status rows */
+.product-rows.status-draft .product-row.cy-row .month-cell {
+  padding: 2px;
+}
+
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-input {
+  border: 2px solid #00A19B !important;
+  border-radius: 4px !important;
+  background: rgba(0, 161, 155, 0.06) !important;
+  padding: 4px 6px !important;
+  min-height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  transition: all 0.15s ease !important;
+}
+
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-value:hover,
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-input:hover {
+  background: rgba(0, 161, 155, 0.12) !important;
+  box-shadow: 0 0 0 2px rgba(0, 161, 155, 0.2) !important;
+}
+
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-value:focus,
+.product-rows.status-draft .product-row.cy-row .month-cell .cell-input:focus {
+  background: rgba(0, 161, 155, 0.15) !important;
+  box-shadow: 0 0 0 3px rgba(0, 161, 155, 0.25) !important;
+  outline: none !important;
+}
+
+/* Style for editable cells - Rejected status rows */
+.product-rows.status-rejected .product-row.cy-row .month-cell {
+  padding: 2px;
+}
+
+.product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+.product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
+  border: 2px solid #00A19B !important;
+  border-radius: 4px !important;
+  background: rgba(0, 161, 155, 0.06) !important;
+  padding: 4px 6px !important;
+  min-height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
+/* ==========================================================================
+   Make sure Submitted and Approved cells do NOT have the border box
+   ========================================================================== */
+
+.product-rows.status-submitted .product-row.cy-row .month-cell .cell-value,
+.product-rows.status-approved .product-row.cy-row .month-cell .cell-value {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* ==========================================================================
+   LY (Last Year) rows should never have border boxes
+   ========================================================================== */
+
+.product-row.ly-row .month-cell .cell-value {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Revenue Only Categories - Editable cells with border
+   ========================================================================== */
+
+.revenue-row.status-draft .month-cell.editable-revenue,
+.revenue-row .month-cell.editable-revenue {
+  padding: 2px;
+}
+
+.revenue-row.status-draft .month-cell.editable-revenue .cell-value,
+.revenue-row.status-draft .month-cell.editable-revenue .cell-input,
+.revenue-row.status-draft .month-cell.editable-revenue .revenue-input,
+.revenue-row .month-cell.editable-revenue .revenue-input {
+  border: 2px solid #00A19B !important;
+  border-radius: 4px !important;
+  background: rgba(0, 161, 155, 0.06) !important;
+}
+
+/* ==========================================================================
+   Responsive adjustments
+   ========================================================================== */
+
+@media (max-width: 1400px) {
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
+    min-height: 24px !important;
+    padding: 3px 4px !important;
+    font-size: 0.75rem !important;
+  }
+}
+
+@media (max-width: 1200px) {
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
+    min-height: 22px !important;
+    padding: 2px 3px !important;
+    border-width: 1.5px !important;
+    font-size: 0.7rem !important;
+  }
+}
