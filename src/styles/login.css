@@ -67,7 +67,7 @@
 .branding-content { position: relative; z-index: 1; }
 
 .brand-logo { margin-bottom: 2rem; }
-.brand-logo-img { max-width: 180px; height: auto; filter: brightness(0) invert(1); }
+.brand-logo-img { max-width: 180px; height: auto;  }
 
 .brand-headline {
   font-size: 2.5rem;

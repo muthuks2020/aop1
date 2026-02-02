@@ -35,6 +35,22 @@ export const Utils = {
   },
 
   /**
+   * Format large numbers compactly (K, L, Cr) - without currency symbol
+   * Used for compact display of revenue/quantities in grids
+   */
+  formatCompact: (num) => {
+    if (num === null || num === undefined || num === 0) return '0';
+    if (num >= 10000000) {
+      return (num / 10000000).toFixed(1) + 'Cr';
+    } else if (num >= 100000) {
+      return (num / 100000).toFixed(1) + 'L';
+    } else if (num >= 1000) {
+      return (num / 1000).toFixed(1) + 'K';
+    }
+    return num.toLocaleString('en-IN');
+  },
+
+  /**
    * Calculate growth percentage
    */
   calcGrowth: (ly, cy) => {

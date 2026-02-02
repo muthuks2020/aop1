@@ -34,6 +34,7 @@ function App() {
           </ProtectedRoute>
         }
       />
+      <Route path="/tbm/dashboard" element={<TBMDashboard />} />
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

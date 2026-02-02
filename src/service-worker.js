@@ -105,8 +105,8 @@ async function syncData() {
 self.addEventListener('push', (event) => {
   const options = {
     body: event.data ? event.data.text() : 'New notification',
-    icon: '/logo192.png',
-    badge: '/logo192.png',
+    icon: '/appasamy-logo.png',
+    badge: '/appasamy-logo.png',
     vibrate: [100, 50, 100],
   };
 

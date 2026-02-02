@@ -9,10 +9,7 @@ product-commitment-pwa/
 ├── public/
 │   ├── index.html          # Main HTML file
 │   ├── manifest.json       # PWA manifest
-│   ├── robots.txt          # SEO robots file
-│   ├── favicon.ico         # App icon
-│   ├── logo192.png         # PWA icon (192x192)
-│   └── logo512.png         # PWA icon (512x512)
+│   └── appasamy-logo.png   # Company logo (add your own)
 │
 ├── src/
 │   ├── components/
@@ -26,6 +23,8 @@ product-commitment-pwa/
 │   │       ├── CategoryList.js      # Category accordion list
 │   │       ├── ProductCard.js       # Individual product card
 │   │       ├── ProductPanel.js      # Product detail slide panel
+│   │       ├── OverviewStats.js     # Overview statistics dashboard
+│   │       ├── TargetEntryGrid.js   # Excel-like target entry grid
 │   │       ├── Toast.js             # Toast notifications
 │   │       └── Modal.js             # Confirmation modal
 │   │
@@ -36,29 +35,23 @@ product-commitment-pwa/
 │   │   ├── Login.js         # Common login page
 │   │   ├── SalesRep/
 │   │   │   └── Dashboard.js # Sales Representative dashboard
-│   │   ├── TBM/
-│   │   │   └── Dashboard.js # Territory Business Manager dashboard
-│   │   ├── ABM/
-│   │   │   └── Dashboard.js # Area Business Manager dashboard
-│   │   ├── ZBM/
-│   │   │   └── Dashboard.js # Zonal Business Manager dashboard
-│   │   └── SalesHead/
-│   │       └── Dashboard.js # Sales Head dashboard
+│   │   └── TBM/
+│   │       └── Dashboard.js # Territory Business Manager dashboard
 │   │
 │   ├── services/
 │   │   └── api.js           # API service with mock data
 │   │
 │   ├── styles/
-│   │   ├── index.css        # Global styles
-│   │   └── login.css        # Login page styles
+│   │   ├── index.css           # Global styles
+│   │   ├── login.css           # Login page styles
+│   │   └── targetEntryGrid.css # Target entry grid styles
 │   │
 │   ├── utils/
 │   │   └── helpers.js       # Utility functions
 │   │
 │   ├── App.js               # Main App component with routing
 │   ├── index.js             # React entry point
-│   ├── service-worker.js    # PWA service worker
-│   └── serviceWorkerRegistration.js # SW registration
+│   └── serviceWorkerRegistration.js # PWA service worker registration
 │
 └── package.json
 ```
@@ -72,8 +65,9 @@ product-commitment-pwa/
 
 ### Installation
 
-1. **Clone or download the project:**
+1. **Extract the project:**
    ```bash
+   unzip product-commitment-pwa.zip
    cd product-commitment-pwa
    ```
 
@@ -98,158 +92,82 @@ npm run build
 
 This creates an optimized production build in the `build/` folder.
 
-### Serving the Production Build
-
-```bash
-# Install serve globally
-npm install -g serve
-
-# Serve the production build
-serve -s build
-```
-
-## 🔐 Demo Accounts
+## 👤 Demo Accounts
 
 | Role | Username | Password |
 |------|----------|----------|
-| Sales Representative | `salesrep` | `demo123` |
-| Territory Business Manager | `tbm` | `demo123` |
-| Area Business Manager | `abm` | `demo123` |
-| Zonal Business Manager | `zbm` | `demo123` |
-| Sales Head | `saleshead` | `demo123` |
+| Sales Representative | salesrep | demo123 |
+| Territory Business Manager | tbm | demo123 |
+| Area Business Manager | abm | demo123 |
+| Zonal Business Manager | zbm | demo123 |
+| Sales Head | saleshead | demo123 |
 
-## 📱 Installing the PWA
+## ✨ Features
 
-### On Desktop (Chrome/Edge/Brave)
+### Sales Representative Module
+- **Overview Dashboard**: Summary statistics with category breakdown
+- **Target Entry Grid**: Excel-like interface for entering monthly targets
+- **Quarterly Totals**: Inline quarterly totals in header row
+- **Status Tracking**: Visual status indicators (Draft, Submitted, Approved, Rejected)
+- **Bulk Actions**: Save all drafts, submit all for approval
 
-1. Open the app in your browser
-2. Look for the **Install** icon in the address bar (or click the three dots menu)
-3. Click **"Install Product Commitment"**
-4. The app will be added to your desktop/start menu
+### TBM Module
+- **Approval Workflow**: Review and approve/reject submitted targets
+- **Team Overview**: View all sales rep submissions
+- **Statistics Dashboard**: Comprehensive team performance metrics
 
-### On Android
+### Common Features
+- **Role-Based Access**: Different views based on user role
+- **PWA Support**: Install as app, offline capability
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Real-time Updates**: Instant feedback on all actions
 
-1. Open the app in Chrome
-2. Tap the **three dots menu** in the top right
-3. Select **"Add to Home screen"** or **"Install app"**
-4. Tap **"Install"** in the prompt
-5. The app icon will appear on your home screen
+## 🎨 Design Features
 
-### On iOS (iPhone/iPad)
+- **Appasamy Brand Colors**: Primary blue (#1B4D7A) and accent teal (#00A19B)
+- **Excel-like Grid**: Familiar spreadsheet interface
+- **Quarter Color Coding**: Q1=Blue, Q2=Green, Q3=Yellow, Q4=Red
+- **Status-based Styling**: Visual cues for different statuses
+- **Glass Morphism**: Modern UI effects
+- **Animated Statistics**: Engaging user experience
 
-1. Open the app in Safari
-2. Tap the **Share** button (square with arrow)
-3. Scroll down and tap **"Add to Home Screen"**
-4. Tap **"Add"** in the top right
-5. The app icon will appear on your home screen
+## 📝 Adding Your Logo
 
-## 🌐 PWA Features
+Replace the placeholder logo:
+1. Add your `appasamy-logo.png` to the `public/` folder
+2. The app will automatically use it in the header and login page
 
-- **Offline Support:** Works without internet connection
-- **Installable:** Can be installed on any device
-- **Push Notifications:** Receive updates (when backend is configured)
-- **Background Sync:** Data syncs when connection is restored
-- **Responsive:** Works on desktop, tablet, and mobile
-- **Fast Loading:** Assets are cached for instant loading
+## 🔧 Configuration
 
-## 🎨 Features by Role
-
-### Sales Representative
-- View and manage product commitments
-- Submit commitments for approval
-- Track approval status
-- Search and filter products
-
-### Territory Business Manager (TBM)
-- All Sales Rep features
-- View territory-wide commitments (coming soon)
-- Approve/reject submissions (coming soon)
-
-### Area Business Manager (ABM)
-- All TBM features
-- Area-wide analytics (coming soon)
-- Multi-territory overview (coming soon)
-
-### Zonal Business Manager (ZBM)
-- All ABM features
-- Zone-wide reporting (coming soon)
-- Strategic planning tools (coming soon)
-
-### Sales Head
-- All ZBM features
-- Company-wide dashboard (coming soon)
-- Final approval authority (coming soon)
-- Export and reporting (coming soon)
-
-## 🔧 Development
-
-### Available Scripts
-
-```bash
-# Start development server
-npm start
-
-# Build for production
-npm run build
-
-# Run tests
-npm test
-
-# Eject from create-react-app (one-way operation)
-npm run eject
+### API Configuration
+Edit `src/services/api.js`:
+```javascript
+const USE_MOCK = true;  // Set to false for real API
+const BASE_URL = 'https://your-api-server.com/api/v1';
 ```
 
-### Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-REACT_APP_API_URL=https://api.appasamy.com
-REACT_APP_USE_MOCK=true
+### Adding New Categories
+Edit the `MockCategories` array in `src/services/api.js`:
+```javascript
+{ id: 'new_cat', name: 'New Category', icon: 'fa-icon', color: 'new_cat', isRevenueOnly: false }
 ```
 
-## 📄 API Integration
+## 📱 PWA Installation
 
-The app currently uses mock data. To connect to a real API:
+1. Open the app in Chrome/Edge
+2. Click the install icon in the address bar
+3. Or use the browser menu: "Install Product Commitment"
 
-1. Open `src/services/api.js`
-2. Set `USE_MOCK = false`
-3. Update `BASE_URL` to your API endpoint
-4. Ensure your API endpoints match the expected format
+## 🔄 Version History
 
-### Expected API Endpoints
+- **v2.1.0**: Simplified quarterly totals display in header row
+- **v2.0.0**: Added Excel-like Target Entry Grid
+- **v1.0.0**: Initial release with card-based interface
 
-```
-GET    /api/v1/categories
-GET    /api/v1/products
-GET    /api/v1/products?category={id}
-POST   /api/v1/products/{id}/draft
-POST   /api/v1/products/{id}/submit
-POST   /api/v1/products/submit-batch
-POST   /api/v1/products/save-all
-```
+## 📄 License
 
-## 🛠️ Troubleshooting
+Proprietary - Appasamy Associates
 
-### PWA Not Installing
-- Ensure you're using HTTPS (or localhost)
-- Check that `manifest.json` is properly configured
-- Verify service worker registration in browser DevTools
+## 🤝 Support
 
-### Offline Mode Not Working
-- Build the production version (`npm run build`)
-- Service worker only works in production mode
-- Clear browser cache and reload
-
-### Styles Not Loading
-- Check if Google Fonts CDN is accessible
-- Verify Font Awesome CDN is accessible
-- Check browser console for errors
-
-## 📞 Support
-
-For technical support, contact the development team or raise an issue in the repository.
-
-## 📜 License
-
-© 2025 Appasamy Associates. All rights reserved.
+For support, contact the IT team at Appasamy Associates.
