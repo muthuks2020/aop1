@@ -23,7 +23,7 @@ function Header({ user, onRefresh, completionPercent, submittedCount, totalCount
           <div className="header-title">
             <h1>Product Commitment</h1>
             <div className="header-subtitle">
-              <span className="fiscal-badge"><i className="fas fa-calendar-alt"></i> FY 2025-26</span>
+              <span className="fiscal-badge"><i className="fas fa-calendar-alt"></i> FY 2026-27</span>
               <span className="territory-badge"><i className="fas fa-map-marker-alt"></i> {user?.territory || 'Territory'}</span>
             </div>
           </div>

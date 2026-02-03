@@ -419,7 +419,7 @@ function TBMDashboard() {
           </div>
         ) : (
           <TBMTargetEntryGrid categories={categories} products={tbmTargets} onUpdateTarget={handleUpdateTBMTarget}
-            onSaveAll={handleSaveTBMTargets} onSubmitAll={handleSubmitTBMTargets} fiscalYear="2025-26" targetStats={tbmTargetStats} />
+            onSaveAll={handleSaveTBMTargets} onSubmitAll={handleSubmitTBMTargets} fiscalYear="2026-27" targetStats={tbmTargetStats} />
         )}
       </main>
 

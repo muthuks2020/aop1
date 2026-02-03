@@ -1,10 +1,11 @@
 /**
  * TargetEntryGrid Component
  * Enhanced Excel-like grid for Monthly Target Entry
- * Features: Quarterly totals in header row, Edit/Freeze based on approval status
+ * Features: Quarterly totals in header row, Monthly totals summary row,
+ *           Edit/Freeze based on approval status
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.1.0
+ * @version 2.2.0 - Added Monthly Totals Summary Row
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -105,6 +106,26 @@ function TargetEntryGrid({
       });
       totals[q.id] = { cy: cyTotal, ly: lyTotal, growth: Utils.calcGrowth(lyTotal, cyTotal) };
     });
+    return totals;
+  }, [products]);
+
+  // =====================================================================
+  // NEW: Calculate overall monthly totals - sum of ALL products per month
+  // This powers the monthly totals summary row below the quarter header
+  // Auto-updates when any product target is edited
+  // =====================================================================
+  const overallMonthlyTotals = useMemo(() => {
+    const totals = {};
+    MONTHS.forEach(month => {
+      let cyTotal = 0;
+      products.forEach(p => {
+        const monthData = p.monthlyTargets?.[month] || {};
+        cyTotal += monthData.cyQty || 0;
+      });
+      totals[month] = cyTotal;
+    });
+    // Grand total = sum of all 12 months
+    totals.grandTotal = MONTHS.reduce((sum, month) => sum + totals[month], 0);
     return totals;
   }, [products]);
 
@@ -209,18 +230,13 @@ function TargetEntryGrid({
   };
 
   const handleCellClick = (productId, month, year, currentValue, status) => {
-    // LY values are always read-only
     if (year === 'LY') return;
-    
-    // Submitted and approved values are frozen
     if (status === 'submitted' || status === 'approved') return;
-    
     setActiveCell({ productId, month, year });
     setEditValue(currentValue?.toString() || '');
   };
 
   const handleInputChange = (e) => {
-    // Only allow numeric input
     const value = e.target.value.replace(/[^0-9]/g, '');
     setEditValue(value);
   };
@@ -237,7 +253,6 @@ function TargetEntryGrid({
   const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleInputBlur();
-      // Move to next cell
       if (activeCell) {
         const currentMonthIndex = MONTHS.indexOf(activeCell.month);
         if (currentMonthIndex < MONTHS.length - 1) {
@@ -294,7 +309,6 @@ function TargetEntryGrid({
 
   // ==================== RENDER HELPERS ====================
 
-  // Highlight matching text in search
   const highlightMatch = (text, search) => {
     if (!search?.trim() || !text) return text;
     const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -304,7 +318,6 @@ function TargetEntryGrid({
     );
   };
 
-  // Render editable/locked cell
   const renderCell = (productId, month, year, value, status) => {
     const isActive = activeCell?.productId === productId && 
                      activeCell?.month === month && 
@@ -341,7 +354,6 @@ function TargetEntryGrid({
     );
   };
 
-  // Render status badges
   const renderStatusBadges = (counts) => (
     <div className="status-badges">
       {counts.approved > 0 && (
@@ -575,7 +587,6 @@ function TargetEntryGrid({
 
   // ==================== MAIN RENDER ====================
 
-  // Calculate draft count for submit button
   const draftCount = products.filter(p => p.status === 'draft').length;
   const submittedCount = products.filter(p => p.status === 'submitted').length;
   const approvedCount = products.filter(p => p.status === 'approved').length;
@@ -681,6 +692,30 @@ function TargetEntryGrid({
             ))}
             <div className="quarter-cell empty total-spacer"></div>
             <div className="quarter-cell empty growth-spacer"></div>
+          </div>
+
+          {/* ============================================================= */}
+          {/* NEW: Monthly Totals Summary Row                                */}
+          {/* Shows grand total of ALL products for each individual month    */}
+          {/* Auto-updates when any product CY value is edited               */}
+          {/* ============================================================= */}
+          <div className="monthly-totals-row">
+            <div className="monthly-totals-label-cell">
+              <i className="fas fa-calculator"></i>
+              <span>Total</span>
+            </div>
+            {MONTHS.map((month, index) => (
+              <div 
+                key={month} 
+                className={`monthly-totals-cell ${index < 3 ? 'q1' : index < 6 ? 'q2' : index < 9 ? 'q3' : 'q4'}`}
+              >
+                {Utils.formatNumber(overallMonthlyTotals[month] || 0)}
+              </div>
+            ))}
+            <div className="monthly-totals-cell grand-total">
+              {Utils.formatNumber(overallMonthlyTotals.grandTotal || 0)}
+            </div>
+            <div className="monthly-totals-cell growth-spacer"></div>
           </div>
 
           {/* Category content */}

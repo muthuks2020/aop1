@@ -37,7 +37,7 @@ function TBMTargetEntryGrid({
   onUpdateTarget,
   onSaveAll,
   onSubmitAll,
-  fiscalYear = '2025-26',
+  fiscalYear = '2026-27',
   targetStats = {}
 }) {
   // State management
