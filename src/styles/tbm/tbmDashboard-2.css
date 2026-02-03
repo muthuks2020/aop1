@@ -1,0 +1,546 @@
+/* ========================================================================== */
+/* TBM DASHBOARD - ROW-BASED TABLE LAYOUT CSS                                 */
+/* Add this to your tbmDashboard.css or replace the submissions section       */
+/* ========================================================================== */
+
+/* ==================== TABLE CONTAINER ==================== */
+.submissions-table-container {
+  background: #FFFFFF;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: 1px solid #E5E7EB;
+}
+
+.submissions-table-wrapper {
+  overflow-x: auto;
+  max-height: calc(100vh - 380px);
+  overflow-y: auto;
+}
+
+/* ==================== TABLE STYLING ==================== */
+.submissions-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.8125rem;
+  min-width: 1600px;
+}
+
+/* ==================== TABLE HEADER ==================== */
+.submissions-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.submissions-table thead tr:first-child th {
+  background: linear-gradient(135deg, #1B365D 0%, #142744 100%);
+  color: #FFFFFF;
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.6875rem;
+  letter-spacing: 0.05em;
+  padding: 0.75rem 0.5rem;
+  border-bottom: 2px solid #0D1F3C;
+  white-space: nowrap;
+}
+
+.submissions-table thead tr:nth-child(2) th {
+  background: #F3F4F6;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.6875rem;
+  padding: 0.5rem 0.25rem;
+  border-bottom: 2px solid #E5E7EB;
+}
+
+/* Quarter colors for header */
+.submissions-table th.q1 {
+  background: #EFF6FF !important;
+  color: #1D4ED8 !important;
+  border-top: 3px solid #3B82F6;
+}
+
+.submissions-table th.q2 {
+  background: #F0FDF4 !important;
+  color: #15803D !important;
+  border-top: 3px solid #22C55E;
+}
+
+.submissions-table th.q3 {
+  background: #FFFBEB !important;
+  color: #B45309 !important;
+  border-top: 3px solid #F59E0B;
+}
+
+.submissions-table th.q4 {
+  background: #FEF2F2 !important;
+  color: #B91C1C !important;
+  border-top: 3px solid #EF4444;
+}
+
+.submissions-table thead tr:first-child th.q1 { background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%) !important; color: #FFFFFF !important; }
+.submissions-table thead tr:first-child th.q2 { background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%) !important; color: #FFFFFF !important; }
+.submissions-table thead tr:first-child th.q3 { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important; color: #FFFFFF !important; }
+.submissions-table thead tr:first-child th.q4 { background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important; color: #FFFFFF !important; }
+
+.submissions-table th.col-total {
+  background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+  color: #FFFFFF !important;
+}
+
+.submissions-table th.col-growth {
+  background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%) !important;
+  color: #FFFFFF !important;
+}
+
+/* ==================== STICKY COLUMNS ==================== */
+.col-sticky {
+  position: sticky;
+  background: #FFFFFF;
+  z-index: 10;
+}
+
+.col-product {
+  left: 0;
+  min-width: 200px;
+  max-width: 200px;
+  border-right: 2px solid #E5E7EB;
+}
+
+.col-rep {
+  left: 200px;
+  min-width: 160px;
+  max-width: 160px;
+  border-right: 1px solid #E5E7EB;
+}
+
+.col-status {
+  left: 360px;
+  min-width: 100px;
+  max-width: 100px;
+  border-right: 1px solid #E5E7EB;
+}
+
+.col-actions {
+  left: 460px;
+  min-width: 90px;
+  max-width: 90px;
+  border-right: 2px solid #E5E7EB;
+}
+
+/* Sticky header columns */
+.submissions-table thead th.col-product,
+.submissions-table thead th.col-rep,
+.submissions-table thead th.col-status,
+.submissions-table thead th.col-actions {
+  background: linear-gradient(135deg, #1B365D 0%, #142744 100%);
+  z-index: 25;
+}
+
+/* ==================== DATA ROWS ==================== */
+.submissions-table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.submissions-table tbody tr:hover td {
+  background-color: #F0FDFA;
+}
+
+.submissions-table tbody td {
+  padding: 0.5rem 0.375rem;
+  border-bottom: 1px solid #F3F4F6;
+  vertical-align: middle;
+  background: #FFFFFF;
+}
+
+/* Row group separator */
+.submissions-table tbody tr.row-last td {
+  border-bottom: 3px solid #E5E7EB;
+}
+
+/* Status-based row coloring */
+.data-row.status-submitted td {
+  background: #FFFBEB;
+}
+
+.data-row.status-approved td {
+  background: #F0FDF4;
+}
+
+.data-row.status-rejected td {
+  background: #FEF2F2;
+}
+
+.data-row.ly-row td {
+  background: #F9FAFB !important;
+}
+
+.data-row.status-submitted.ly-row td {
+  background: #FEF9E7 !important;
+}
+
+.data-row.status-approved.ly-row td {
+  background: #ECFDF5 !important;
+}
+
+.data-row.status-rejected.ly-row td {
+  background: #FEF2F2 !important;
+}
+
+/* ==================== PRODUCT CELL ==================== */
+.product-cell {
+  padding: 0.25rem 0;
+}
+
+.product-name {
+  font-weight: 600;
+  color: #1F2937;
+  font-size: 0.875rem;
+  line-height: 1.3;
+  margin-bottom: 0.25rem;
+}
+
+.product-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.product-code {
+  font-size: 0.6875rem;
+  color: #6B7280;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.product-category {
+  font-size: 0.6875rem;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.product-category i {
+  font-size: 0.625rem;
+}
+
+/* ==================== REP CELL ==================== */
+.rep-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rep-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #00A19B 0%, #00C9B7 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FFFFFF;
+  font-weight: 700;
+  font-size: 0.6875rem;
+  flex-shrink: 0;
+}
+
+.rep-info {
+  min-width: 0;
+}
+
+.rep-name {
+  font-weight: 600;
+  color: #1F2937;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rep-territory {
+  font-size: 0.6875rem;
+  color: #6B7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==================== STATUS BADGE ==================== */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-badge.pending {
+  background: #FEF3C7;
+  color: #B45309;
+}
+
+.status-badge.approved {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.status-badge.rejected {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.status-badge.draft {
+  background: #DBEAFE;
+  color: #2563EB;
+}
+
+/* ==================== ACTION BUTTONS ==================== */
+.action-buttons {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: center;
+}
+
+.btn-approve,
+.btn-reject {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+}
+
+.btn-approve {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.btn-approve:hover {
+  background: #10B981;
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+
+.btn-reject {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.btn-reject:hover {
+  background: #EF4444;
+  color: #FFFFFF;
+  transform: scale(1.1);
+}
+
+/* ==================== TYPE COLUMN ==================== */
+.col-type {
+  font-weight: 600;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  min-width: 60px;
+  text-align: center;
+}
+
+.col-type.cy {
+  color: #00A19B;
+  background: #F0FDFA !important;
+}
+
+.col-type.ly {
+  color: #9CA3AF;
+  background: #F9FAFB !important;
+}
+
+/* ==================== VALUE CELLS ==================== */
+.col-value {
+  text-align: right;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  padding: 0.375rem 0.5rem !important;
+  min-width: 65px;
+}
+
+.col-value.cy {
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.col-value.ly {
+  color: #9CA3AF;
+}
+
+/* Quarter background tints */
+.col-value.q1 { border-left: 1px solid #DBEAFE; }
+.col-value.q2 { border-left: 1px solid #D1FAE5; }
+.col-value.q3 { border-left: 1px solid #FEF3C7; }
+.col-value.q4 { border-left: 1px solid #FEE2E2; }
+
+/* ==================== TOTAL COLUMN ==================== */
+.col-total {
+  text-align: right;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.375rem 0.5rem !important;
+  min-width: 80px;
+  border-left: 2px solid #E5E7EB;
+}
+
+.col-total.cy {
+  background: #D1FAE5 !important;
+  color: #059669;
+}
+
+.col-total.ly {
+  background: #F3F4F6 !important;
+  color: #9CA3AF;
+}
+
+/* ==================== GROWTH COLUMN ==================== */
+.col-growth {
+  text-align: center;
+  min-width: 80px;
+  border-left: 2px solid #E5E7EB;
+  vertical-align: middle;
+}
+
+.col-growth.positive {
+  background: #D1FAE5 !important;
+}
+
+.col-growth.negative {
+  background: #FEE2E2 !important;
+}
+
+.growth-value {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.col-growth.positive .growth-value {
+  color: #059669;
+}
+
+.col-growth.negative .growth-value {
+  color: #DC2626;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  background: #FFFFFF;
+}
+
+.empty-state-icon {
+  width: 80px;
+  height: 80px;
+  border-radius: 16px;
+  background: #F3F4F6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #9CA3AF;
+  margin-bottom: 1.5rem;
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1F2937;
+  margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+  color: #6B7280;
+  font-size: 0.9375rem;
+  max-width: 400px;
+}
+
+/* ==================== SCROLLBAR STYLING ==================== */
+.submissions-table-wrapper::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+.submissions-table-wrapper::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.submissions-table-wrapper::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 5px;
+}
+
+.submissions-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+.submissions-table-wrapper::-webkit-scrollbar-corner {
+  background: #F3F4F6;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .col-product {
+    min-width: 160px;
+    max-width: 160px;
+  }
+  
+  .col-rep {
+    left: 160px;
+    min-width: 140px;
+    max-width: 140px;
+  }
+  
+  .col-status {
+    left: 300px;
+    min-width: 80px;
+    max-width: 80px;
+  }
+  
+  .col-actions {
+    left: 380px;
+    min-width: 70px;
+    max-width: 70px;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+@media print {
+  .submissions-table-wrapper {
+    overflow: visible;
+    max-height: none;
+  }
+  
+  .col-sticky {
+    position: static;
+  }
+  
+  .submissions-table {
+    font-size: 9pt;
+  }
+}
