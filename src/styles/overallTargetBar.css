@@ -1,0 +1,635 @@
+/* ============================================
+   Overall Target Summary Bar Styles
+   Product Commitment PWA - Appasamy Associates
+   Version: 2.3.0 - NEW Overall Target Feature
+   
+   ADD THIS CSS to the END of your targetEntryGrid.css file
+   (After the monthly-totals-row styles, before @media print)
+   ============================================ */
+
+/* ==================== OVERALL TARGET BAR ==================== */
+
+.overall-target-bar {
+  background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 40%, #F0FDFA 100%);
+  border-bottom: 2px solid var(--border, #E5E7EB);
+  padding: 1rem 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.overall-target-bar::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, 
+    var(--primary, #1B4D7A) 0%, 
+    var(--accent, #00A19B) 50%, 
+    #10B981 100%
+  );
+}
+
+.overall-target-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 300px;
+  height: 100%;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='40' fill='none' stroke='%2300A19B' stroke-opacity='0.05' stroke-width='2'/%3E%3Ccircle cx='50' cy='50' r='25' fill='none' stroke='%231B4D7A' stroke-opacity='0.04' stroke-width='2'/%3E%3C/svg%3E") repeat;
+  pointer-events: none;
+}
+
+/* ==================== MAIN SECTION - Cards Layout ==================== */
+
+.otb-main-section {
+  display: flex;
+  align-items: stretch;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+/* ==================== INDIVIDUAL CARDS ==================== */
+
+.otb-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  background: var(--white, #FFFFFF);
+  border-radius: 12px;
+  padding: 0.875rem 1.25rem;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03);
+  flex: 1;
+  min-width: 0;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.otb-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+/* Card Icon */
+.otb-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.125rem;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--primary, #1B4D7A) 0%, #2563EB 100%);
+  color: var(--white, #FFFFFF);
+  box-shadow: 0 2px 8px rgba(27, 77, 122, 0.25);
+}
+
+.otb-card-icon.current {
+  background: linear-gradient(135deg, var(--accent, #00A19B) 0%, #10B981 100%);
+  box-shadow: 0 2px 8px rgba(0, 161, 155, 0.25);
+}
+
+.otb-card-icon.revenue {
+  background: linear-gradient(135deg, #7C3AED 0%, #A855F7 100%);
+  box-shadow: 0 2px 8px rgba(124, 58, 237, 0.25);
+}
+
+/* Card Content */
+.otb-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.otb-card-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--gray-500, #6B7280);
+  white-space: nowrap;
+}
+
+.otb-card-value {
+  font-size: 1.375rem;
+  font-weight: 800;
+  font-family: var(--font-mono, 'JetBrains Mono', 'Fira Code', monospace);
+  color: var(--gray-900, #111827);
+  line-height: 1.2;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.otb-card-value.live {
+  color: var(--accent, #00A19B);
+}
+
+.otb-card-value.revenue-value {
+  color: #7C3AED;
+}
+
+.otb-not-set {
+  font-size: 0.875rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: var(--gray-400, #9CA3AF);
+  font-style: italic;
+}
+
+.otb-card-sub {
+  font-size: 0.6875rem;
+  color: var(--gray-400, #9CA3AF);
+  font-weight: 500;
+}
+
+/* Growth Badge (inline) */
+.otb-growth-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  padding: 0.125rem 0.5rem;
+  border-radius: 20px;
+  font-family: inherit;
+  letter-spacing: 0;
+}
+
+.otb-growth-badge.positive {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+}
+
+.otb-growth-badge.negative {
+  background: rgba(239, 68, 68, 0.12);
+  color: #DC2626;
+}
+
+.otb-growth-badge i {
+  font-size: 0.5625rem;
+}
+
+/* ==================== DIVIDER ==================== */
+
+.otb-divider {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  padding: 0 0.25rem;
+}
+
+.otb-divider-line {
+  width: 2px;
+  height: 12px;
+  background: var(--gray-300, #D1D5DB);
+  border-radius: 1px;
+}
+
+.otb-divider-arrow {
+  color: var(--accent, #00A19B);
+  font-size: 0.75rem;
+  animation: otb-arrow-pulse 2s ease-in-out infinite;
+}
+
+@keyframes otb-arrow-pulse {
+  0%, 100% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(3px); }
+}
+
+/* ==================== PROGRESS BAR SECTION ==================== */
+
+.otb-progress-section {
+  position: relative;
+  z-index: 1;
+}
+
+.otb-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
+.otb-progress-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-600, #4B5563);
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.otb-progress-label i {
+  color: var(--accent, #00A19B);
+  font-size: 0.6875rem;
+}
+
+.otb-progress-values {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.otb-progress-current {
+  font-size: 0.875rem;
+  font-weight: 800;
+  color: var(--accent, #00A19B);
+}
+
+.otb-progress-sep {
+  font-size: 0.75rem;
+  color: var(--gray-400, #9CA3AF);
+}
+
+.otb-progress-target {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--gray-600, #4B5563);
+}
+
+.otb-progress-percent {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.125rem 0.5rem;
+  border-radius: 20px;
+  margin-left: 0.25rem;
+}
+
+.otb-progress-percent.exceeded {
+  background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+  color: #059669;
+}
+
+.otb-progress-percent.on-track {
+  background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+  color: #2563EB;
+}
+
+.otb-progress-percent.behind {
+  background: linear-gradient(135deg, #FEF3C7, #FDE68A);
+  color: #B45309;
+}
+
+/* Progress Bar Track */
+.otb-progress-bar-track {
+  width: 100%;
+  height: 28px;
+  background: var(--gray-100, #F3F4F6);
+  border-radius: 14px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--gray-200, #E5E7EB);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+.otb-progress-bar-fill {
+  height: 100%;
+  border-radius: 14px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 0.75rem;
+  position: relative;
+  min-width: 0;
+}
+
+.otb-progress-bar-fill.exceeded {
+  background: linear-gradient(90deg, #10B981 0%, #059669 60%, #047857 100%);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.otb-progress-bar-fill.on-track {
+  background: linear-gradient(90deg, #3B82F6 0%, #2563EB 60%, #1D4ED8 100%);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+.otb-progress-bar-fill.moderate {
+  background: linear-gradient(90deg, #F59E0B 0%, #D97706 60%, #B45309 100%);
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.otb-progress-bar-fill.behind {
+  background: linear-gradient(90deg, #EF4444 0%, #DC2626 60%, #B91C1C 100%);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+.otb-progress-bar-text {
+  color: var(--white, #FFFFFF);
+  font-size: 0.6875rem;
+  font-weight: 800;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* Progress Markers */
+.otb-progress-markers {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.otb-progress-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.otb-progress-marker span {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  color: var(--gray-400, #9CA3AF);
+  position: absolute;
+  bottom: -16px;
+}
+
+/* ==================== QUARTER BREAKDOWN CHIPS ==================== */
+
+.otb-quarter-breakdown {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 0.75rem;
+}
+
+.otb-quarter-chip {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  background: var(--white, #FFFFFF);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  transition: all 0.2s ease;
+}
+
+.otb-quarter-chip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.06);
+}
+
+.otb-quarter-chip::before {
+  content: '';
+  width: 4px;
+  height: 28px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.otb-quarter-chip.q1::before { background: linear-gradient(180deg, #3B82F6, #60A5FA); }
+.otb-quarter-chip.q2::before { background: linear-gradient(180deg, #22C55E, #4ADE80); }
+.otb-quarter-chip.q3::before { background: linear-gradient(180deg, #F59E0B, #FBBF24); }
+.otb-quarter-chip.q4::before { background: linear-gradient(180deg, #EF4444, #F87171); }
+
+.otb-qchip-label {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-500, #6B7280);
+  min-width: 20px;
+}
+
+.otb-qchip-value {
+  font-size: 0.9375rem;
+  font-weight: 800;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--gray-800, #1F2937);
+  letter-spacing: -0.02em;
+}
+
+.otb-qchip-rev {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-400, #9CA3AF);
+  margin-left: auto;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* ==================== YEARLY TARGET CARD SPECIAL STYLING ==================== */
+
+.otb-yearly-target {
+  border-left: 4px solid var(--primary, #1B4D7A);
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0F9FF 100%);
+}
+
+.otb-current-value {
+  border-left: 4px solid var(--accent, #00A19B);
+  background: linear-gradient(135deg, #FFFFFF 0%, #F0FDFA 100%);
+}
+
+.otb-revenue-total {
+  border-left: 4px solid #7C3AED;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FAF5FF 100%);
+}
+
+/* ==================== MONTH-WISE BREAKDOWN ROW ==================== */
+
+.otb-month-breakdown {
+  display: flex;
+  gap: 0.625rem;
+  margin-top: 0.5rem;
+}
+
+.otb-month-group {
+  flex: 1;
+  display: flex;
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.otb-month-group::before {
+  display: none;
+}
+
+.otb-month-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.5rem 0.375rem;
+  background: var(--white, #FFFFFF);
+  transition: all 0.2s ease;
+}
+
+.otb-month-item:hover {
+  background: #F9FAFB;
+}
+
+/* Quarter color top border for each month group */
+.otb-month-group.q1 { border-top: 3px solid #3B82F6; }
+.otb-month-group.q2 { border-top: 3px solid #22C55E; }
+.otb-month-group.q3 { border-top: 3px solid #F59E0B; }
+.otb-month-group.q4 { border-top: 3px solid #EF4444; }
+
+/* Quarter tinted backgrounds for month items */
+.otb-month-group.q1 .otb-month-item { background: linear-gradient(180deg, #F0F7FF 0%, #FFFFFF 100%); }
+.otb-month-group.q2 .otb-month-item { background: linear-gradient(180deg, #F0FDF4 0%, #FFFFFF 100%); }
+.otb-month-group.q3 .otb-month-item { background: linear-gradient(180deg, #FFFBEB 0%, #FFFFFF 100%); }
+.otb-month-group.q4 .otb-month-item { background: linear-gradient(180deg, #FEF2F2 0%, #FFFFFF 100%); }
+
+.otb-month-label {
+  font-size: 0.5625rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--gray-400, #9CA3AF);
+}
+
+.otb-month-group.q1 .otb-month-label { color: #93C5FD; }
+.otb-month-group.q2 .otb-month-label { color: #86EFAC; }
+.otb-month-group.q3 .otb-month-label { color: #FDE68A; }
+.otb-month-group.q4 .otb-month-label { color: #FCA5A5; }
+
+.otb-month-qty {
+  font-size: 0.8125rem;
+  font-weight: 800;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  color: var(--gray-800, #1F2937);
+  letter-spacing: -0.02em;
+}
+
+.otb-month-rev {
+  font-size: 0.5625rem;
+  font-weight: 600;
+  color: var(--gray-400, #9CA3AF);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1200px) {
+  .otb-main-section {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  
+  .otb-card {
+    flex: 1 1 calc(50% - 0.75rem);
+    min-width: 220px;
+  }
+  
+  .otb-divider {
+    display: none;
+  }
+  
+  .otb-quarter-breakdown {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .otb-quarter-chip {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 150px;
+  }
+  
+  .otb-month-breakdown {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  
+  .otb-month-group {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .overall-target-bar {
+    padding: 0.75rem 1rem;
+  }
+  
+  .otb-main-section {
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+  
+  .otb-card {
+    flex: 1 1 100%;
+    min-width: unset;
+  }
+  
+  .otb-card-value {
+    font-size: 1.125rem;
+  }
+  
+  .otb-quarter-breakdown {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  
+  .otb-quarter-chip {
+    flex: 1 1 100%;
+    min-width: unset;
+  }
+  
+  .otb-month-breakdown {
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+  
+  .otb-month-group {
+    flex: 1 1 100%;
+    min-width: unset;
+  }
+  
+  .otb-progress-bar-track {
+    height: 22px;
+  }
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  .overall-target-bar {
+    background: none !important;
+    border-bottom: 2px solid #000;
+    padding: 0.5rem 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .otb-card {
+    box-shadow: none;
+    border: 1px solid #ccc;
+  }
+  
+  .otb-progress-bar-fill {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .otb-quarter-chip::before {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

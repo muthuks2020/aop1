@@ -2,11 +2,11 @@
  * Sales Representative Dashboard
  * Main dashboard with three tabs:
  * 1. Overview & Summary
- * 2. Target Entry Grid  
+ * 2. Target Entry Grid (with Overall Target Bar)
  * 3. Quarterly Summary - Unit Wise
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.3.0 - Added Quarterly Summary Tab
+ * @version 2.4.0 - Added Overall Target support
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -19,6 +19,12 @@ import TargetEntryGrid from '../../components/common/TargetEntryGrid';
 import QuarterlySummary from '../../components/common/QuarterlySummary';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
+
+// ==================== OVERALL YEARLY TARGET ====================
+// This is the fixed yearly target assigned to the sales rep.
+// In production, this should come from the API (e.g., from TBM/ABM assignments).
+// For now, it's set as a constant. Update this value or fetch from backend.
+const OVERALL_YEARLY_TARGET_QTY = 15000; // Fixed yearly quantity target for this sales rep
 
 function SalesRepDashboard() {
   const { user } = useAuth();
@@ -68,8 +74,7 @@ function SalesRepDashboard() {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
         const updatedMonthlyTargets = { ...p.monthlyTargets, [month]: { ...p.monthlyTargets?.[month], cyQty: value } };
-        const yearlyData = Utils.calculateYearlyTotals(updatedMonthlyTargets);
-        return { ...p, monthlyTargets: updatedMonthlyTargets, cyQty: yearlyData.cyQty };
+        return { ...p, monthlyTargets: updatedMonthlyTargets, status: p.status === 'rejected' ? 'draft' : p.status };
       }
       return p;
     }));
@@ -77,45 +82,47 @@ function SalesRepDashboard() {
 
   const handleSaveAll = useCallback(async () => {
     try {
-      await ApiService.saveAllDrafts(products);
-      showToast('Saved', 'All targets saved as draft', 'success');
+      const result = await ApiService.saveAllDrafts(products);
+      showToast('Saved', `${result.savedCount} drafts saved successfully`, 'success');
     } catch (error) {
-      showToast('Error', 'Failed to save', 'error');
+      showToast('Error', 'Failed to save drafts', 'error');
     }
   }, [products, showToast]);
 
   const handleSubmitAll = useCallback(() => {
-    const draftProducts = products.filter(p => p.status === 'draft');
-    if (draftProducts.length === 0) { showToast('Info', 'No draft targets to submit', 'info'); return; }
+    const draftProducts = products.filter(p => p.status === 'draft' || p.status === 'rejected');
+    if (draftProducts.length === 0) {
+      showToast('Info', 'No drafts to submit', 'info');
+      return;
+    }
+
     setModalConfig({
-      isOpen: true, title: 'Submit for Approval',
-      message: `Are you sure you want to submit ${draftProducts.length} product targets for approval? This will lock the values for manager review.`,
+      isOpen: true,
+      title: 'Submit for Approval',
+      message: `Are you sure you want to submit ${draftProducts.length} product(s) for TBM approval? You won't be able to edit them until they are reviewed.`,
       type: 'warning',
       onConfirm: async () => {
         try {
-          await ApiService.submitMultipleProducts(draftProducts.map(p => p.id));
-          setProducts(prev => prev.map(p => p.status === 'draft' ? { ...p, status: 'submitted', submittedDate: new Date().toISOString() } : p));
+          const productIds = draftProducts.map(p => p.id);
+          await ApiService.submitMultipleProducts(productIds);
+          setProducts(prev => prev.map(p => 
+            draftProducts.find(d => d.id === p.id) ? { ...p, status: 'submitted' } : p
+          ));
           showToast('Submitted', `${draftProducts.length} products submitted for approval`, 'success');
-        } catch (error) { showToast('Error', 'Failed to submit', 'error'); }
+        } catch (error) {
+          showToast('Error', 'Failed to submit', 'error');
+        }
         setModalConfig(prev => ({ ...prev, isOpen: false }));
       }
     });
   }, [products, showToast]);
 
-  const handleRefresh = useCallback(async () => {
-    showToast('Refreshing', 'Updating data...', 'info');
-    try {
-      const [cats, prods] = await Promise.all([ApiService.getCategories(), ApiService.getProducts()]);
-      setCategories(cats);
-      setProducts(prods);
-      showToast('Updated', 'Data refreshed', 'success');
-    } catch (error) { showToast('Error', 'Failed to refresh', 'error'); }
-  }, [showToast]);
+  const closeModal = useCallback(() => { setModalConfig(prev => ({ ...prev, isOpen: false })); }, []);
 
-  const closeModal = useCallback(() => setModalConfig(prev => ({ ...prev, isOpen: false })), []);
   const statusCounts = getStatusCounts();
+  const totalProducts = products.length;
+  const completionPercent = totalProducts > 0 ? Math.round(((statusCounts.approved + statusCounts.submitted) / totalProducts) * 100) : 0;
 
-  // Render active tab content
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
@@ -128,7 +135,9 @@ function SalesRepDashboard() {
             onUpdateTarget={handleUpdateTarget}
             onSaveAll={handleSaveAll}
             onSubmitAll={handleSubmitAll}
-            userRole={user?.role}
+            userRole="salesrep"
+            fiscalYear="2025-26"
+            overallYearlyTarget={OVERALL_YEARLY_TARGET_QTY}
           />
         );
       case 'quarterly':
@@ -136,7 +145,7 @@ function SalesRepDashboard() {
           <QuarterlySummary
             products={products}
             categories={categories}
-            fiscalYear="2026-27"
+            fiscalYear="2025-26"
           />
         );
       default:
@@ -145,9 +154,18 @@ function SalesRepDashboard() {
   };
 
   return (
-    <div className="app excel-mode">
+    <div className="dashboard">
       {!isOnline && <div className="offline-banner show"><i className="fas fa-wifi-slash"></i><span>You're offline. Changes will sync when connected.</span></div>}
-      <Header user={user} onRefresh={handleRefresh} completionPercent={Math.round(((statusCounts.approved + statusCounts.submitted) / products.length) * 100) || 0} submittedCount={statusCounts.submitted} totalCount={products.length} approvedCount={statusCounts.approved} pendingCount={statusCounts.draft + statusCounts.rejected} />
+
+      <Header 
+        user={user} 
+        completionPercent={completionPercent}
+        submittedCount={statusCounts.submitted}
+        totalCount={totalProducts}
+        approvedCount={statusCounts.approved}
+        pendingCount={statusCounts.draft + statusCounts.rejected}
+      />
+
       <div className="main-tabs">
         <button className={`main-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <i className="fas fa-chart-pie"></i> Overview & Summary
