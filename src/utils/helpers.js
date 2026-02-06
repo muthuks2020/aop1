@@ -331,24 +331,4 @@ export const Utils = {
   checkReadingsComplete,
 };
 
-export default {
-  formatDate,
-  formatDateIndian,
-  parseTolerance,
-  parseSpecification,
-  isWithinTolerance,
-  calculatePassPercentage,
-  generateSequentialNumber,
-  deepClone,
-  debounce,
-  formatNumber,
-  formatCurrency,
-  formatShortCurrency,
-  formatCompact,
-  formatGrowth,
-  calcGrowth,
-  getInitials,
-  getStatusColors,
-  truncateText,
-  checkReadingsComplete,
-};
+export default Utils;
