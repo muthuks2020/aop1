@@ -168,6 +168,56 @@ export const formatNumber = (value, decimals = 2) => {
 };
 
 /**
+ * Format currency in Indian notation (₹ Cr / L / K)
+ * @param {number} amount - Amount to format
+ * @returns {string} Formatted currency string
+ */
+export const formatCurrency = (amount) => {
+  if (amount === null || amount === undefined || isNaN(amount)) return '₹0';
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(2)} Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(2)} L`;
+  if (amount >= 1000) return `₹${(amount / 1000).toFixed(1)}K`;
+  return `₹${amount.toLocaleString('en-IN')}`;
+};
+
+/**
+ * Format currency in short form (e.g., ₹1.2 Cr)
+ * @param {number} amount - Amount to format
+ * @returns {string} Short formatted currency
+ */
+export const formatShortCurrency = (amount) => {
+  if (amount === null || amount === undefined || isNaN(amount)) return '₹0';
+  if (amount >= 10000000) return `₹${(amount / 10000000).toFixed(1)} Cr`;
+  if (amount >= 100000) return `₹${(amount / 100000).toFixed(1)} L`;
+  if (amount >= 1000) return `₹${(amount / 1000).toFixed(0)}K`;
+  return `₹${Math.round(amount).toLocaleString('en-IN')}`;
+};
+
+/**
+ * Format number in compact notation
+ * @param {number} num - Number to format
+ * @returns {string} Compact formatted number
+ */
+export const formatCompact = (num) => {
+  if (num === null || num === undefined || isNaN(num)) return '0';
+  if (num >= 10000000) return `${(num / 10000000).toFixed(2)} Cr`;
+  if (num >= 100000) return `${(num / 100000).toFixed(2)} L`;
+  if (num >= 1000) return `${(num / 1000).toFixed(1)}K`;
+  return num.toLocaleString('en-IN');
+};
+
+/**
+ * Format growth percentage with arrow indicator
+ * @param {number} growth - Growth percentage
+ * @returns {string} Formatted growth string (e.g., "▲ 12.5%")
+ */
+export const formatGrowth = (growth) => {
+  if (growth === null || growth === undefined || isNaN(growth)) return '0%';
+  const arrow = growth >= 0 ? '▲' : '▼';
+  return `${arrow} ${Math.abs(growth).toFixed(1)}%`;
+};
+
+/**
  * Get status color based on status string
  * @param {string} status - Status string
  * @returns {Object} { bg, text, border } colors
@@ -230,6 +280,57 @@ export const checkReadingsComplete = (readings, checkpoints, sampleSize) => {
   };
 };
 
+/**
+ * Get initials from a name string
+ * @param {string} name - Full name
+ * @returns {string} Initials (e.g., "Rajesh Kumar" → "RK")
+ */
+export const getInitials = (name) => {
+  if (!name) return '?';
+  return name
+    .split(' ')
+    .filter(part => part.length > 0)
+    .map(part => part[0].toUpperCase())
+    .slice(0, 2)
+    .join('');
+};
+
+/**
+ * Calculate growth percentage between last year and current year
+ * @param {number} ly - Last year value
+ * @param {number} cy - Current year value
+ * @returns {number} Growth percentage
+ */
+export const calcGrowth = (ly, cy) => {
+  if (!ly || ly === 0) return cy > 0 ? 100 : 0;
+  return ((cy - ly) / ly) * 100;
+};
+
+/**
+ * Named Utils export — used by components that import { Utils }
+ */
+export const Utils = {
+  formatDate,
+  formatDateIndian,
+  parseTolerance,
+  parseSpecification,
+  isWithinTolerance,
+  calculatePassPercentage,
+  generateSequentialNumber,
+  deepClone,
+  debounce,
+  formatNumber,
+  formatCurrency,
+  formatShortCurrency,
+  formatCompact,
+  formatGrowth,
+  calcGrowth,
+  getInitials,
+  getStatusColors,
+  truncateText,
+  checkReadingsComplete,
+};
+
 export default {
   formatDate,
   formatDateIndian,
@@ -241,6 +342,12 @@ export default {
   deepClone,
   debounce,
   formatNumber,
+  formatCurrency,
+  formatShortCurrency,
+  formatCompact,
+  formatGrowth,
+  calcGrowth,
+  getInitials,
   getStatusColors,
   truncateText,
   checkReadingsComplete,
