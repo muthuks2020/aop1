@@ -3,7 +3,7 @@
  * Territory Business Manager specific API methods
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.1.0
+ * @version 3.0.0 - Added TBM Individual Target CRUD
  * 
  * BACKEND INTEGRATION:
  * - Set USE_MOCK = false and update BASE_URL when backend is ready
@@ -32,6 +32,11 @@ export const TBM_API_CONFIG = {
     getTBMTargets: '/tbm/territory-targets',
     saveTBMTargets: '/tbm/territory-targets/save',
     submitTBMTargets: '/tbm/territory-targets/submit',
+
+    // ★ NEW — TBM individual (personal) targets
+    getTBMIndividualTargets: '/tbm/individual-targets',
+    saveTBMIndividualTargets: '/tbm/individual-targets/save',
+    submitTBMIndividualTargets: '/tbm/individual-targets/submit',
     
     // Dashboard stats
     getTBMDashboardStats: '/tbm/dashboard-stats',
@@ -441,6 +446,159 @@ const MockTBMTargets = [
   }
 ];
 
+// ★ NEW — Mock TBM Individual Targets (TBM's own personal targets)
+// These represent what the TBM personally commits to sell.
+// The ABM uses these to track TBM performance independently of the territory roll-up.
+const MockTBMIndividualTargets = [
+  // Equipment
+  {
+    id: 5001,
+    categoryId: 'equipment',
+    subcategory: 'Diagnostic',
+    name: 'My Target - Slit Lamp SL-700',
+    code: 'IND-EQ-DG-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(5, 50000)
+  },
+  {
+    id: 5002,
+    categoryId: 'equipment',
+    subcategory: 'Diagnostic',
+    name: 'My Target - Auto Refractometer AR-500',
+    code: 'IND-EQ-DG-002',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(3, 57000)
+  },
+  {
+    id: 5003,
+    categoryId: 'equipment',
+    subcategory: 'Surgical',
+    name: 'My Target - Phaco Machine PM-3000',
+    code: 'IND-EQ-SG-001',
+    status: 'submitted',
+    submittedDate: '2025-01-25T14:00:00Z',
+    monthlyTargets: generateMonthlyTargets(2, 150000)
+  },
+  {
+    id: 5004,
+    categoryId: 'equipment',
+    subcategory: 'Laser',
+    name: 'My Target - YAG Laser System',
+    code: 'IND-EQ-LS-001',
+    status: 'approved',
+    approvedDate: '2025-01-22T10:00:00Z',
+    approvedBy: 'Priya Sharma (ABM)',
+    monthlyTargets: generateMonthlyTargets(1, 210000)
+  },
+
+  // IOL
+  {
+    id: 5005,
+    categoryId: 'iol',
+    subcategory: 'Hydrophilic',
+    name: 'My Target - Hydrophilic IOL',
+    code: 'IND-IOL-HY-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(80, 24000)
+  },
+  {
+    id: 5006,
+    categoryId: 'iol',
+    subcategory: 'Hydrophobic',
+    name: 'My Target - Hydrophobic IOL',
+    code: 'IND-IOL-HB-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(50, 40000)
+  },
+  {
+    id: 5007,
+    categoryId: 'iol',
+    subcategory: 'Multifocal',
+    name: 'My Target - Multifocal IOL',
+    code: 'IND-IOL-MF-001',
+    status: 'submitted',
+    submittedDate: '2025-01-26T11:00:00Z',
+    monthlyTargets: generateMonthlyTargets(25, 72000)
+  },
+  {
+    id: 5008,
+    categoryId: 'iol',
+    subcategory: 'Toric',
+    name: 'My Target - Toric IOL',
+    code: 'IND-IOL-TR-001',
+    status: 'rejected',
+    rejectedDate: '2025-01-24T09:00:00Z',
+    rejectedBy: 'Priya Sharma (ABM)',
+    rejectionReason: 'Please align Q3 targets with territory plan',
+    monthlyTargets: generateMonthlyTargets(15, 25600)
+  },
+
+  // OVD
+  {
+    id: 5009,
+    categoryId: 'ovd',
+    subcategory: 'Cohesive',
+    name: 'My Target - Cohesive OVD',
+    code: 'IND-OVD-CO-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(100, 15000)
+  },
+  {
+    id: 5010,
+    categoryId: 'ovd',
+    subcategory: 'Dispersive',
+    name: 'My Target - Dispersive OVD',
+    code: 'IND-OVD-DS-001',
+    status: 'approved',
+    approvedDate: '2025-01-21T16:00:00Z',
+    approvedBy: 'Priya Sharma (ABM)',
+    monthlyTargets: generateMonthlyTargets(70, 14000)
+  },
+
+  // MIS (Revenue Only)
+  {
+    id: 5011,
+    categoryId: 'mis',
+    subcategory: 'Instruments',
+    name: 'My Target - Surgical Instruments',
+    code: 'IND-MIS-IN-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(0, 36000)
+  },
+  {
+    id: 5012,
+    categoryId: 'mis',
+    subcategory: 'Consumables',
+    name: 'My Target - Consumables',
+    code: 'IND-MIS-CN-001',
+    status: 'draft',
+    monthlyTargets: generateMonthlyTargets(0, 19000)
+  },
+
+  // Others (Revenue Only)
+  {
+    id: 5013,
+    categoryId: 'others',
+    subcategory: 'Services',
+    name: 'My Target - AMC Services',
+    code: 'IND-OTH-SV-001',
+    status: 'submitted',
+    submittedDate: '2025-01-27T10:00:00Z',
+    monthlyTargets: generateMonthlyTargets(0, 24000)
+  },
+  {
+    id: 5014,
+    categoryId: 'others',
+    subcategory: 'Accessories',
+    name: 'My Target - Accessories',
+    code: 'IND-OTH-AC-001',
+    status: 'approved',
+    approvedDate: '2025-01-23T14:00:00Z',
+    approvedBy: 'Priya Sharma (ABM)',
+    monthlyTargets: generateMonthlyTargets(0, 11000)
+  }
+];
+
 // ==================== TBM API SERVICE ====================
 
 export const TBMApiService = {
@@ -464,7 +622,6 @@ export const TBMApiService = {
       await delay(400);
       let submissions = [...MockSalesRepSubmissions];
       
-      // Apply filters
       if (filters.status) {
         submissions = submissions.filter(s => s.status === filters.status);
       }
@@ -486,8 +643,8 @@ export const TBMApiService = {
   },
 
   /**
-   * Approve a sales rep's target submission
-   * @param {number} submissionId - The submission ID to approve
+   * Approve a sales rep target
+   * @param {number} submissionId - Submission ID to approve
    * @param {string} comments - Optional approval comments
    */
   async approveSalesRepTarget(submissionId, comments = '') {
@@ -500,25 +657,19 @@ export const TBMApiService = {
         submission.approvedBy = 'Rajesh Kumar (TBM)';
         submission.approvalComments = comments;
       }
-      return { 
-        success: true, 
-        submissionId, 
-        status: 'approved',
-        message: 'Target approved successfully'
-      };
+      return { success: true, submissionId };
     }
     
-    const url = TBM_API_CONFIG.endpoints.approveSalesRepTarget.replace(':id', submissionId);
-    return apiRequest(url, {
+    return apiRequest(TBM_API_CONFIG.endpoints.approveSalesRepTarget.replace(':id', submissionId), {
       method: 'POST',
       body: JSON.stringify({ comments })
     });
   },
 
   /**
-   * Reject a sales rep's target submission
-   * @param {number} submissionId - The submission ID to reject
-   * @param {string} reason - Required rejection reason
+   * Reject a sales rep target
+   * @param {number} submissionId - Submission ID to reject
+   * @param {string} reason - Rejection reason
    */
   async rejectSalesRepTarget(submissionId, reason) {
     if (USE_MOCK) {
@@ -530,25 +681,19 @@ export const TBMApiService = {
         submission.rejectedBy = 'Rajesh Kumar (TBM)';
         submission.rejectionReason = reason;
       }
-      return { 
-        success: true, 
-        submissionId, 
-        status: 'rejected',
-        message: 'Target rejected and sent back to sales rep'
-      };
+      return { success: true, submissionId, reason };
     }
     
-    const url = TBM_API_CONFIG.endpoints.rejectSalesRepTarget.replace(':id', submissionId);
-    return apiRequest(url, {
+    return apiRequest(TBM_API_CONFIG.endpoints.rejectSalesRepTarget.replace(':id', submissionId), {
       method: 'POST',
       body: JSON.stringify({ reason })
     });
   },
 
   /**
-   * Bulk approve multiple sales rep submissions
-   * @param {number[]} submissionIds - Array of submission IDs to approve
-   * @param {string} comments - Optional bulk approval comments
+   * Bulk approve multiple sales rep targets
+   * @param {number[]} submissionIds - Array of submission IDs
+   * @param {string} comments - Optional approval comments
    */
   async bulkApproveSalesRepTargets(submissionIds, comments = '') {
     if (USE_MOCK) {
@@ -616,7 +761,7 @@ export const TBMApiService = {
         if (target) {
           target.monthlyTargets = updatedTarget.monthlyTargets;
           if (target.status === 'rejected') {
-            target.status = 'draft'; // Reset rejected to draft on edit
+            target.status = 'draft';
           }
         }
       });
@@ -679,7 +824,6 @@ export const TBMApiService = {
           ...target.monthlyTargets[month],
           ...values
         };
-        // Auto-set to draft if was rejected
         if (target.status === 'rejected') {
           target.status = 'draft';
         }
@@ -688,6 +832,122 @@ export const TBMApiService = {
     }
     
     return apiRequest(`${TBM_API_CONFIG.endpoints.getTBMTargets}/${targetId}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ month, values })
+    });
+  },
+
+  // ========== ★ NEW — TBM INDIVIDUAL (PERSONAL) TARGETS ==========
+
+  /**
+   * Get TBM's individual (personal) targets
+   * @param {Object} filters - Optional filters { status, categoryId }
+   */
+  async getTBMIndividualTargets(filters = {}) {
+    if (USE_MOCK) {
+      await delay(400);
+      let targets = [...MockTBMIndividualTargets];
+
+      if (filters.status) {
+        targets = targets.filter(t => t.status === filters.status);
+      }
+      if (filters.categoryId) {
+        targets = targets.filter(t => t.categoryId === filters.categoryId);
+      }
+
+      return targets;
+    }
+
+    const queryParams = new URLSearchParams(filters).toString();
+    const url = queryParams
+      ? `${TBM_API_CONFIG.endpoints.getTBMIndividualTargets}?${queryParams}`
+      : TBM_API_CONFIG.endpoints.getTBMIndividualTargets;
+    return apiRequest(url);
+  },
+
+  /**
+   * Save TBM individual targets as draft
+   * @param {Object[]} targets - Array of target objects with updated values
+   */
+  async saveTBMIndividualTargets(targets) {
+    if (USE_MOCK) {
+      await delay(500);
+      targets.forEach(updatedTarget => {
+        const target = MockTBMIndividualTargets.find(t => t.id === updatedTarget.id);
+        if (target) {
+          target.monthlyTargets = updatedTarget.monthlyTargets;
+          if (target.status === 'rejected') {
+            target.status = 'draft';
+          }
+        }
+      });
+      return {
+        success: true,
+        savedCount: targets.length,
+        message: 'Individual targets saved as draft'
+      };
+    }
+
+    return apiRequest(TBM_API_CONFIG.endpoints.saveTBMIndividualTargets, {
+      method: 'POST',
+      body: JSON.stringify({ targets })
+    });
+  },
+
+  /**
+   * Submit TBM individual targets for ABM approval
+   * @param {number[]} targetIds - Array of target IDs to submit
+   */
+  async submitTBMIndividualTargets(targetIds) {
+    if (USE_MOCK) {
+      await delay(500);
+      const submittedDate = new Date().toISOString();
+      targetIds.forEach(id => {
+        const target = MockTBMIndividualTargets.find(t => t.id === id);
+        if (target && (target.status === 'draft' || target.status === 'rejected')) {
+          target.status = 'submitted';
+          target.submittedDate = submittedDate;
+        }
+      });
+      return {
+        success: true,
+        submittedCount: targetIds.length,
+        message: `${targetIds.length} individual targets submitted for ABM approval`
+      };
+    }
+
+    return apiRequest(TBM_API_CONFIG.endpoints.submitTBMIndividualTargets, {
+      method: 'POST',
+      body: JSON.stringify({ targetIds })
+    });
+  },
+
+  /**
+   * Update a single TBM individual target value
+   * @param {number} targetId - Target ID to update
+   * @param {string} month - Month key (e.g., 'apr', 'may')
+   * @param {Object} values - Values to update { cyQty, cyRev }
+   */
+  async updateTBMIndividualTarget(targetId, month, values) {
+    if (USE_MOCK) {
+      await delay(200);
+      const target = MockTBMIndividualTargets.find(t => t.id === targetId);
+      if (target) {
+        if (!target.monthlyTargets[month]) {
+          target.monthlyTargets[month] = {};
+        }
+        target.monthlyTargets[month] = {
+          ...target.monthlyTargets[month],
+          ...values
+        };
+        if (target.status === 'rejected') {
+          target.status = 'draft';
+        }
+      }
+      return { success: true, targetId, month, values };
+    }
+
+    return apiRequest(`${TBM_API_CONFIG.endpoints.getTBMIndividualTargets}/${targetId}`, {
       method: 'PATCH',
       body: JSON.stringify({ month, values })
     });
@@ -719,6 +979,15 @@ export const TBMApiService = {
         approved: MockTBMTargets.filter(t => t.status === 'approved').length,
         rejected: MockTBMTargets.filter(t => t.status === 'rejected').length
       };
+
+      // ★ NEW — Calculate TBM individual stats
+      const tbmIndividualStats = {
+        total: MockTBMIndividualTargets.length,
+        draft: MockTBMIndividualTargets.filter(t => t.status === 'draft').length,
+        submitted: MockTBMIndividualTargets.filter(t => t.status === 'submitted').length,
+        approved: MockTBMIndividualTargets.filter(t => t.status === 'approved').length,
+        rejected: MockTBMIndividualTargets.filter(t => t.status === 'rejected').length
+      };
       
       // Calculate totals
       const calculateTotals = (items) => {
@@ -739,8 +1008,10 @@ export const TBMApiService = {
       return {
         salesRepSubmissions: salesRepStats,
         tbmTargets: tbmStats,
+        tbmIndividualTargets: tbmIndividualStats, // ★ NEW
         salesRepTotals: calculateTotals(MockSalesRepSubmissions),
-        tbmTotals: calculateTotals(MockTBMTargets)
+        tbmTotals: calculateTotals(MockTBMTargets),
+        tbmIndividualTotals: calculateTotals(MockTBMIndividualTargets) // ★ NEW
       };
     }
     

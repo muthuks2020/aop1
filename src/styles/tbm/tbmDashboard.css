@@ -1,11 +1,11 @@
 /* ========================================================================== */
 /* TBM DASHBOARD - APPASAMY ASSOCIATES CORPORATE THEME                        */
-/* Version 3.0.0 - Professional Corporate Design with WOW Effect              */
 /* Brand: Appasamy Associates - Empowering Vision Through Innovation          */
 /* ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import './tbmOverallTargetBar.css';
+@import './tbmDashboard_4tab_additions.css';
 /* ==================== APPASAMY BRAND COLORS ==================== */
 :root {
   /* Primary Brand Colors - Deep Corporate Navy */
