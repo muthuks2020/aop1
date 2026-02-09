@@ -1,753 +1,542 @@
-/* ============================================================
-   Sales Rep Overview Dashboard - Premium Design
-   Product Commitment PWA - Appasamy Associates
-   Version: 3.0.0 — Sales-focused -
-   
-   Replaces the old Total Products / Approved / Pending cards
-   with meaningful sales KPIs, charts, and performance metrics.
-   ============================================================ */
+/* ==========================================
+   OVERVIEW DASHBOARD - v4.1.0 Side-by-Side Pie Layout
+   Pie chart (left) | Dropdown + Breakdown list (right)
+   ========================================== */
 
-/* ==================== DASHBOARD CONTAINER ==================== */
+/* ==================== ANIMATIONS ==================== */
+@keyframes ov-fadeSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes ov-scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
 
 .ov-dashboard {
-  display: flex;
-  flex-direction: column;
-  gap: 1.25rem;
-  padding: 0.5rem 0;
+  padding: 1rem;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-/* ==================== ENTRANCE ANIMATIONS ==================== */
-
-.ov-dashboard .ov-hero-card,
-.ov-dashboard .ov-panel,
-.ov-dashboard .ov-revenue-footer {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity 0.5s cubic-bezier(0.23, 1, 0.32, 1),
-              transform 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-  transition-delay: var(--delay, 0s);
-}
-
-.ov-dashboard.ov-animate-in .ov-hero-card,
-.ov-dashboard.ov-animate-in .ov-panel,
-.ov-dashboard.ov-animate-in .ov-revenue-footer {
-  opacity: 1;
-  transform: translateY(0);
+.ov-animate-in .ov-hero-strip,
+.ov-animate-in .ov-section-header,
+.ov-animate-in .ov-pie-full-year,
+.ov-animate-in .ov-pie-quarters-grid,
+.ov-animate-in .ov-pie-card {
+  animation: ov-fadeSlideUp 0.5s ease-out both;
+  animation-delay: var(--delay, 0s);
 }
 
 /* ==================== HERO KPI STRIP ==================== */
-
 .ov-hero-strip {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1rem;
+  margin-bottom: 1.75rem;
 }
 
 .ov-hero-card {
-  background: var(--white, #fff);
-  border-radius: 16px;
-  padding: 1.25rem;
+  background: #fff;
+  border-radius: 14px;
+  padding: 1.25rem 1rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  border: 1px solid var(--border, #E2E8F0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
+  gap: 0.875rem;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
   overflow: hidden;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-
 .ov-hero-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
 }
-
-/* Subtle top border accent */
 .ov-hero-card::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  border-radius: 16px 16px 0 0;
+  top: 0; left: 0;
+  width: 4px; height: 100%;
+  border-radius: 14px 0 0 14px;
 }
+.ov-hero-target::before { background: linear-gradient(180deg, #1B4D7A, #2A6FAF); }
+.ov-hero-revenue::before { background: linear-gradient(180deg, #00A19B, #00C4BD); }
+.ov-hero-achievement::before { background: linear-gradient(180deg, #F59E0B, #FBBF24); }
+.ov-hero-products::before { background: linear-gradient(180deg, #8B5CF6, #A78BFA); }
 
-.ov-hero-target::before {
-  background: linear-gradient(90deg, #00A19B, #00C4BC);
-}
-.ov-hero-ly::before {
-  background: linear-gradient(90deg, #3B82F6, #60A5FA);
-}
-.ov-hero-revenue::before {
-  background: linear-gradient(90deg, #8B5CF6, #A78BFA);
-}
-.ov-hero-achievement::before {
-  background: linear-gradient(90deg, #F59E0B, #FBBF24);
-}
-
-/* Background pattern on hover */
-.ov-hero-card::after {
-  content: '';
-  position: absolute;
-  top: -20px; right: -20px;
-  width: 100px; height: 100px;
-  border-radius: 50%;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-.ov-hero-card:hover::after { opacity: 1; }
-.ov-hero-target::after { background: radial-gradient(circle, rgba(0, 161, 155, 0.06) 0%, transparent 70%); }
-.ov-hero-ly::after { background: radial-gradient(circle, rgba(59, 130, 246, 0.06) 0%, transparent 70%); }
-.ov-hero-revenue::after { background: radial-gradient(circle, rgba(139, 92, 246, 0.06) 0%, transparent 70%); }
-.ov-hero-achievement::after { background: radial-gradient(circle, rgba(245, 158, 11, 0.06) 0%, transparent 70%); }
-
-/* Icon */
 .ov-hero-icon-wrap {
-  width: 48px; height: 48px;
-  border-radius: 14px;
+  width: 44px; height: 44px;
+  border-radius: 12px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 1.125rem;
-  background: linear-gradient(135deg, #E0F7F5 0%, #B2F5EA 100%);
-  color: #00A19B;
+  background: linear-gradient(135deg, #1B4D7A, #2A6FAF);
   flex-shrink: 0;
-  transition: transform 0.3s ease;
 }
-.ov-hero-card:hover .ov-hero-icon-wrap { transform: scale(1.08); }
-.ov-hero-icon-wrap.ly { background: linear-gradient(135deg, #DBEAFE, #BFDBFE); color: #3B82F6; }
-.ov-hero-icon-wrap.rev { background: linear-gradient(135deg, #EDE9FE, #DDD6FE); color: #8B5CF6; }
-.ov-hero-icon-wrap.ach { background: linear-gradient(135deg, #FEF3C7, #FDE68A); color: #D97706; }
+.ov-hero-icon-wrap.rev { background: linear-gradient(135deg, #00A19B, #00C4BD); }
+.ov-hero-icon-wrap.ach { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
+.ov-hero-icon-wrap.prod { background: linear-gradient(135deg, #8B5CF6, #A78BFA); }
 
-/* Data */
+.ov-hero-icon { color: #fff; font-size: 1.1rem; }
+
 .ov-hero-data {
-  display: flex; flex-direction: column; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; min-width: 0;
 }
 .ov-hero-value {
-  font-size: 1.5rem;
-  font-weight: 800;
-  color: var(--gray-800, #1E293B);
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: -0.02em;
-  line-height: 1.2;
+  font-size: 1.35rem; font-weight: 800; color: #1a1a2e;
+  line-height: 1.2; letter-spacing: -0.02em;
 }
 .ov-hero-label {
-  font-size: 0.6875rem;
-  font-weight: 600;
-  color: var(--gray-400, #94A3B8);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-top: 2px;
+  font-size: 0.72rem; color: #64748B; font-weight: 500;
+  text-transform: uppercase; letter-spacing: 0.04em; margin-top: 2px;
 }
 
-/* Badge */
 .ov-hero-badge {
-  position: absolute;
-  top: 14px; right: 14px;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  padding: 3px 8px;
+  margin-left: auto;
+  padding: 4px 10px;
   border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700;
   display: flex; align-items: center; gap: 3px;
+  flex-shrink: 0;
 }
-.ov-hero-badge.positive { background: #D1FAE5; color: #059669; }
-.ov-hero-badge.negative { background: #FEE2E2; color: #DC2626; }
-.ov-hero-badge.neutral { background: #E2E8F0; color: #64748B; }
+.ov-hero-badge.positive { background: rgba(16,185,129,0.1); color: #059669; }
+.ov-hero-badge.negative { background: rgba(239,68,68,0.1); color: #DC2626; }
 
-/* Achievement ring */
 .ov-hero-ring {
-  position: absolute;
-  top: 10px; right: 10px;
   width: 40px; height: 40px;
+  margin-left: auto; flex-shrink: 0;
 }
-.ov-hero-ring svg {
-  width: 100%; height: 100%;
-  transform: rotate(-90deg);
-}
-.ov-ring-bg {
-  fill: none; stroke: #E2E8F0; stroke-width: 3;
-}
+.ov-hero-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.ov-ring-bg { fill: none; stroke: #E5E7EB; stroke-width: 3; }
 .ov-ring-fill {
-  fill: none; stroke: #F59E0B; stroke-width: 3;
+  fill: none; stroke: #10B981; stroke-width: 3;
   stroke-linecap: round;
-  transition: stroke-dasharray 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: stroke-dasharray 1s ease;
 }
 
-/* ==================== TWIN SECTION LAYOUT ==================== */
-
-.ov-twin-section {
-  display: grid;
-  grid-template-columns: 1.5fr 1fr;
-  gap: 1.25rem;
+.ov-hero-sub-info {
+  margin-left: auto;
+  font-size: 0.7rem; color: #8B5CF6; font-weight: 600;
+  background: rgba(139,92,246,0.08);
+  padding: 4px 10px; border-radius: 12px;
 }
 
-/* ==================== PANEL BASE ==================== */
-
-.ov-panel {
-  background: var(--white, #fff);
-  border-radius: 16px;
-  border: 1px solid var(--border, #E2E8F0);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 12px rgba(0, 0, 0, 0.02);
-  overflow: hidden;
-}
-
-.ov-panel-header {
+/* ==================== SECTION HEADERS ==================== */
+.ov-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.25rem;
-  border-bottom: 1px solid var(--border, #E2E8F0);
+  margin: 1.75rem 0 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
 }
-
-.ov-panel-header h3 {
-  font-size: 0.9375rem;
-  font-weight: 700;
-  color: var(--gray-800, #1E293B);
-  display: flex; align-items: center; gap: 0.5rem;
-  margin: 0;
+.ov-section-title-wrap {
+  display: flex; align-items: center; gap: 0.6rem;
 }
-
-.ov-panel-header h3 i {
-  color: var(--accent, #00A19B);
-  font-size: 0.875rem;
+.ov-section-title-wrap i {
+  font-size: 1.1rem; color: #1B4D7A;
 }
-
-.ov-panel-subtitle {
-  font-size: 0.75rem;
-  color: var(--gray-400, #94A3B8);
-  font-weight: 500;
+.ov-section-title-wrap h2 {
+  font-size: 1.15rem; font-weight: 700; color: #1a1a2e; margin: 0;
 }
-
-/* ==================== MONTHLY TREND CHART ==================== */
-
-.ov-chart-area {
-  display: flex;
-  align-items: flex-end;
-  gap: 2px;
-  padding: 1.25rem 1rem 0.5rem;
-  height: 240px;
-}
-
-.ov-chart-col {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  height: 100%;
-}
-
-.ov-bar-group {
-  flex: 1;
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  width: 100%;
-  position: relative;
-}
-
-.ov-bar {
-  flex: 1;
-  border-radius: 4px 4px 0 0;
-  min-height: 4px;
-  position: relative;
-  transition: height 0.8s cubic-bezier(0.23, 1, 0.32, 1);
-  transition-delay: var(--col-delay, 0s);
-}
-
-/* Bars start at 0 before animation */
-.ov-dashboard:not(.ov-animate-in) .ov-bar {
-  height: 0 !important;
-}
-
-.ly-bar {
-  background: linear-gradient(180deg, #CBD5E1 0%, #E2E8F0 100%);
-  opacity: 0.6;
-}
-
-.cy-bar {
-  background: linear-gradient(180deg, #00A19B 0%, #00C4BC 100%);
-  box-shadow: 0 -2px 8px rgba(0, 161, 155, 0.15);
-}
-
-.ov-bar-tooltip {
-  position: absolute;
-  top: -4px;
-  left: 50%;
-  transform: translateX(-50%) translateY(-100%);
-  font-size: 0.5625rem;
-  font-weight: 700;
-  font-family: 'JetBrains Mono', monospace;
-  color: var(--gray-600, #475569);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-  pointer-events: none;
-}
-
-.ov-chart-col:hover .ov-bar-tooltip { opacity: 1; }
-
-.ov-chart-label {
-  font-size: 0.625rem;
-  font-weight: 700;
-  color: var(--gray-400, #94A3B8);
-  text-transform: uppercase;
+.ov-section-badge {
+  background: linear-gradient(135deg, #1B4D7A, #00A19B);
+  color: #fff;
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.72rem; font-weight: 700;
   letter-spacing: 0.03em;
 }
 
-.ov-chart-growth {
-  font-size: 0.5625rem;
-  font-weight: 700;
-  padding: 1px 4px;
-  border-radius: 4px;
-  line-height: 1.3;
+/* ==================== QUARTER PILLS ==================== */
+.ov-quarter-pills {
+  display: flex; gap: 0.4rem; flex-wrap: wrap;
 }
-.ov-chart-growth.up { color: #059669; background: #D1FAE5; }
-.ov-chart-growth.down { color: #DC2626; background: #FEE2E2; }
-
-/* Legend */
-.ov-legend {
-  display: flex; align-items: center; gap: 0.75rem;
-  font-size: 0.6875rem; color: var(--gray-500);
-}
-.ov-legend-dot {
-  width: 8px; height: 8px; border-radius: 2px; display: inline-block; margin-right: 4px;
-}
-.ov-legend-dot.cy { background: #00A19B; }
-.ov-legend-dot.ly { background: #CBD5E1; }
-
-/* ==================== QUARTERLY CARDS ==================== */
-
-.ov-quarter-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  padding: 1rem;
-}
-
-.ov-qcard {
-  border: 1px solid var(--border, #E2E8F0);
-  border-radius: 12px;
-  padding: 1rem;
-  background: var(--white, #fff);
+.ov-qpill {
+  padding: 5px 14px;
+  border-radius: 20px;
+  border: 1.5px solid #E5E7EB;
+  background: #fff;
+  color: #64748B;
+  font-size: 0.75rem; font-weight: 600;
   cursor: pointer;
-  transition: all 0.25s ease;
-  position: relative;
+  transition: all 0.2s;
+}
+.ov-qpill:hover {
+  border-color: var(--pill-color, #1B4D7A);
+  color: var(--pill-color, #1B4D7A);
+  background: rgba(27,77,122,0.04);
+}
+.ov-qpill.active {
+  background: var(--pill-color, #1B4D7A);
+  color: #fff;
+  border-color: var(--pill-color, #1B4D7A);
+}
+
+/* ==================== FULL YEAR PIE (full width) ==================== */
+.ov-pie-full-year {
+  margin-bottom: 0.5rem;
+}
+
+/* ==================== QUARTERLY GRID ==================== */
+.ov-pie-quarters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+/* ==================== PIE CHART CARD ==================== */
+.ov-pie-card {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 16px rgba(0,0,0,0.06);
+  border: 1px solid rgba(0,0,0,0.04);
   overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
 }
-
-.ov-qcard::before {
-  content: '';
-  position: absolute;
-  top: 0; left: 0; right: 0;
-  height: 3px;
-  background: var(--q-color, #00A19B);
-  border-radius: 12px 12px 0 0;
-}
-
-.ov-qcard:hover {
-  border-color: var(--q-color, #00A19B);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+.ov-pie-card:hover {
   transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,0.1);
 }
 
-.ov-qcard.active {
-  border-color: var(--q-color, #00A19B);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--q-color) 20%, transparent);
+/* ---- Card Header ---- */
+.ov-pie-card-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem 0.75rem;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  gap: 1rem;
 }
-
-.ov-qcard-top {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 0.5rem;
+.ov-pie-card-title-row {
+  display: flex; align-items: center; gap: 0.7rem;
 }
-.ov-qcard-label {
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--q-color, #1E293B);
-}
-.ov-qcard-period {
-  font-size: 0.625rem;
-  color: var(--gray-400, #94A3B8);
-  font-weight: 500;
-}
-
-.ov-qcard-value {
-  font-size: 1.375rem;
-  font-weight: 800;
-  color: var(--gray-800, #1E293B);
-  font-family: 'JetBrains Mono', monospace;
-  letter-spacing: -0.02em;
-  margin-bottom: 0.375rem;
-}
-
-.ov-qcard-compare {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 0.5rem;
-}
-.ov-qcard-ly {
-  font-size: 0.6875rem;
-  color: var(--gray-400);
-  font-family: 'JetBrains Mono', monospace;
-}
-.ov-qcard-growth {
-  font-size: 0.6875rem;
-  font-weight: 700;
-  display: flex; align-items: center; gap: 2px;
-}
-.ov-qcard-growth.positive { color: #059669; }
-.ov-qcard-growth.negative { color: #DC2626; }
-
-/* Progress bar */
-.ov-qcard-progress {
-  height: 4px;
-  background: #F1F5F9;
-  border-radius: 4px;
-  overflow: hidden;
-  margin-bottom: 0.375rem;
-}
-.ov-qcard-progress-fill {
-  height: 100%;
-  background: var(--q-color, #00A19B);
-  border-radius: 4px;
-  transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
-}
-
-.ov-qcard-share {
-  font-size: 0.625rem;
-  color: var(--gray-400);
-  font-weight: 600;
-}
-
-/* Expanded detail */
-.ov-qcard-detail {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px dashed var(--border, #E2E8F0);
-  display: flex; flex-direction: column; gap: 0.375rem;
-  animation: fadeSlide 0.25s ease;
-}
-
-@keyframes fadeSlide {
-  from { opacity: 0; transform: translateY(-6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.ov-qcard-month-row {
-  display: flex; align-items: center; gap: 0.5rem;
-}
-.ov-qm-label {
-  font-size: 0.6875rem; font-weight: 600; color: var(--gray-500); width: 2.5rem;
-}
-.ov-qm-val {
-  font-size: 0.75rem; font-weight: 700; color: var(--gray-700);
-  font-family: 'JetBrains Mono', monospace; flex: 1;
-}
-.ov-qm-growth {
-  font-size: 0.625rem; font-weight: 700;
-}
-.ov-qm-growth.up { color: #059669; }
-.ov-qm-growth.down { color: #DC2626; }
-
-/* ==================== CATEGORY PERFORMANCE ==================== */
-
-.ov-category-list {
-  padding: 0.75rem 1.25rem 1rem;
-  display: flex; flex-direction: column; gap: 0.75rem;
-}
-
-.ov-cat-row {
-  padding: 0.875rem;
-  border: 1px solid var(--border, #E2E8F0);
-  border-radius: 12px;
-  transition: all 0.25s ease;
-  opacity: 0;
-  transform: translateX(-12px);
-}
-.ov-animate-in .ov-cat-row {
-  opacity: 1;
-  transform: translateX(0);
-  transition-delay: calc(var(--row-delay, 0s) + 0.35s);
-}
-.ov-cat-row:hover {
-  border-color: var(--accent, #00A19B);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.ov-cat-info {
-  display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.625rem;
-}
-
-.ov-cat-icon {
-  width: 36px; height: 36px;
+.ov-pie-card-icon {
+  width: 38px; height: 38px;
   border-radius: 10px;
   display: flex; align-items: center; justify-content: center;
-  font-size: 0.875rem;
-  background: #E0F7F5;
-  color: #00A19B;
+  background: linear-gradient(135deg, var(--accent, #1B4D7A), rgba(0,0,0,0.05));
+  color: #fff; font-size: 1rem;
   flex-shrink: 0;
 }
-
-/* Category color variants */
-.ov-cat-icon.equipment { background: #DBEAFE; color: #2563EB; }
-.ov-cat-icon.iol { background: #D1FAE5; color: #059669; }
-.ov-cat-icon.ovd { background: #EDE9FE; color: #7C3AED; }
-.ov-cat-icon.pharma { background: #FEF3C7; color: #D97706; }
-.ov-cat-icon.mis { background: #FEE2E2; color: #DC2626; }
-.ov-cat-icon.others { background: #F1F5F9; color: #64748B; }
-
-.ov-cat-text { display: flex; flex-direction: column; }
-.ov-cat-name { font-size: 0.8125rem; font-weight: 700; color: var(--gray-700); }
-.ov-cat-count { font-size: 0.625rem; color: var(--gray-400); }
-
-.ov-cat-metrics {
-  display: flex; gap: 1rem; margin-bottom: 0.5rem;
+.ov-pie-card-title {
+  font-size: 1rem; font-weight: 700; color: #1a1a2e; margin: 0;
+  line-height: 1.3;
 }
-
-.ov-cat-metric {
-  display: flex; flex-direction: column;
+.ov-pie-card-subtitle {
+  font-size: 0.72rem; color: #94A3B8; font-weight: 500;
+  display: block; margin-top: 2px;
 }
-.ov-cm-label {
-  font-size: 0.5625rem;
-  font-weight: 600;
-  color: var(--gray-400);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+.ov-pie-card-total {
+  text-align: right; flex-shrink: 0;
 }
-.ov-cm-value {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: var(--gray-600);
-  font-family: 'JetBrains Mono', monospace;
-}
-.ov-cm-value.accent { color: var(--accent, #00A19B); }
-.ov-cm-value.positive { color: #059669; }
-.ov-cm-value.negative { color: #DC2626; }
-
-/* Contribution bar */
-.ov-cat-bar-wrap {
-  height: 6px;
-  background: #F1F5F9;
-  border-radius: 6px;
-  overflow: hidden;
-  position: relative;
-}
-.ov-cat-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #00A19B, #00C4BC);
-  border-radius: 6px;
-  transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
-  position: relative;
-}
-.ov-cat-bar-label {
-  position: absolute;
-  right: 0;
-  top: -14px;
-  font-size: 0.5625rem;
-  font-weight: 700;
-  color: var(--gray-500);
-}
-
-/* ==================== TOP PRODUCTS ==================== */
-
-.ov-top-list {
-  padding: 0.75rem 1.25rem 1rem;
-  display: flex; flex-direction: column; gap: 0.625rem;
-}
-
-.ov-top-row {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.625rem 0;
-  border-bottom: 1px solid #F1F5F9;
-  opacity: 0;
-  transform: translateX(12px);
-}
-.ov-animate-in .ov-top-row {
-  opacity: 1;
-  transform: translateX(0);
-  transition: opacity 0.4s ease, transform 0.4s ease;
-  transition-delay: calc(var(--row-delay, 0s) + 0.4s);
-}
-.ov-top-row:last-child { border-bottom: none; }
-
-.ov-top-rank { flex-shrink: 0; }
-.ov-rank-num {
-  width: 26px; height: 26px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 0.6875rem;
-  font-weight: 800;
-  color: var(--white, #fff);
-}
-.ov-rank-num.rank-1 { background: linear-gradient(135deg, #F59E0B, #FBBF24); }
-.ov-rank-num.rank-2 { background: linear-gradient(135deg, #94A3B8, #CBD5E1); color: #334155; }
-.ov-rank-num.rank-3 { background: linear-gradient(135deg, #D97706, #F59E0B); }
-.ov-rank-num.rank-4,
-.ov-rank-num.rank-5 { background: #F1F5F9; color: #64748B; }
-
-.ov-top-info {
-  flex: 1; min-width: 0;
-}
-.ov-top-name {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--gray-700);
+.ov-pie-card-total-label {
+  font-size: 0.65rem; color: #94A3B8; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.05em;
   display: block;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 4px;
 }
-.ov-top-bar-wrap {
-  height: 4px;
-  background: #F1F5F9;
-  border-radius: 4px;
-  overflow: hidden;
-}
-.ov-top-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #00A19B, #34D399);
-  border-radius: 4px;
-  transition: width 1s cubic-bezier(0.23, 1, 0.32, 1);
+.ov-pie-card-total-value {
+  font-size: 1.25rem; font-weight: 800; color: var(--accent, #1B4D7A);
+  line-height: 1.3;
 }
 
-.ov-top-numbers {
-  display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0;
+/* ==================== SIDE-BY-SIDE BODY ==================== */
+.ov-pie-body {
+  display: flex;
+  align-items: stretch;
+  min-height: 380px;
 }
-.ov-top-qty {
-  font-size: 0.875rem;
-  font-weight: 800;
-  color: var(--gray-700);
-  font-family: 'JetBrains Mono', monospace;
-}
-.ov-top-growth {
-  font-size: 0.625rem;
-  font-weight: 700;
-  display: flex; align-items: center; gap: 2px;
-}
-.ov-top-growth.positive { color: #059669; }
-.ov-top-growth.negative { color: #DC2626; }
 
-/* Empty state */
-.ov-empty-state {
-  padding: 3rem 2rem;
-  text-align: center;
-  color: var(--gray-400);
-}
-.ov-empty-state i {
-  font-size: 2rem; margin-bottom: 0.75rem; display: block; opacity: 0.5;
-}
-.ov-empty-state p { font-size: 0.875rem; }
-
-/* ==================== REVENUE FOOTER ==================== */
-
-.ov-revenue-footer {
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 60%, #1B4D7A 100%);
-  border-radius: 16px;
-  padding: 1.25rem 1.5rem;
+/* LEFT — Pie Chart */
+.ov-pie-body-left {
+  flex: 0 0 50%;
+  max-width: 50%;
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  justify-content: center;
+  padding: 1rem;
   position: relative;
+}
+
+/* RIGHT — Dropdown + List */
+.ov-pie-body-right {
+  flex: 0 0 50%;
+  max-width: 50%;
+  border-left: 1px solid rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
 }
 
-.ov-revenue-footer::before {
-  content: '';
+/* ==================== DROPDOWN SELECTOR ==================== */
+.ov-pie-dropdown-row {
+  padding: 1rem 1.25rem 0.5rem;
+}
+.ov-pie-dropdown {
+  width: 100%;
+  padding: 9px 36px 9px 14px;
+  border-radius: 10px;
+  border: 1.5px solid #E2E8F0;
+  background: #F8FAFC;
+  color: #1a1a2e;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2364748B' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+.ov-pie-dropdown:hover {
+  border-color: var(--accent, #1B4D7A);
+}
+.ov-pie-dropdown:focus {
+  outline: none;
+  border-color: var(--accent, #1B4D7A);
+  box-shadow: 0 0 0 3px rgba(27,77,122,0.1);
+}
+
+/* ==================== PIE CHART WRAPPER ==================== */
+.ov-pie-chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* Center label inside donut */
+.ov-pie-center-label {
   position: absolute;
-  top: 0; right: 0;
-  width: 300px; height: 100%;
-  background: radial-gradient(ellipse at top right, rgba(0, 161, 155, 0.12) 0%, transparent 60%);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
   pointer-events: none;
 }
-
-.ov-rev-block {
-  display: flex; align-items: center; gap: 0.875rem;
-  position: relative; z-index: 1;
+.ov-pie-center-count {
+  display: block;
+  font-size: 1.75rem; font-weight: 800; color: #1a1a2e;
+  line-height: 1.1;
 }
-.ov-rev-block.highlight .ov-rev-value {
-  color: #00C4BC;
-  font-size: 1.375rem;
+.ov-pie-center-text {
+  display: block;
+  font-size: 0.6rem; color: #94A3B8; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.06em;
+  margin-top: 2px;
 }
 
-.ov-rev-icon {
-  width: 40px; height: 40px;
+/* ==================== BREAKDOWN TABLE ==================== */
+.ov-pie-breakdown {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.25rem 1rem;
+  overflow: hidden;
+}
+.ov-pie-breakdown-header {
+  display: grid;
+  grid-template-columns: 1fr 90px 55px;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  border-bottom: 1.5px solid #E5E7EB;
+  font-size: 0.62rem; font-weight: 700; color: #94A3B8;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.ov-pie-breakdown-header span:nth-child(2),
+.ov-pie-breakdown-header span:nth-child(3) {
+  text-align: right;
+}
+.ov-pie-breakdown-body {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 320px;
+}
+.ov-pie-breakdown-body::-webkit-scrollbar {
+  width: 4px;
+}
+.ov-pie-breakdown-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.ov-pie-breakdown-body::-webkit-scrollbar-thumb {
+  background: #CBD5E1; border-radius: 4px;
+}
+.ov-pie-breakdown-row {
+  display: grid;
+  grid-template-columns: 1fr 90px 55px;
+  gap: 0.5rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(0,0,0,0.03);
+  align-items: center;
+  transition: background 0.15s;
+}
+.ov-pie-breakdown-row:last-child {
+  border-bottom: none;
+}
+.ov-pie-breakdown-row:hover {
+  background: rgba(27,77,122,0.02);
+  border-radius: 6px;
+}
+.ov-pie-breakdown-name {
+  display: flex; align-items: center; gap: 0.5rem;
+  min-width: 0;
+}
+.ov-pie-breakdown-dot {
+  width: 10px; height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+.ov-pie-breakdown-label {
+  font-size: 0.8rem; font-weight: 600; color: #334155;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ov-pie-breakdown-val {
+  font-size: 0.78rem; font-weight: 700; color: #1a1a2e;
+  text-align: right;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+.ov-pie-breakdown-pct {
+  font-size: 0.72rem; font-weight: 700; color: var(--accent, #1B4D7A);
+  text-align: right;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.ov-pie-empty {
+  padding: 3rem 1rem;
+  text-align: center; color: #94A3B8;
+}
+.ov-pie-empty i {
+  font-size: 2.5rem; margin-bottom: 0.75rem; opacity: 0.4;
+}
+.ov-pie-empty p {
+  font-size: 0.9rem; font-weight: 600; margin: 0 0 4px;
+}
+.ov-pie-empty span {
+  font-size: 0.75rem; opacity: 0.7;
+}
+
+/* ==================== TOOLTIP ==================== */
+.ov-pie-tooltip {
+  background: #1a1a2e;
   border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  background: rgba(255, 255, 255, 0.08);
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.875rem;
+  padding: 10px 14px;
+  display: flex; align-items: center; gap: 10px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+  min-width: 160px;
+}
+.ov-pie-tooltip-dot {
+  width: 12px; height: 12px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+.ov-pie-tooltip-content {
+  display: flex; flex-direction: column;
+}
+.ov-pie-tooltip-name {
+  font-size: 0.75rem; color: rgba(255,255,255,0.7); font-weight: 500;
+  max-width: 180px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.ov-pie-tooltip-value {
+  font-size: 0.95rem; color: #fff; font-weight: 700;
+}
+.ov-pie-tooltip-pct {
+  font-size: 0.7rem; color: #00A19B; font-weight: 600;
 }
 
-.ov-rev-data { display: flex; flex-direction: column; }
-.ov-rev-label {
-  font-size: 0.625rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.5);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+/* ==================== COMPACT MODE (Quarterly cards) ==================== */
+.ov-pie-card--compact .ov-pie-body {
+  min-height: 280px;
 }
-.ov-rev-value {
-  font-size: 1.125rem;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.9);
-  font-family: 'JetBrains Mono', monospace;
+.ov-pie-card--compact .ov-pie-center-count {
+  font-size: 1.3rem;
 }
-
-.ov-rev-arrow {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 1rem;
-  position: relative; z-index: 1;
+.ov-pie-card--compact .ov-pie-center-text {
+  font-size: 0.55rem;
 }
-
-.ov-rev-growth-pill {
-  margin-left: auto;
-  position: relative; z-index: 1;
+.ov-pie-card--compact .ov-pie-breakdown-body {
+  max-height: 200px;
 }
-.ov-rev-growth-pill span {
-  display: flex; align-items: center; gap: 0.375rem;
-  padding: 0.375rem 0.875rem;
-  border-radius: 20px;
-  font-size: 0.75rem;
-  font-weight: 700;
+.ov-pie-card--compact .ov-pie-card-header {
+  padding: 1rem 1.25rem 0.6rem;
 }
-.ov-rev-growth-pill span.positive {
-  background: rgba(16, 185, 129, 0.15);
-  color: #34D399;
-}
-.ov-rev-growth-pill span.negative {
-  background: rgba(239, 68, 68, 0.15);
-  color: #FCA5A5;
+.ov-pie-card--compact .ov-pie-card-total-value {
+  font-size: 1.05rem;
 }
 
 /* ==================== RESPONSIVE ==================== */
 
-@media (max-width: 1280px) {
-  .ov-hero-strip { grid-template-columns: repeat(2, 1fr); }
-  .ov-twin-section { grid-template-columns: 1fr; }
+/* Medium screens — quarterly grid single column */
+@media (max-width: 1100px) {
+  .ov-pie-quarters-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
+/* Tablet — stack pie body vertically */
 @media (max-width: 768px) {
-  .ov-hero-strip { grid-template-columns: 1fr; }
-  .ov-quarter-grid { grid-template-columns: 1fr; }
-  .ov-hero-value { font-size: 1.25rem; }
-  .ov-chart-area { height: 180px; }
-  .ov-revenue-footer {
+  .ov-hero-strip {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .ov-pie-body {
+    flex-direction: column;
+    min-height: auto;
+  }
+  .ov-pie-body-left {
+    flex: none;
+    max-width: 100%;
+    padding: 0.5rem;
+  }
+  .ov-pie-body-right {
+    flex: none;
+    max-width: 100%;
+    border-left: none;
+    border-top: 1px solid rgba(0,0,0,0.05);
+  }
+  .ov-pie-breakdown-body {
+    max-height: 260px;
+  }
+  .ov-section-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 1rem;
   }
-  .ov-rev-growth-pill { margin-left: 0; }
-  .ov-cat-metrics { flex-wrap: wrap; }
 }
 
-@media (max-width: 480px) {
-  .ov-panel-header { padding: 0.875rem 1rem; }
-  .ov-category-list { padding: 0.5rem 0.75rem; }
-  .ov-top-list { padding: 0.5rem 0.75rem; }
+/* Mobile */
+@media (max-width: 600px) {
+  .ov-dashboard { padding: 0.5rem; }
+  .ov-hero-strip {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .ov-hero-card { padding: 1rem 0.875rem; }
+  .ov-hero-value { font-size: 1.15rem; }
+  .ov-pie-card-header {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 1rem 0.6rem;
+  }
+  .ov-pie-card-total { text-align: left; }
+  .ov-pie-quarters-grid { grid-template-columns: 1fr; }
+  .ov-quarter-pills {
+    width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding-bottom: 4px;
+  }
+  .ov-qpill { white-space: nowrap; }
+  .ov-pie-dropdown-row { padding: 0.75rem 1rem 0.4rem; }
+  .ov-pie-breakdown { padding: 0 1rem 0.75rem; }
 }
 
 /* ==================== PRINT ==================== */
-
 @media print {
-  .ov-dashboard * { transition: none !important; animation: none !important; }
-  .ov-hero-card, .ov-panel, .ov-revenue-footer { opacity: 1 !important; transform: none !important; }
-  .ov-hero-card:hover, .ov-qcard:hover, .ov-cat-row:hover { transform: none; box-shadow: none; }
-  .ov-revenue-footer { background: #1E293B !important; -webkit-print-color-adjust: exact; }
+  .ov-dashboard { padding: 0; }
+  .ov-hero-card, .ov-pie-card {
+    break-inside: avoid;
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  .ov-pie-dropdown-row { display: none; }
+  .ov-quarter-pills { display: none; }
 }

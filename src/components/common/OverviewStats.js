@@ -1,34 +1,230 @@
 /**
  * Sales Rep Overview Dashboard
- * Meaningful KPIs for sales performance tracking
- * Removes generic product status cards — focuses on targets, revenue, growth
+ * Pie chart visualizations showing product & category contribution breakdowns
+ * - Full Year pie chart (by Category + by Product)
+ * - Quarterly pie charts (Q1–Q4) with same breakdowns
+ * 
+ * Uses Recharts for professional, PWA-friendly charts.
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 3.0.0 - Sales-focused redesign
+ * @version 4.0.0 - Pie Chart redesign
  * 
  * API INTEGRATION NOTES:
  * - All data currently computed from props (products, categories)
  * - Replace with API calls when backend is ready:
  *   GET /api/v1/salesrep/dashboard-summary
- *   GET /api/v1/salesrep/monthly-trends
- *   GET /api/v1/salesrep/category-performance
- *   GET /api/v1/salesrep/top-products
+ *   GET /api/v1/salesrep/contribution-breakdown?scope=yearly
+ *   GET /api/v1/salesrep/contribution-breakdown?scope=quarterly&quarter=Q1
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer
+} from 'recharts';
 import { Utils } from '../../utils/helpers';
 import '../../styles/overviewDashboard.css';
 
 // Fiscal year months in order
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
-const MONTH_LABELS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-const QUARTER_MONTHS = {
-  Q1: ['apr', 'may', 'jun'],
-  Q2: ['jul', 'aug', 'sep'],
-  Q3: ['oct', 'nov', 'dec'],
-  Q4: ['jan', 'feb', 'mar']
+const QUARTER_CONFIG = {
+  Q1: { months: ['apr', 'may', 'jun'], label: 'Q1', fullLabel: 'Apr — Jun', color: '#4285F4', bg: 'rgba(66,133,244,0.08)' },
+  Q2: { months: ['jul', 'aug', 'sep'], label: 'Q2', fullLabel: 'Jul — Sep', color: '#34A853', bg: 'rgba(52,168,83,0.08)' },
+  Q3: { months: ['oct', 'nov', 'dec'], label: 'Q3', fullLabel: 'Oct — Dec', color: '#FBBC04', bg: 'rgba(251,188,4,0.08)' },
+  Q4: { months: ['jan', 'feb', 'mar'], label: 'Q4', fullLabel: 'Jan — Mar', color: '#EA4335', bg: 'rgba(234,67,53,0.08)' }
 };
 
+// Professional color palette for pie slices
+const CATEGORY_COLORS = ['#1B4D7A', '#00A19B', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
+const PRODUCT_COLORS = [
+  '#1B4D7A', '#00A19B', '#3B82F6', '#10B981', '#F59E0B',
+  '#EF4444', '#8B5CF6', '#EC4899', '#06B6D4', '#F97316',
+  '#6366F1', '#14B8A6', '#E11D48', '#7C3AED', '#0EA5E9',
+  '#84CC16', '#D946EF', '#FB923C', '#22D3EE', '#A3E635'
+];
+
+// ==================== CUSTOM TOOLTIP ====================
+const CustomTooltip = ({ active, payload }) => {
+  if (active && payload && payload.length) {
+    const data = payload[0];
+    return (
+      <div className="ov-pie-tooltip">
+        <div className="ov-pie-tooltip-dot" style={{ background: data.payload.fill }}></div>
+        <div className="ov-pie-tooltip-content">
+          <span className="ov-pie-tooltip-name">{data.name}</span>
+          <span className="ov-pie-tooltip-value">₹{Utils.formatCompact(data.value)}</span>
+          <span className="ov-pie-tooltip-pct">{(data.payload.percent * 100).toFixed(1)}%</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+};
+
+// ==================== CUSTOM LEGEND (scrollable for many items) ====================
+const CustomLegend = ({ payload, maxItems = 8 }) => {
+  const [showAll, setShowAll] = useState(false);
+  const items = showAll ? payload : payload.slice(0, maxItems);
+  const hasMore = payload.length > maxItems;
+
+  return (
+    <div className="ov-pie-legend">
+      {items.map((entry, idx) => (
+        <div key={idx} className="ov-pie-legend-item">
+          <span className="ov-pie-legend-dot" style={{ background: entry.color }}></span>
+          <span className="ov-pie-legend-text">{entry.value}</span>
+        </div>
+      ))}
+      {hasMore && (
+        <button className="ov-pie-legend-toggle" onClick={() => setShowAll(!showAll)}>
+          {showAll ? 'Show less' : `+${payload.length - maxItems} more`}
+        </button>
+      )}
+    </div>
+  );
+};
+
+// ==================== CUSTOM ACTIVE SHAPE LABEL ====================
+const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
+  if (percent < 0.04) return null; // Don't label slices < 4%
+  const RADIAN = Math.PI / 180;
+  const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
+  const x = cx + radius * Math.cos(-midAngle * RADIAN);
+  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  return (
+    <text x={x} y={y} fill="#fff" textAnchor="middle" dominantBaseline="central" fontSize={11} fontWeight={700}>
+      {(percent * 100).toFixed(0)}%
+    </text>
+  );
+};
+
+// ==================== PIE CHART CARD COMPONENT ====================
+// Side-by-side layout: Pie chart (left) | Dropdown + Breakdown list (right)
+const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, icon, accentColor, delay, isCompact }) => {
+  const [viewMode, setViewMode] = useState('product'); // 'category' | 'product'
+  const data = viewMode === 'category' ? categoryData : productData;
+  const colors = viewMode === 'category' ? CATEGORY_COLORS : PRODUCT_COLORS;
+
+  // Add fill color and percent to data
+  const chartData = data.map((item, idx) => ({
+    ...item,
+    fill: colors[idx % colors.length],
+    percent: totalValue > 0 ? item.value / totalValue : 0
+  }));
+
+  // Dynamic pie sizing based on compact mode (quarterly cards vs full year)
+  const pieHeight = isCompact ? 260 : 360;
+  const innerR = isCompact ? 50 : 75;
+  const outerR = isCompact ? 100 : 145;
+
+  return (
+    <div className={`ov-pie-card ${isCompact ? 'ov-pie-card--compact' : ''}`} style={{ '--delay': delay, '--accent': accentColor || '#1B4D7A' }}>
+      {/* ---- Card Header ---- */}
+      <div className="ov-pie-card-header">
+        <div className="ov-pie-card-title-row">
+          <div className="ov-pie-card-icon">
+            <i className={`fas ${icon || 'fa-chart-pie'}`}></i>
+          </div>
+          <div>
+            <h3 className="ov-pie-card-title">{title}</h3>
+            {subtitle && <span className="ov-pie-card-subtitle">{subtitle}</span>}
+          </div>
+        </div>
+        <div className="ov-pie-card-total">
+          <span className="ov-pie-card-total-label">Total Value</span>
+          <span className="ov-pie-card-total-value">₹{Utils.formatCompact(totalValue)}</span>
+        </div>
+      </div>
+
+      {/* ---- Side-by-side body: Pie Left | List Right ---- */}
+      {totalValue > 0 ? (
+        <div className="ov-pie-body">
+          {/* LEFT — Pie Chart */}
+          <div className="ov-pie-body-left">
+            <div className="ov-pie-chart-wrap">
+              <ResponsiveContainer width="100%" height={pieHeight}>
+                <PieChart>
+                  <Pie
+                    data={chartData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={innerR}
+                    outerRadius={outerR}
+                    paddingAngle={2}
+                    dataKey="value"
+                    nameKey="name"
+                    labelLine={false}
+                    label={renderCustomLabel}
+                    animationBegin={0}
+                    animationDuration={800}
+                    animationEasing="ease-out"
+                  >
+                    {chartData.map((entry, idx) => (
+                      <Cell key={idx} fill={entry.fill} stroke="#fff" strokeWidth={2} />
+                    ))}
+                  </Pie>
+                  <Tooltip content={<CustomTooltip />} />
+                </PieChart>
+              </ResponsiveContainer>
+              {/* Center label */}
+              <div className="ov-pie-center-label">
+                <span className="ov-pie-center-count">{data.length}</span>
+                <span className="ov-pie-center-text">{viewMode === 'category' ? 'CATEGORIES' : 'PRODUCTS'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT — Dropdown + Breakdown List */}
+          <div className="ov-pie-body-right">
+            {/* Dropdown selector */}
+            <div className="ov-pie-dropdown-row">
+              <select
+                className="ov-pie-dropdown"
+                value={viewMode}
+                onChange={(e) => setViewMode(e.target.value)}
+              >
+                <option value="product">
+                  By Product
+                </option>
+                <option value="category">
+                  By Category
+                </option>
+              </select>
+            </div>
+
+            {/* Breakdown list */}
+            <div className="ov-pie-breakdown">
+              <div className="ov-pie-breakdown-header">
+                <span>NAME</span>
+                <span>VALUE (₹)</span>
+                <span>SHARE</span>
+              </div>
+              <div className="ov-pie-breakdown-body">
+                {chartData.map((item, idx) => (
+                  <div key={idx} className="ov-pie-breakdown-row">
+                    <div className="ov-pie-breakdown-name">
+                      <span className="ov-pie-breakdown-dot" style={{ background: item.fill }}></span>
+                      <span className="ov-pie-breakdown-label">{item.name}</span>
+                    </div>
+                    <span className="ov-pie-breakdown-val">₹{Utils.formatCompact(item.value)}</span>
+                    <span className="ov-pie-breakdown-pct">{(item.percent * 100).toFixed(1)}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="ov-pie-empty">
+          <i className="fas fa-inbox"></i>
+          <p>No target data entered yet</p>
+          <span>Add targets in the Target Entry Grid</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ==================== MAIN COMPONENT ====================
 function OverviewStats({ products, categories }) {
   const [animateIn, setAnimateIn] = useState(false);
   const [activeQuarter, setActiveQuarter] = useState(null);
@@ -39,9 +235,7 @@ function OverviewStats({ products, categories }) {
   }, []);
 
   // ==================== COMPUTED DATA ====================
-  // TODO: Replace these computations with API responses when backend is ready.
-  // Expected API endpoint: GET /api/v1/salesrep/dashboard-summary
-  
+
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
     products.forEach(p => {
@@ -61,92 +255,77 @@ function OverviewStats({ products, categories }) {
     };
   }, [products]);
 
-  // Monthly trend data
-  // TODO: API endpoint: GET /api/v1/salesrep/monthly-trends?fy=2025-26
-  const monthlyTrend = useMemo(() => {
-    return MONTHS.map((month, idx) => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      products.forEach(p => {
-        if (p.monthlyTargets?.[month]) {
-          lyQty += p.monthlyTargets[month].lyQty || 0;
-          cyQty += p.monthlyTargets[month].cyQty || 0;
-          lyRev += p.monthlyTargets[month].lyRev || 0;
-          cyRev += p.monthlyTargets[month].cyRev || 0;
-        }
-      });
-      return { month, label: MONTH_LABELS[idx], lyQty, cyQty, lyRev, cyRev, growth: Utils.calcGrowth(lyQty, cyQty) };
-    });
-  }, [products]);
+  const achievementRate = overallTotals.lyQty > 0
+    ? Math.round((overallTotals.cyQty / overallTotals.lyQty) * 100)
+    : 0;
 
-  // Quarterly aggregates
-  // TODO: API endpoint: GET /api/v1/salesrep/quarterly-summary?fy=2025-26
-  const quarterlyData = useMemo(() => {
-    const quarters = [
-      { id: 'Q1', label: 'Q1', fullLabel: 'Apr — Jun', color: '#4285F4' },
-      { id: 'Q2', label: 'Q2', fullLabel: 'Jul — Sep', color: '#34A853' },
-      { id: 'Q3', label: 'Q3', fullLabel: 'Oct — Dec', color: '#FBBC04' },
-      { id: 'Q4', label: 'Q4', fullLabel: 'Jan — Mar', color: '#EA4335' }
-    ];
-    return quarters.map(q => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      products.forEach(p => {
-        if (p.monthlyTargets) {
-          QUARTER_MONTHS[q.id].forEach(m => {
-            lyQty += p.monthlyTargets[m]?.lyQty || 0;
-            cyQty += p.monthlyTargets[m]?.cyQty || 0;
-            lyRev += p.monthlyTargets[m]?.lyRev || 0;
-            cyRev += p.monthlyTargets[m]?.cyRev || 0;
-          });
-        }
-      });
-      return { ...q, lyQty, cyQty, lyRev, cyRev, growth: Utils.calcGrowth(lyQty, cyQty) };
-    });
-  }, [products]);
-
-  // Category performance
-  // TODO: API endpoint: GET /api/v1/salesrep/category-performance?fy=2025-26
-  const categoryPerformance = useMemo(() => {
+  // ==================== YEARLY PIE DATA ====================
+  // Category breakdown for full year
+  const yearlyCategoryData = useMemo(() => {
     return categories.map(cat => {
       const catProducts = products.filter(p => p.categoryId === cat.id);
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+      let cyRev = 0;
       catProducts.forEach(p => {
         if (p.monthlyTargets) {
           Object.values(p.monthlyTargets).forEach(m => {
-            lyQty += m.lyQty || 0;
-            cyQty += m.cyQty || 0;
-            lyRev += m.lyRev || 0;
             cyRev += m.cyRev || 0;
           });
         }
       });
-      const growth = Utils.calcGrowth(lyQty, cyQty);
-      // Contribution percentage of this category to total CY target
-      const contribution = overallTotals.cyQty > 0 ? (cyQty / overallTotals.cyQty) * 100 : 0;
-      return { ...cat, lyQty, cyQty, lyRev, cyRev, growth, contribution, productCount: catProducts.length };
-    }).sort((a, b) => b.cyQty - a.cyQty); // Sort by highest target
-  }, [categories, products, overallTotals]);
+      return { name: cat.name, value: cyRev, id: cat.id };
+    }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+  }, [categories, products]);
 
-  // Top movers - products with highest CY targets
-  // TODO: API endpoint: GET /api/v1/salesrep/top-products?fy=2025-26&limit=5
-  const topProducts = useMemo(() => {
-    return products
-      .map(p => {
-        const totals = Utils.calculateYearlyTotals(p.monthlyTargets);
-        return { ...p, ...totals, growth: Utils.calcGrowth(totals.lyQty, totals.cyQty) };
-      })
-      .sort((a, b) => b.cyQty - a.cyQty)
-      .slice(0, 5);
+  // Product breakdown for full year
+  const yearlyProductData = useMemo(() => {
+    return products.map(p => {
+      let cyRev = 0;
+      if (p.monthlyTargets) {
+        Object.values(p.monthlyTargets).forEach(m => {
+          cyRev += m.cyRev || 0;
+        });
+      }
+      return { name: p.name, value: cyRev, id: p.id, categoryId: p.categoryId };
+    }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
   }, [products]);
 
-  // Find the max monthly CY value for chart scaling
-  const maxMonthlyQty = useMemo(() => {
-    return Math.max(...monthlyTrend.map(m => Math.max(m.cyQty, m.lyQty)), 1);
-  }, [monthlyTrend]);
+  const yearlyTotalValue = useMemo(() => {
+    return yearlyProductData.reduce((sum, d) => sum + d.value, 0);
+  }, [yearlyProductData]);
 
-  // Achievement rate (how much CY target vs LY actual)
-  const achievementRate = overallTotals.lyQty > 0
-    ? Math.round((overallTotals.cyQty / overallTotals.lyQty) * 100)
-    : 0;
+  // ==================== QUARTERLY PIE DATA ====================
+  const quarterlyPieData = useMemo(() => {
+    return Object.entries(QUARTER_CONFIG).map(([qId, qConfig]) => {
+      // Category breakdown for this quarter
+      const categoryData = categories.map(cat => {
+        const catProducts = products.filter(p => p.categoryId === cat.id);
+        let cyRev = 0;
+        catProducts.forEach(p => {
+          if (p.monthlyTargets) {
+            qConfig.months.forEach(m => {
+              cyRev += p.monthlyTargets[m]?.cyRev || 0;
+            });
+          }
+        });
+        return { name: cat.name, value: cyRev, id: cat.id };
+      }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+
+      // Product breakdown for this quarter
+      const productData = products.map(p => {
+        let cyRev = 0;
+        if (p.monthlyTargets) {
+          qConfig.months.forEach(m => {
+            cyRev += p.monthlyTargets[m]?.cyRev || 0;
+          });
+        }
+        return { name: p.name, value: cyRev, id: p.id, categoryId: p.categoryId };
+      }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
+
+      const totalValue = productData.reduce((sum, d) => sum + d.value, 0);
+
+      return { id: qId, ...qConfig, categoryData, productData, totalValue };
+    });
+  }, [categories, products]);
 
   return (
     <div className={`ov-dashboard ${animateIn ? 'ov-animate-in' : ''}`}>
@@ -167,24 +346,13 @@ function OverviewStats({ products, categories }) {
           </div>
         </div>
 
-        <div className="ov-hero-card ov-hero-ly" style={{ '--delay': '0.1s' }}>
-          <div className="ov-hero-icon-wrap ly">
-            <div className="ov-hero-icon"><i className="fas fa-history"></i></div>
-          </div>
-          <div className="ov-hero-data">
-            <span className="ov-hero-value">{Utils.formatNumber(overallTotals.lyQty)}</span>
-            <span className="ov-hero-label">Last Year (Qty)</span>
-          </div>
-          <div className="ov-hero-badge neutral">Baseline</div>
-        </div>
-
-        <div className="ov-hero-card ov-hero-revenue" style={{ '--delay': '0.15s' }}>
+        <div className="ov-hero-card ov-hero-revenue" style={{ '--delay': '0.1s' }}>
           <div className="ov-hero-icon-wrap rev">
             <div className="ov-hero-icon"><i className="fas fa-rupee-sign"></i></div>
           </div>
           <div className="ov-hero-data">
             <span className="ov-hero-value">{Utils.formatShortCurrency(overallTotals.cyRev)}</span>
-            <span className="ov-hero-label">Revenue Target</span>
+            <span className="ov-hero-label">FY Revenue Target</span>
           </div>
           <div className={`ov-hero-badge ${overallTotals.revGrowth >= 0 ? 'positive' : 'negative'}`}>
             <i className={`fas fa-arrow-${overallTotals.revGrowth >= 0 ? 'up' : 'down'}`}></i>
@@ -192,7 +360,7 @@ function OverviewStats({ products, categories }) {
           </div>
         </div>
 
-        <div className="ov-hero-card ov-hero-achievement" style={{ '--delay': '0.2s' }}>
+        <div className="ov-hero-card ov-hero-achievement" style={{ '--delay': '0.15s' }}>
           <div className="ov-hero-icon-wrap ach">
             <div className="ov-hero-icon"><i className="fas fa-trophy"></i></div>
           </div>
@@ -208,213 +376,84 @@ function OverviewStats({ products, categories }) {
             </svg>
           </div>
         </div>
-      </div>
 
-      {/* ==================== MONTHLY TREND + QUARTERLY ==================== */}
-      <div className="ov-twin-section">
-
-        {/* Monthly Trend Chart */}
-        <div className="ov-panel ov-trend-panel" style={{ '--delay': '0.25s' }}>
-          <div className="ov-panel-header">
-            <h3><i className="fas fa-chart-area"></i> Monthly Target Trend</h3>
-            <div className="ov-legend">
-              <span className="ov-legend-dot cy"></span> CY Target
-              <span className="ov-legend-dot ly"></span> LY Actual
-            </div>
+        <div className="ov-hero-card ov-hero-products" style={{ '--delay': '0.2s' }}>
+          <div className="ov-hero-icon-wrap prod">
+            <div className="ov-hero-icon"><i className="fas fa-boxes-stacked"></i></div>
           </div>
-          <div className="ov-chart-area">
-            {monthlyTrend.map((m, idx) => (
-              <div key={m.month} className="ov-chart-col" style={{ '--col-delay': `${idx * 0.04}s` }}>
-                <div className="ov-bar-group">
-                  <div className="ov-bar ly-bar"
-                    style={{ height: `${(m.lyQty / maxMonthlyQty) * 100}%` }}
-                    title={`LY: ${Utils.formatNumber(m.lyQty)}`}>
-                  </div>
-                  <div className="ov-bar cy-bar"
-                    style={{ height: `${(m.cyQty / maxMonthlyQty) * 100}%` }}
-                    title={`CY: ${Utils.formatNumber(m.cyQty)}`}>
-                    <span className="ov-bar-tooltip">{Utils.formatCompact(m.cyQty)}</span>
-                  </div>
-                </div>
-                <span className="ov-chart-label">{m.label}</span>
-                <span className={`ov-chart-growth ${m.growth >= 0 ? 'up' : 'down'}`}>
-                  {m.growth >= 0 ? '+' : ''}{m.growth.toFixed(0)}%
-                </span>
-              </div>
-            ))}
+          <div className="ov-hero-data">
+            <span className="ov-hero-value">{products.length}</span>
+            <span className="ov-hero-label">Products Tracked</span>
           </div>
-        </div>
-
-        {/* Quarterly Performance Cards */}
-        <div className="ov-panel ov-quarter-panel" style={{ '--delay': '0.3s' }}>
-          <div className="ov-panel-header">
-            <h3><i className="fas fa-calendar-alt"></i> Quarterly Targets</h3>
-          </div>
-          <div className="ov-quarter-grid">
-            {quarterlyData.map(q => (
-              <div
-                key={q.id}
-                className={`ov-qcard ${activeQuarter === q.id ? 'active' : ''}`}
-                style={{ '--q-color': q.color }}
-                onClick={() => setActiveQuarter(activeQuarter === q.id ? null : q.id)}
-              >
-                <div className="ov-qcard-top">
-                  <span className="ov-qcard-label">{q.label}</span>
-                  <span className="ov-qcard-period">{q.fullLabel}</span>
-                </div>
-                <div className="ov-qcard-value">{Utils.formatNumber(q.cyQty)}</div>
-                <div className="ov-qcard-compare">
-                  <span className="ov-qcard-ly">LY: {Utils.formatNumber(q.lyQty)}</span>
-                  <span className={`ov-qcard-growth ${q.growth >= 0 ? 'positive' : 'negative'}`}>
-                    <i className={`fas fa-caret-${q.growth >= 0 ? 'up' : 'down'}`}></i>
-                    {Math.abs(q.growth).toFixed(1)}%
-                  </span>
-                </div>
-                {/* Mini progress bar */}
-                <div className="ov-qcard-progress">
-                  <div className="ov-qcard-progress-fill"
-                    style={{ width: `${Math.min((q.cyQty / (overallTotals.cyQty || 1)) * 100 * 4, 100)}%` }}>
-                  </div>
-                </div>
-                <span className="ov-qcard-share">
-                  {overallTotals.cyQty > 0 ? ((q.cyQty / overallTotals.cyQty) * 100).toFixed(0) : 0}% of FY
-                </span>
-
-                {/* Expanded monthly detail */}
-                {activeQuarter === q.id && (
-                  <div className="ov-qcard-detail">
-                    {QUARTER_MONTHS[q.id].map(m => {
-                      const md = monthlyTrend.find(mt => mt.month === m);
-                      return md ? (
-                        <div key={m} className="ov-qcard-month-row">
-                          <span className="ov-qm-label">{md.label}</span>
-                          <span className="ov-qm-val">{Utils.formatNumber(md.cyQty)}</span>
-                          <span className={`ov-qm-growth ${md.growth >= 0 ? 'up' : 'down'}`}>
-                            {md.growth >= 0 ? '+' : ''}{md.growth.toFixed(0)}%
-                          </span>
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-              </div>
-            ))}
+          <div className="ov-hero-sub-info">
+            <span>{categories.length} categories</span>
           </div>
         </div>
       </div>
 
-      {/* ==================== CATEGORY PERFORMANCE + TOP PRODUCTS ==================== */}
-      <div className="ov-twin-section">
-
-        {/* Category Breakdown */}
-        <div className="ov-panel ov-category-panel" style={{ '--delay': '0.35s' }}>
-          <div className="ov-panel-header">
-            <h3><i className="fas fa-layer-group"></i> Category Performance</h3>
-          </div>
-          <div className="ov-category-list">
-            {categoryPerformance.map((cat, idx) => (
-              <div key={cat.id} className="ov-cat-row" style={{ '--row-delay': `${idx * 0.05}s` }}>
-                <div className="ov-cat-info">
-                  <div className={`ov-cat-icon ${cat.color || ''}`}>
-                    <i className={`fas ${cat.icon || 'fa-box'}`}></i>
-                  </div>
-                  <div className="ov-cat-text">
-                    <span className="ov-cat-name">{cat.name}</span>
-                    <span className="ov-cat-count">{cat.productCount} products</span>
-                  </div>
-                </div>
-                <div className="ov-cat-metrics">
-                  <div className="ov-cat-metric">
-                    <span className="ov-cm-label">CY Target</span>
-                    <span className="ov-cm-value accent">{Utils.formatNumber(cat.cyQty)}</span>
-                  </div>
-                  <div className="ov-cat-metric">
-                    <span className="ov-cm-label">LY Actual</span>
-                    <span className="ov-cm-value">{Utils.formatNumber(cat.lyQty)}</span>
-                  </div>
-                  <div className="ov-cat-metric">
-                    <span className="ov-cm-label">Growth</span>
-                    <span className={`ov-cm-value ${cat.growth >= 0 ? 'positive' : 'negative'}`}>
-                      {Utils.formatGrowth(cat.growth)}
-                    </span>
-                  </div>
-                </div>
-                {/* Contribution bar */}
-                <div className="ov-cat-bar-wrap">
-                  <div className="ov-cat-bar" style={{ width: `${cat.contribution}%` }}>
-                    <span className="ov-cat-bar-label">{cat.contribution.toFixed(1)}%</span>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* ==================== FULL YEAR PIE CHART ==================== */}
+      <div className="ov-section-header" style={{ '--delay': '0.25s' }}>
+        <div className="ov-section-title-wrap">
+          <i className="fas fa-calendar-alt"></i>
+          <h2>Full Year Contribution Breakdown</h2>
         </div>
+        <span className="ov-section-badge">FY 2025-26</span>
+      </div>
 
-        {/* Top Products */}
-        <div className="ov-panel ov-top-panel" style={{ '--delay': '0.4s' }}>
-          <div className="ov-panel-header">
-            <h3><i className="fas fa-fire"></i> Top 5 Products</h3>
-            <span className="ov-panel-subtitle">By CY target volume</span>
-          </div>
-          <div className="ov-top-list">
-            {topProducts.map((p, idx) => {
-              const barWidth = overallTotals.cyQty > 0 ? (p.cyQty / topProducts[0]?.cyQty) * 100 : 0;
-              return (
-                <div key={p.id} className="ov-top-row" style={{ '--row-delay': `${idx * 0.06}s` }}>
-                  <div className="ov-top-rank">
-                    <span className={`ov-rank-num rank-${idx + 1}`}>{idx + 1}</span>
-                  </div>
-                  <div className="ov-top-info">
-                    <span className="ov-top-name">{p.name}</span>
-                    <div className="ov-top-bar-wrap">
-                      <div className="ov-top-bar" style={{ width: `${barWidth}%` }}></div>
-                    </div>
-                  </div>
-                  <div className="ov-top-numbers">
-                    <span className="ov-top-qty">{Utils.formatNumber(p.cyQty)}</span>
-                    <span className={`ov-top-growth ${p.growth >= 0 ? 'positive' : 'negative'}`}>
-                      <i className={`fas fa-arrow-${p.growth >= 0 ? 'up' : 'down'}`}></i>
-                      {Math.abs(p.growth).toFixed(1)}%
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          {topProducts.length === 0 && (
-            <div className="ov-empty-state">
-              <i className="fas fa-inbox"></i>
-              <p>No product targets entered yet</p>
-            </div>
-          )}
+      <div className="ov-pie-full-year" style={{ '--delay': '0.3s' }}>
+        <PieChartCard
+          title="FY Revenue Breakdown"
+          subtitle="How each category & product contributes to the yearly target"
+          categoryData={yearlyCategoryData}
+          productData={yearlyProductData}
+          totalValue={yearlyTotalValue}
+          icon="fa-chart-pie"
+          accentColor="#1B4D7A"
+          delay="0.3s"
+        />
+      </div>
+
+      {/* ==================== QUARTERLY PIE CHARTS ==================== */}
+      <div className="ov-section-header" style={{ '--delay': '0.4s' }}>
+        <div className="ov-section-title-wrap">
+          <i className="fas fa-calendar-week"></i>
+          <h2>Quarterly Contribution Breakdown</h2>
+        </div>
+        <div className="ov-quarter-pills">
+          <button
+            className={`ov-qpill ${activeQuarter === null ? 'active' : ''}`}
+            onClick={() => setActiveQuarter(null)}
+          >All Quarters</button>
+          {Object.entries(QUARTER_CONFIG).map(([qId, q]) => (
+            <button
+              key={qId}
+              className={`ov-qpill ${activeQuarter === qId ? 'active' : ''}`}
+              onClick={() => setActiveQuarter(activeQuarter === qId ? null : qId)}
+              style={{ '--pill-color': q.color }}
+            >
+              {q.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* ==================== REVENUE SNAPSHOT FOOTER ==================== */}
-      <div className="ov-revenue-footer" style={{ '--delay': '0.45s' }}>
-        <div className="ov-rev-block">
-          <div className="ov-rev-icon"><i className="fas fa-wallet"></i></div>
-          <div className="ov-rev-data">
-            <span className="ov-rev-label">LY Revenue</span>
-            <span className="ov-rev-value">{Utils.formatShortCurrency(overallTotals.lyRev)}</span>
-          </div>
-        </div>
-        <div className="ov-rev-arrow">
-          <i className="fas fa-arrow-right"></i>
-        </div>
-        <div className="ov-rev-block highlight">
-          <div className="ov-rev-icon"><i className="fas fa-chart-line"></i></div>
-          <div className="ov-rev-data">
-            <span className="ov-rev-label">CY Revenue Target</span>
-            <span className="ov-rev-value">{Utils.formatShortCurrency(overallTotals.cyRev)}</span>
-          </div>
-        </div>
-        <div className="ov-rev-growth-pill">
-          <span className={overallTotals.revGrowth >= 0 ? 'positive' : 'negative'}>
-            <i className={`fas fa-trending-${overallTotals.revGrowth >= 0 ? 'up' : 'down'}`}></i>
-            {Utils.formatGrowth(overallTotals.revGrowth)} Revenue Growth
-          </span>
-        </div>
+      <div className="ov-pie-quarters-grid">
+        {quarterlyPieData
+          .filter(q => activeQuarter === null || q.id === activeQuarter)
+          .map(q => (
+            <PieChartCard
+              key={q.id}
+              title={`${q.label} Revenue`}
+              subtitle={q.fullLabel}
+              categoryData={q.categoryData}
+              productData={q.productData}
+              totalValue={q.totalValue}
+              icon="fa-chart-pie"
+              accentColor={q.color}
+              delay={`${0.45 + Object.keys(QUARTER_CONFIG).indexOf(q.id) * 0.1}s`}
+              isCompact
+            />
+          ))}
       </div>
 
     </div>
