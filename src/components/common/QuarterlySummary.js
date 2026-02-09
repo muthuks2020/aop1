@@ -492,39 +492,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
       })}
 
       {/* ==================== GRAND TOTAL FOOTER ==================== */}
-      <div className="qs-grand-footer">
-        <div className="qs-grand-footer-inner">
-          <div className="qs-grand-footer-label">
-            <i className="fas fa-calculator"></i>
-            Grand Total — All Categories
-          </div>
-          <div className="qs-grand-footer-values">
-            {displayQuarters.map(q => (
-              <div key={q.id} className="qs-grand-footer-q" style={{ '--q-color': q.color }}>
-                <span className="qs-gf-q-label">{q.label} ({q.fullLabel})</span>
-                <div className="qs-gf-months-row">
-                  {q.months.map(m => (
-                    <div key={m} className="qs-gf-month-item">
-                      <span className="qs-gf-month-name">{MONTH_LABEL_MAP[m]}</span>
-                      <span className="qs-gf-month-val">{formatCurrency(grandTotals.months[m]?.cyValue || 0)}</span>
-                      <span className="qs-gf-month-units">{formatNumber(grandTotals.months[m]?.cyQty || 0)}</span>
-                    </div>
-                  ))}
-                </div>
-                <div className="qs-gf-q-total-row">
-                  <span className="qs-gf-q-value">{formatCurrency(grandTotals.quarters[q.id]?.cyValue || 0)}</span>
-                  <span className="qs-gf-q-units">{formatNumber(grandTotals.quarters[q.id]?.cyQty || 0)} units</span>
-                </div>
-              </div>
-            ))}
-            <div className="qs-grand-footer-fy">
-              <span className="qs-gf-q-label">FY Total</span>
-              <span className="qs-gf-fy-value">{formatCurrency(grandTotals.fyTotal.value)}</span>
-              <span className="qs-gf-q-units">{formatNumber(grandTotals.fyTotal.qty)} units</span>
-            </div>
-          </div>
-        </div>
-      </div>
+  
     </div>
   );
 }
