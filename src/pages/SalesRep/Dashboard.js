@@ -2,11 +2,11 @@
  * Sales Representative Dashboard
  * Main dashboard with three tabs:
  * 1. Overview & Summary
- * 2. Target Entry Grid (with Overall Target Bar)
+ * 2. Target Entry Grid (with Overall Target Bar — VALUE-based)
  * 3. Quarterly Summary - Unit Wise
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.4.0 - Added Overall Target support
+ * @version 2.5.0 - VALUE-based Overall Target
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -20,11 +20,11 @@ import QuarterlySummary from '../../components/common/QuarterlySummary';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 
-// ==================== OVERALL YEARLY TARGET ====================
-// This is the fixed yearly target assigned to the sales rep.
+// ==================== OVERALL YEARLY TARGET (VALUE) ====================
+// This is the fixed yearly VALUE target (₹) assigned to the sales rep by TBM.
 // In production, this should come from the API (e.g., from TBM/ABM assignments).
 // For now, it's set as a constant. Update this value or fetch from backend.
-const OVERALL_YEARLY_TARGET_QTY = 15000; // Fixed yearly quantity target for this sales rep
+const OVERALL_YEARLY_TARGET_VALUE = 50000000; // ₹5 Crore — Fixed yearly VALUE target from TBM
 
 function SalesRepDashboard() {
   const { user } = useAuth();
@@ -137,7 +137,7 @@ function SalesRepDashboard() {
             onSubmitAll={handleSubmitAll}
             userRole="salesrep"
             fiscalYear="2025-26"
-            overallYearlyTarget={OVERALL_YEARLY_TARGET_QTY}
+            overallYearlyTargetValue={OVERALL_YEARLY_TARGET_VALUE}
           />
         );
       case 'quarterly':

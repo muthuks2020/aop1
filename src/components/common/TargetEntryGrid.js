@@ -1,11 +1,20 @@
 /**
  * TargetEntryGrid Component
  * Enhanced Excel-like grid for Monthly Target Entry
- * Features: Overall Target Bar, Quarterly totals in header row, Monthly totals summary row,
- *           Edit/Freeze based on approval status
+ * Features: Overall Target Bar (VALUE-based), Quarterly totals in header row, 
+ *           Monthly totals summary row, Edit/Freeze based on approval status
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.3.0 - Added Overall Target Summary Bar
+ * @version 2.5.0 - VALUE-based Overall Target Summary Bar
+ * 
+ * v2.5.0 CHANGES:
+ * - All 3 OTB cards now show VALUE (₹) not units
+ * - Card 1: Target Value (FY) — fixed target from TBM
+ * - Card 2: Current Year Value — live running total with growth badge
+ * - Card 3: Last Year Value — reference
+ * - LY → "Last Year", CY → "Current Year" in labels
+ * - Progress bar tracks value achievement
+ * - Quarter chips show revenue only
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -45,7 +54,7 @@ function TargetEntryGrid({
   onSubmitAll,
   userRole = 'salesrep',
   fiscalYear = '2025-26',
-  overallYearlyTarget = null  // NEW: Fixed yearly target (quantity)
+  overallYearlyTargetValue = null  // Fixed yearly target in VALUE (₹) assigned by TBM
 }) {
   // State management
   const [activeCell, setActiveCell] = useState(null);
@@ -116,11 +125,7 @@ function TargetEntryGrid({
     return totals;
   }, [products]);
 
-  // =====================================================================
-  // Calculate overall monthly totals - sum of ALL products per month
-  // This powers the monthly totals summary row below the quarter header
-  // Auto-updates when any product target is edited
-  // =====================================================================
+  // Calculate overall monthly totals
   const overallMonthlyTotals = useMemo(() => {
     const totals = {};
     MONTHS.forEach(month => {
@@ -131,15 +136,14 @@ function TargetEntryGrid({
       });
       totals[month] = cyTotal;
     });
-    // Grand total across all months
     totals.grandTotal = Object.values(totals).reduce((sum, val) => sum + (typeof val === 'number' ? val : 0), 0);
     return totals;
   }, [products]);
 
   // =====================================================================
-  // NEW in v2.3.0: Overall Target Calculations
-  // Computes running total of CY Qty and CY Revenue across all products
-  // Updates live as the sales person enters values
+  // Overall Target Calculations — VALUE-BASED (v2.5.0)
+  // Computes running total of CY Revenue and LY Revenue across all products
+  // Achievement is measured against the fixed yearly VALUE target from TBM
   // =====================================================================
   const overallTargetSummary = useMemo(() => {
     let totalCyQty = 0;
@@ -161,20 +165,19 @@ function TargetEntryGrid({
     const qtyGrowth = Utils.calcGrowth(totalLyQty, totalCyQty);
     const revGrowth = Utils.calcGrowth(totalLyRev, totalCyRev);
 
-    // Calculate achievement percentage against fixed yearly target
-    const yearlyTarget = overallYearlyTarget || 0;
-    const achievementPercent = yearlyTarget > 0 
-      ? Math.min(Math.round((totalCyQty / yearlyTarget) * 100), 100) 
+    // Achievement percentage against fixed yearly VALUE target
+    const yearlyTargetValue = overallYearlyTargetValue || 0;
+    const achievementPercent = yearlyTargetValue > 0 
+      ? Math.min(Math.round((totalCyRev / yearlyTargetValue) * 100), 100) 
       : 0;
-    const overflowPercent = yearlyTarget > 0 && totalCyQty > yearlyTarget
-      ? Math.round(((totalCyQty - yearlyTarget) / yearlyTarget) * 100)
+    const overflowPercent = yearlyTargetValue > 0 && totalCyRev > yearlyTargetValue
+      ? Math.round(((totalCyRev - yearlyTargetValue) / yearlyTargetValue) * 100)
       : 0;
 
     // Quarterly breakdown for the target bar (with month-level detail)
     const quarterlyBreakdown = QUARTERS.map(q => {
       let qCyQty = 0;
       let qCyRev = 0;
-      // Month-level totals within this quarter
       const monthlyDetail = q.months.map(month => {
         let mCyQty = 0;
         let mCyRev = 0;
@@ -197,12 +200,12 @@ function TargetEntryGrid({
       totalLyRev,
       qtyGrowth,
       revGrowth,
-      yearlyTarget,
+      yearlyTargetValue,
       achievementPercent,
       overflowPercent,
       quarterlyBreakdown
     };
-  }, [products, overallYearlyTarget]);
+  }, [products, overallYearlyTargetValue]);
 
   // ==================== HELPER FUNCTIONS ====================
 
@@ -257,9 +260,7 @@ function TargetEntryGrid({
   // ==================== STATUS HELPERS ====================
 
   const getStatusClass = (status) => STATUS_CONFIG[status]?.class || 'status-draft';
-  
   const isEditable = (status) => status === 'draft' || status === 'rejected';
-
   const getStatusTooltip = (status) => {
     switch (status) {
       case 'submitted': return 'Pending TBM approval - values are locked';
@@ -310,7 +311,6 @@ function TargetEntryGrid({
     } else if (e.key === 'Tab') {
       e.preventDefault();
       handleCellBlur();
-      // Move to next month
       if (activeCell) {
         const monthIdx = MONTHS.indexOf(activeCell.month);
         if (monthIdx < MONTHS.length - 1) {
@@ -370,14 +370,6 @@ function TargetEntryGrid({
     );
   };
 
-  const renderStatusBadges = (statusCounts) => (
-    <div className="status-badges">
-      {statusCounts.approved > 0 && <span className="mini-badge approved">{statusCounts.approved}</span>}
-      {statusCounts.submitted > 0 && <span className="mini-badge submitted">{statusCounts.submitted}</span>}
-      {statusCounts.draft > 0 && <span className="mini-badge draft">{statusCounts.draft}</span>}
-      {statusCounts.rejected > 0 && <span className="mini-badge rejected">{statusCounts.rejected}</span>}
-    </div>
-  );
 
   // Get overall status counts
   const statusCounts = useMemo(() => {
@@ -393,7 +385,7 @@ function TargetEntryGrid({
   const renderRevenueOnlyCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
     const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
-    const statusCounts = getCategoryStatusCounts(category.id);
+    const catStatusCounts = getCategoryStatusCounts(category.id);
     const firstProduct = catProducts[0];
     const status = firstProduct?.status || 'draft';
 
@@ -404,41 +396,39 @@ function TargetEntryGrid({
         <div className="category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
-            <div className={`category-icon ${category.color}`}>
-              <i className={`fas ${category.icon}`}></i>
+            <div className={`category-icon-badge ${category.id}`}>
+              <i className={`fas ${category.icon || 'fa-box'}`}></i>
             </div>
-            <span>{highlightMatch(category.name, searchTerm)}</span>
-            <span className="revenue-badge">Revenue Only</span>
-            {renderStatusBadges(statusCounts)}
+            <span className="category-name">{category.name}</span>
+            <span className="revenue-only-badge">Revenue Only</span>
+          
           </div>
           {MONTHS.map(month => (
-            <div key={month} className="month-cell category-total">
+            <div key={month} className="month-cell">
               {Utils.formatNumber(calculateCategoryTotal(category.id, month, 'CY'))}
             </div>
           ))}
-          <div className="total-cell category-total">
+          <div className="total-cell">
             {Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0))}
           </div>
           <div className="growth-cell">
             {(() => {
-              const lyTotal = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
-              const cyTotal = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
-              const growth = Utils.calcGrowth(lyTotal, cyTotal);
+              const ly = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
+              const cy = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
+              const growth = Utils.calcGrowth(ly, cy);
               return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
             })()}
           </div>
         </div>
-        
+
         {isExpanded && (
           <div className="revenue-input-section">
-            <div className={`revenue-row ${getStatusClass(status)}`}>
+            <div className="revenue-row cy-row">
               <div className="product-name-cell">
                 <span className="year-label">CY Target</span>
                 <span className={`product-status-badge ${status}`}>
-                  {status === 'approved' && <><i className="fas fa-check-circle"></i> Approved</>}
-                  {status === 'submitted' && <><i className="fas fa-clock"></i> Pending</>}
-                  {status === 'rejected' && <><i className="fas fa-times-circle"></i> Rejected</>}
-                  {status === 'draft' && <><i className="fas fa-edit"></i> Draft</>}
+                  <i className={`fas ${STATUS_CONFIG[status]?.icon}`}></i>
+                  {STATUS_CONFIG[status]?.label}
                 </span>
               </div>
               {MONTHS.map(month => {
@@ -472,7 +462,7 @@ function TargetEntryGrid({
               <div className="growth-cell">-</div>
             </div>
             <div className="revenue-row ly-row">
-              <div className="product-name-cell"><span className="year-label ly">LY Actual</span></div>
+              <div className="product-name-cell"><span className="year-label ly">Last Year Actual</span></div>
               {MONTHS.map(month => (
                 <div key={month} className="month-cell ly-value">{Utils.formatNumber(calculateCategoryTotal(category.id, month, 'LY'))}</div>
               ))}
@@ -490,41 +480,40 @@ function TargetEntryGrid({
   const renderProductCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
     const subcategories = getSubcategories(category.id);
-    const statusCounts = getCategoryStatusCounts(category.id);
+    const catStatusCounts = getCategoryStatusCounts(category.id);
 
     if (subcategories.length === 0 && searchTerm) return null;
 
     return (
       <div key={category.id} className="category-section">
-        {/* Category Header Row */}
         <div className="category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
-            <div className={`category-icon ${category.color}`}>
-              <i className={`fas ${category.icon}`}></i>
+            <div className={`category-icon-badge ${category.id}`}>
+              <i className={`fas ${category.icon || 'fa-box'}`}></i>
             </div>
-            <span>{highlightMatch(category.name, searchTerm)}</span>
-            {renderStatusBadges(statusCounts)}
+            <span className="category-name">{category.name}</span>
+            
+           
           </div>
           {MONTHS.map(month => (
-            <div key={month} className="month-cell category-total">
+            <div key={month} className="month-cell">
               {Utils.formatNumber(calculateCategoryTotal(category.id, month, 'CY'))}
             </div>
           ))}
-          <div className="total-cell category-total">
+          <div className="total-cell">
             {Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0))}
           </div>
           <div className="growth-cell">
             {(() => {
-              const lyTotal = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
-              const cyTotal = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
-              const growth = Utils.calcGrowth(lyTotal, cyTotal);
+              const ly = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
+              const cy = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
+              const growth = Utils.calcGrowth(ly, cy);
               return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
             })()}
           </div>
         </div>
 
-        {/* Expanded content */}
         {isExpanded && subcategories.map(subcategory => {
           const subcatProducts = filteredProducts.filter(
             p => p.categoryId === category.id && p.subcategory === subcategory
@@ -532,11 +521,10 @@ function TargetEntryGrid({
 
           return (
             <div key={subcategory} className="subcategory-section">
-              {/* Subcategory Header */}
               <div className="subcategory-header-row">
                 <div className="subcategory-name-cell">
                   <span className="subcategory-name">{highlightMatch(subcategory, searchTerm)}</span>
-                  <span className="product-count">{subcatProducts.length}</span>
+                  
                 </div>
                 {MONTHS.map(month => (
                   <div key={month} className="month-cell subcategory-total">
@@ -549,10 +537,8 @@ function TargetEntryGrid({
                 <div className="growth-cell">-</div>
               </div>
 
-              {/* Product Rows */}
               {subcatProducts.map(product => (
                 <div key={product.id} className={`product-rows ${getStatusClass(product.status)}`}>
-                  {/* CY Row - Editable */}
                   <div className="product-row cy-row">
                     <div className="product-name-cell">
                       <span className="product-name" title={product.name}>
@@ -607,7 +593,6 @@ function TargetEntryGrid({
                     </div>
                   </div>
 
-                  {/* LY Row - Read Only */}
                   <div className="product-row ly-row">
                     <div className="product-name-cell">
                       <span className="year-label ly">LY</span>
@@ -672,26 +657,28 @@ function TargetEntryGrid({
       </div>
 
       {/* ============================================================= */}
-      {/* NEW in v2.3.0: Overall Target Summary Bar                      */}
-      {/* Shows fixed yearly target vs live running total                 */}
-      {/* Updates in real-time as sales person enters monthly values      */}
+      {/* Overall Target Summary Bar — VALUE-BASED (v2.5.0)              */}
+      {/* Card 1: Target Value (FY) — Fixed from TBM                    */}
+      {/* Card 2: Current Year Value — Live running total                */}
+      {/* Card 3: Last Year Value — Reference                            */}
       {/* ============================================================= */}
       <div className="overall-target-bar">
         <div className="otb-main-section">
-          {/* Overall Yearly Target (Fixed) */}
+
+          {/* Card 1: Target Value (FY) — Fixed target assigned by TBM */}
           <div className="otb-card otb-yearly-target">
             <div className="otb-card-icon">
               <i className="fas fa-flag-checkered"></i>
             </div>
             <div className="otb-card-content">
-              <span className="otb-card-label">Overall Target (FY {fiscalYear})</span>
+              <span className="otb-card-label">Target Value (FY {fiscalYear})</span>
               <span className="otb-card-value">
-                {overallYearlyTarget 
-                  ? Utils.formatNumber(overallYearlyTarget) 
+                {overallTargetSummary.yearlyTargetValue 
+                  ? Utils.formatShortCurrency(overallTargetSummary.yearlyTargetValue) 
                   : <span className="otb-not-set">Not Set</span>
                 }
               </span>
-              <span className="otb-card-sub">Fixed Yearly Qty Target</span>
+              <span className="otb-card-sub">Fixed Yearly Target from TBM</span>
             </div>
           </div>
 
@@ -702,34 +689,14 @@ function TargetEntryGrid({
             <div className="otb-divider-line"></div>
           </div>
 
-          {/* Current Value (Live Running Total) */}
+          {/* Card 2: Current Year Value — Live running total */}
           <div className="otb-card otb-current-value">
             <div className="otb-card-icon current">
               <i className="fas fa-chart-line"></i>
             </div>
             <div className="otb-card-content">
-              <span className="otb-card-label">Current Total (CY Qty)</span>
+              <span className="otb-card-label">Current Year Value</span>
               <span className="otb-card-value live">
-                {Utils.formatNumber(overallTargetSummary.totalCyQty)}
-                <span className={`otb-growth-badge ${overallTargetSummary.qtyGrowth >= 0 ? 'positive' : 'negative'}`}>
-                  <i className={`fas fa-arrow-${overallTargetSummary.qtyGrowth >= 0 ? 'up' : 'down'}`}></i>
-                  {Math.abs(overallTargetSummary.qtyGrowth).toFixed(1)}%
-                </span>
-              </span>
-              <span className="otb-card-sub">
-                LY: {Utils.formatNumber(overallTargetSummary.totalLyQty)} units
-              </span>
-            </div>
-          </div>
-
-          {/* Revenue Total */}
-          <div className="otb-card otb-revenue-total">
-            <div className="otb-card-icon revenue">
-              <i className="fas fa-rupee-sign"></i>
-            </div>
-            <div className="otb-card-content">
-              <span className="otb-card-label">Revenue Total (CY)</span>
-              <span className="otb-card-value revenue-value">
                 {Utils.formatShortCurrency(overallTargetSummary.totalCyRev)}
                 <span className={`otb-growth-badge ${overallTargetSummary.revGrowth >= 0 ? 'positive' : 'negative'}`}>
                   <i className={`fas fa-arrow-${overallTargetSummary.revGrowth >= 0 ? 'up' : 'down'}`}></i>
@@ -737,70 +704,47 @@ function TargetEntryGrid({
                 </span>
               </span>
               <span className="otb-card-sub">
-                LY: {Utils.formatShortCurrency(overallTargetSummary.totalLyRev)}
+                vs Last Year • Live Running Total
+              </span>
+            </div>
+          </div>
+
+          {/* Divider with arrow */}
+          <div className="otb-divider">
+            <div className="otb-divider-line"></div>
+            <i className="fas fa-arrow-right otb-divider-arrow"></i>
+            <div className="otb-divider-line"></div>
+          </div>
+
+          {/* Card 3: Last Year Value — Reference */}
+          <div className="otb-card otb-ly-value">
+            <div className="otb-card-icon ly">
+              <i className="fas fa-history"></i>
+            </div>
+            <div className="otb-card-content">
+              <span className="otb-card-label">Last Year Value</span>
+              <span className="otb-card-value ly-value">
+                {Utils.formatShortCurrency(overallTargetSummary.totalLyRev)}
+              </span>
+              <span className="otb-card-sub">
+                FY {(() => {
+                  const parts = fiscalYear.split('-');
+                  return `${parseInt(parts[0]) - 1}-${parseInt(parts[1]) - 1}`;
+                })()} Reference
               </span>
             </div>
           </div>
         </div>
 
-        {/* Progress Bar - Achievement against yearly target */}
-        {overallYearlyTarget > 0 && (
-          <div className="otb-progress-section">
-            <div className="otb-progress-header">
-              <span className="otb-progress-label">
-                <i className="fas fa-bullseye"></i> Target Achievement
-              </span>
-              <span className="otb-progress-values">
-                <span className="otb-progress-current">{Utils.formatNumber(overallTargetSummary.totalCyQty)}</span>
-                <span className="otb-progress-sep">/</span>
-                <span className="otb-progress-target">{Utils.formatNumber(overallYearlyTarget)}</span>
-                <span className={`otb-progress-percent ${overallTargetSummary.achievementPercent >= 100 ? 'exceeded' : overallTargetSummary.achievementPercent >= 75 ? 'on-track' : 'behind'}`}>
-                  {overallTargetSummary.achievementPercent}%
-                </span>
-              </span>
+        {/* Quarter-wise contribution chips — revenue only */}
+        <div className="otb-quarter-breakdown">
+          {overallTargetSummary.quarterlyBreakdown.map(q => (
+            <div key={q.id} className={`otb-quarter-chip ${q.color}`}>
+              <span className="otb-qchip-label">{q.label}</span>
+              <span className="otb-qchip-value">{Utils.formatShortCurrency(q.cyRev)}</span>
             </div>
-            <div className="otb-progress-bar-track">
-              <div 
-                className={`otb-progress-bar-fill ${overallTargetSummary.achievementPercent >= 100 ? 'exceeded' : overallTargetSummary.achievementPercent >= 75 ? 'on-track' : overallTargetSummary.achievementPercent >= 50 ? 'moderate' : 'behind'}`}
-                style={{ width: `${Math.min(overallTargetSummary.achievementPercent, 100)}%` }}
-              >
-                {overallTargetSummary.achievementPercent >= 15 && (
-                  <span className="otb-progress-bar-text">{overallTargetSummary.achievementPercent}%</span>
-                )}
-              </div>
-              {/* Quarter markers on progress bar */}
-              <div className="otb-progress-markers">
-                <div className="otb-progress-marker" style={{ left: '25%' }} title="Q1 End"><span>25%</span></div>
-                <div className="otb-progress-marker" style={{ left: '50%' }} title="H1 End"><span>50%</span></div>
-                <div className="otb-progress-marker" style={{ left: '75%' }} title="Q3 End"><span>75%</span></div>
-              </div>
-            </div>
-            {/* Quarter-wise contribution mini-cards */}
-            <div className="otb-quarter-breakdown">
-              {overallTargetSummary.quarterlyBreakdown.map(q => (
-                <div key={q.id} className={`otb-quarter-chip ${q.color}`}>
-                  <span className="otb-qchip-label">{q.label}</span>
-                  <span className="otb-qchip-value">{Utils.formatNumber(q.cyQty)}</span>
-                  <span className="otb-qchip-rev">{Utils.formatShortCurrency(q.cyRev)}</span>
-                </div>
-              ))}
-            </div>
-            {/* Month-wise breakdown row under each quarter */}
-            <div className="otb-month-breakdown">
-              {overallTargetSummary.quarterlyBreakdown.map(q => (
-                <div key={q.id} className={`otb-month-group ${q.color}`}>
-                  {q.monthlyDetail.map(m => (
-                    <div key={m.month} className="otb-month-item">
-                      <span className="otb-month-label">{MONTH_LABEL_MAP[m.month]}</span>
-                      <span className="otb-month-qty">{Utils.formatNumber(m.cyQty)}</span>
-                      <span className="otb-month-rev">{Utils.formatShortCurrency(m.cyRev)}</span>
-                    </div>
-                  ))}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+          ))}
+        </div>
       </div>
 
       {/* Search Bar */}
