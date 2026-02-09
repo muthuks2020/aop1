@@ -336,8 +336,7 @@
 }
 .ov-pie-breakdown-header {
   display: grid;
-  grid-template-columns: 1fr 90px 55px;
-  gap: 0.5rem;
+  grid-template-columns: 40% 30% 30%;
   padding: 0.5rem 0;
   border-bottom: 1.5px solid #E5E7EB;
   font-size: 0.62rem; font-weight: 700; color: #94A3B8;
@@ -363,8 +362,7 @@
 }
 .ov-pie-breakdown-row {
   display: grid;
-  grid-template-columns: 1fr 90px 55px;
-  gap: 0.5rem;
+  grid-template-columns: 40% 30% 30%;
   padding: 0.6rem 0;
   border-bottom: 1px solid rgba(0,0,0,0.03);
   align-items: center;
@@ -380,6 +378,7 @@
 .ov-pie-breakdown-name {
   display: flex; align-items: center; gap: 0.5rem;
   min-width: 0;
+  overflow: hidden;
 }
 .ov-pie-breakdown-dot {
   width: 10px; height: 10px;
@@ -387,18 +386,24 @@
   flex-shrink: 0;
 }
 .ov-pie-breakdown-label {
-  font-size: 0.8rem; font-weight: 600; color: #334155;
+  font-size: 0.78rem; font-weight: 600; color: #334155;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: 100%;
 }
 .ov-pie-breakdown-val {
   font-size: 0.78rem; font-weight: 700; color: #1a1a2e;
   text-align: right;
   font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  white-space: nowrap;
+  min-width: 70px;
 }
 .ov-pie-breakdown-pct {
   font-size: 0.72rem; font-weight: 700; color: var(--accent, #1B4D7A);
   text-align: right;
+  white-space: nowrap;
+  min-width: 42px;
 }
+
 
 /* ==================== EMPTY STATE ==================== */
 .ov-pie-empty {

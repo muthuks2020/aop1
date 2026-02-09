@@ -215,16 +215,7 @@ function TargetEntryGrid({
     return subcats;
   }, [filteredProducts]);
 
-  const getCategoryStatusCounts = useCallback((categoryId) => {
-    const catProducts = products.filter(p => p.categoryId === categoryId);
-    return {
-      draft: catProducts.filter(p => p.status === 'draft').length,
-      submitted: catProducts.filter(p => p.status === 'submitted').length,
-      approved: catProducts.filter(p => p.status === 'approved').length,
-      rejected: catProducts.filter(p => p.status === 'rejected').length,
-      total: catProducts.length
-    };
-  }, [products]);
+
 
   const calculateCategoryTotal = useCallback((categoryId, month, year) => {
     const catProducts = products.filter(p => p.categoryId === categoryId);
@@ -234,13 +225,7 @@ function TargetEntryGrid({
     }, 0);
   }, [products]);
 
-  const calculateSubcategoryTotal = useCallback((categoryId, subcategory, month, year) => {
-    const subcatProducts = products.filter(p => p.categoryId === categoryId && p.subcategory === subcategory);
-    return subcatProducts.reduce((sum, p) => {
-      const monthData = p.monthlyTargets?.[month] || {};
-      return sum + (year === 'CY' ? (monthData.cyQty || 0) : (monthData.lyQty || 0));
-    }, 0);
-  }, [products]);
+  
 
   const calculateYearlyTotal = useCallback((productId, year) => {
     const product = products.find(p => p.id === productId);
@@ -385,7 +370,7 @@ function TargetEntryGrid({
   const renderRevenueOnlyCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
     const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
-    const catStatusCounts = getCategoryStatusCounts(category.id);
+   
     const firstProduct = catProducts[0];
     const status = firstProduct?.status || 'draft';
 
@@ -480,7 +465,7 @@ function TargetEntryGrid({
   const renderProductCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
     const subcategories = getSubcategories(category.id);
-    const catStatusCounts = getCategoryStatusCounts(category.id);
+    
 
     if (subcategories.length === 0 && searchTerm) return null;
 
@@ -526,15 +511,8 @@ function TargetEntryGrid({
                   <span className="subcategory-name">{highlightMatch(subcategory, searchTerm)}</span>
                   
                 </div>
-                {MONTHS.map(month => (
-                  <div key={month} className="month-cell subcategory-total">
-                    {Utils.formatNumber(calculateSubcategoryTotal(category.id, subcategory, month, 'CY'))}
-                  </div>
-                ))}
-                <div className="total-cell subcategory-total">
-                  {Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateSubcategoryTotal(category.id, subcategory, m, 'CY'), 0))}
-                </div>
-                <div className="growth-cell">-</div>
+               
+               
               </div>
 
               {subcatProducts.map(product => (
@@ -811,25 +789,7 @@ function TargetEntryGrid({
             <div className="quarter-cell empty growth-spacer"></div>
           </div>
 
-          {/* Monthly Totals Summary Row */}
-          <div className="monthly-totals-row">
-            <div className="monthly-totals-label-cell">
-              <i className="fas fa-calculator"></i>
-              <span>Total</span>
-            </div>
-            {MONTHS.map((month, index) => (
-              <div 
-                key={month} 
-                className={`monthly-totals-cell ${index < 3 ? 'q1' : index < 6 ? 'q2' : index < 9 ? 'q3' : 'q4'}`}
-              >
-                {Utils.formatNumber(overallMonthlyTotals[month] || 0)}
-              </div>
-            ))}
-            <div className="monthly-totals-cell grand-total">
-              {Utils.formatNumber(overallMonthlyTotals.grandTotal || 0)}
-            </div>
-            <div className="monthly-totals-cell growth-spacer"></div>
-          </div>
+       
 
           {/* Category content */}
           {filteredCategories.length === 0 ? (

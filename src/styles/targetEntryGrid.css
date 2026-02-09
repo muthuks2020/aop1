@@ -1216,14 +1216,6 @@
     font-size: 0.7rem !important;
   }
 }
-/* ==================== MONTHLY TOTALS SUMMARY ROW ==================== */
-/* 
- * NEW in v2.2.0 - Add this CSS to the END of your targetEntryGrid.css file
- * (Before the @media print section)
- * 
- * This styles the monthly totals summary row that appears below the quarter header
- * showing the sum of ALL products for each individual month
- */
 
 .monthly-totals-row {
   display: grid;
@@ -1266,6 +1258,7 @@
   align-items: center;
   justify-content: center;
 }
+
 
 /* Quarter color tints for monthly total cells */
 .monthly-totals-cell.q1 { background: rgba(59, 130, 246, 0.1); color: #1D4ED8; }
