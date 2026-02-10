@@ -1,8 +1,8 @@
 /**
  * Header Component — Updated
- * CHANGE: Removed header-progress bar section
+ * CHANGE: Uses useAuth() as fallback if user prop is not provided
  * 
- * @version 3.1.0 - No progress bar
+ * @version 3.2.0 - User prop fallback fix
  */
 
 import React, { useState } from 'react';
@@ -10,10 +10,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Utils } from '../../utils/helpers';
 
-function Header({ user, onRefresh }) {
-  const { logout } = useAuth();
+function Header({ user: userProp, onRefresh }) {
+  const { logout, user: authUser } = useAuth();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
+
+  // Use prop first, fallback to auth context
+  const user = userProp || authUser;
 
   const handleLogout = () => {
     logout();

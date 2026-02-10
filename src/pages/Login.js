@@ -40,11 +40,11 @@ function Login() {
   };
 
   const demoCredentials = [
-    { username: 'salesrep', role: 'Sales Representative' },
-    { username: 'tbm', role: 'Territory Business Manager' },
-    { username: 'abm', role: 'Area Business Manager' },
-    { username: 'zbm', role: 'Zonal Business Manager' },
-    { username: 'saleshead', role: 'Sales Head' }
+    { username: 'salesrep', role: 'Sales Representative', name: 'Vasanthakumar C' },
+    { username: 'tbm', role: 'Territory Business Manager', name: 'Rajesh Kumar' },
+    { username: 'abm', role: 'Area Business Manager', name: 'Priya Sharma' },
+    { username: 'zbm', role: 'Zonal Business Manager', name: 'Amit Singh' },
+    { username: 'saleshead', role: 'Sales Head', name: 'Dr. Srinivasan' }
   ];
 
   const handleDemoLogin = (demoUsername) => {
@@ -127,7 +127,7 @@ function Login() {
                     <i className="fas fa-user-circle"></i>
                     <div className="demo-info">
                       <span className="demo-role">{cred.role}</span>
-                      <span className="demo-username">{cred.username}</span>
+                      <span className="demo-username">{cred.name}</span>
                     </div>
                   </button>
                 ))}
