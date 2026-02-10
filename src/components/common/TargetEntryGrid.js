@@ -714,12 +714,28 @@ function TargetEntryGrid({
           </div>
         </div>
 
-        {/* Quarter-wise contribution chips — revenue only */}
+       {/* Quarter-wise contribution chips — qty + revenue */}
         <div className="otb-quarter-breakdown">
           {overallTargetSummary.quarterlyBreakdown.map(q => (
             <div key={q.id} className={`otb-quarter-chip ${q.color}`}>
               <span className="otb-qchip-label">{q.label}</span>
-              <span className="otb-qchip-value">{Utils.formatShortCurrency(q.cyRev)}</span>
+              <span className="otb-qchip-value">{Utils.formatNumber(q.cyQty)}</span>
+              <span className="otb-qchip-rev">{Utils.formatShortCurrency(q.cyRev)}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* Month-wise breakdown row — auto-totals from cell values */}
+        <div className="otb-month-breakdown">
+          {overallTargetSummary.quarterlyBreakdown.map(q => (
+            <div key={q.id} className={`otb-month-group ${q.color}`}>
+              {q.monthlyDetail.map(m => (
+                <div key={m.month} className="otb-month-item">
+                  <span className="otb-month-label">{MONTH_LABEL_MAP[m.month]}</span>
+                  <span className="otb-month-qty">{Utils.formatNumber(m.cyQty)}</span>
+                  <span className="otb-month-rev">{Utils.formatShortCurrency(m.cyRev)}</span>
+                </div>
+              ))}
             </div>
           ))}
         </div>
