@@ -4,13 +4,12 @@
  * Mirrors Sales Rep OverviewStats design but with TBM-specific metrics
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * @version 1.1.0 - Removed Monthly Territory Trend chart
  * 
  * API INTEGRATION NOTES:
  * - All data currently computed from props (tbmTargets, categories, salesRepSubmissions)
  * - Replace with API calls when backend is ready:
  *   GET /api/v1/tbm/dashboard-summary
- *   GET /api/v1/tbm/monthly-trends
  *   GET /api/v1/tbm/category-performance
  *   GET /api/v1/tbm/top-products
  */
@@ -21,17 +20,9 @@ import '../../../styles/tbm/tbmOverview.css';
 
 // Fiscal year months in order
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
-const MONTH_LABELS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
-const QUARTER_MONTHS = {
-  Q1: ['apr', 'may', 'jun'],
-  Q2: ['jul', 'aug', 'sep'],
-  Q3: ['oct', 'nov', 'dec'],
-  Q4: ['jan', 'feb', 'mar']
-};
 
 function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmissions = [], approvalStats = {} }) {
   const [animateIn, setAnimateIn] = useState(false);
-  const [activeQuarter, setActiveQuarter] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setAnimateIn(true), 100);
@@ -58,48 +49,6 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
       qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
       revGrowth: Utils.calcGrowth(lyRev, cyRev)
     };
-  }, [tbmTargets]);
-
-  // Monthly trend data
-  // TODO: GET /api/v1/tbm/monthly-trends?fy=2026-27
-  const monthlyTrend = useMemo(() => {
-    return MONTHS.map((month, idx) => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      tbmTargets.forEach(p => {
-        if (p.monthlyTargets?.[month]) {
-          lyQty += p.monthlyTargets[month].lyQty || 0;
-          cyQty += p.monthlyTargets[month].cyQty || 0;
-          lyRev += p.monthlyTargets[month].lyRev || 0;
-          cyRev += p.monthlyTargets[month].cyRev || 0;
-        }
-      });
-      return { month, label: MONTH_LABELS[idx], lyQty, cyQty, lyRev, cyRev, growth: Utils.calcGrowth(lyQty, cyQty) };
-    });
-  }, [tbmTargets]);
-
-  // Quarterly aggregates
-  // TODO: GET /api/v1/tbm/quarterly-summary?fy=2026-27
-  const quarterlyData = useMemo(() => {
-    const quarters = [
-      { id: 'Q1', label: 'Q1', fullLabel: 'Apr — Jun', color: '#4285F4' },
-      { id: 'Q2', label: 'Q2', fullLabel: 'Jul — Sep', color: '#34A853' },
-      { id: 'Q3', label: 'Q3', fullLabel: 'Oct — Dec', color: '#FBBC04' },
-      { id: 'Q4', label: 'Q4', fullLabel: 'Jan — Mar', color: '#EA4335' }
-    ];
-    return quarters.map(q => {
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
-      tbmTargets.forEach(p => {
-        if (p.monthlyTargets) {
-          QUARTER_MONTHS[q.id].forEach(m => {
-            lyQty += p.monthlyTargets[m]?.lyQty || 0;
-            cyQty += p.monthlyTargets[m]?.cyQty || 0;
-            lyRev += p.monthlyTargets[m]?.lyRev || 0;
-            cyRev += p.monthlyTargets[m]?.cyRev || 0;
-          });
-        }
-      });
-      return { ...q, lyQty, cyQty, lyRev, cyRev, growth: Utils.calcGrowth(lyQty, cyQty) };
-    });
   }, [tbmTargets]);
 
   // Category performance
@@ -143,10 +92,6 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
       .sort((a, b) => b.cyQty - a.cyQty)
       .slice(0, 5);
   }, [tbmTargets]);
-
-  const maxMonthlyQty = useMemo(() => {
-    return Math.max(...monthlyTrend.map(m => Math.max(m.cyQty, m.lyQty)), 1);
-  }, [monthlyTrend]);
 
   const achievementRate = overallTotals.lyQty > 0
     ? Math.round((overallTotals.cyQty / overallTotals.lyQty) * 100)
@@ -263,77 +208,8 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
         </div>
       </div>
 
-      {/* ==================== MONTHLY TREND + QUARTERLY CHIPS ==================== */}
-      <div className="tbm-ov-panel tbm-ov-chart-panel" style={{ '--delay': '0.25s' }}>
-        <div className="tbm-ov-panel-header">
-          <h3><i className="fas fa-chart-bar"></i> Monthly Territory Trend</h3>
-          <div className="tbm-ov-chart-legend">
-            <span className="tbm-ov-legend-item cy"><span className="tbm-ov-legend-dot"></span>CY Target</span>
-            <span className="tbm-ov-legend-item ly"><span className="tbm-ov-legend-dot"></span>LY Actual</span>
-          </div>
-        </div>
-        <div className="tbm-ov-chart-area">
-          {monthlyTrend.map((m, idx) => {
-            const cyHeight = maxMonthlyQty > 0 ? (m.cyQty / maxMonthlyQty) * 100 : 0;
-            const lyHeight = maxMonthlyQty > 0 ? (m.lyQty / maxMonthlyQty) * 100 : 0;
-            return (
-              <div key={m.month} className="tbm-ov-bar-group" style={{ '--bar-delay': `${idx * 0.04}s` }}>
-                <div className="tbm-ov-bar-container">
-                  <div className="tbm-ov-bar ly" style={{ height: `${lyHeight}%` }}>
-                    <span className="tbm-ov-bar-tooltip">{Utils.formatNumber(m.lyQty)}</span>
-                  </div>
-                  <div className="tbm-ov-bar cy" style={{ height: `${cyHeight}%` }}>
-                    <span className="tbm-ov-bar-tooltip">{Utils.formatNumber(m.cyQty)}</span>
-                  </div>
-                </div>
-                <span className="tbm-ov-bar-label">{m.label}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Quarter Chips */}
-        <div className="tbm-ov-quarter-strip">
-          {quarterlyData.map((q, idx) => {
-            const isActive = activeQuarter === q.id;
-            return (
-              <div
-                key={q.id}
-                className={`tbm-ov-qchip ${isActive ? 'active' : ''}`}
-                style={{ '--chip-color': q.color }}
-                onClick={() => setActiveQuarter(isActive ? null : q.id)}
-              >
-                <div className="tbm-ov-qchip-header">
-                  <span className="tbm-ov-qchip-label" style={{ color: q.color }}>{q.label}</span>
-                  <span className="tbm-ov-qchip-sub">{q.fullLabel}</span>
-                </div>
-                <div className="tbm-ov-qchip-values">
-                  <span className="tbm-ov-qchip-val">{Utils.formatNumber(q.cyQty)}</span>
-                  <span className={`tbm-ov-qchip-growth ${q.growth >= 0 ? 'up' : 'down'}`}>
-                    {q.growth >= 0 ? '+' : ''}{q.growth.toFixed(0)}%
-                  </span>
-                </div>
-                {isActive && (
-                  <div className="tbm-ov-qcard-months">
-                    {QUARTER_MONTHS[q.id].map(m => {
-                      const md = monthlyTrend.find(mt => mt.month === m);
-                      return md ? (
-                        <div key={m} className="tbm-ov-qcard-month-row">
-                          <span className="tbm-ov-qm-label">{md.label}</span>
-                          <span className="tbm-ov-qm-val">{Utils.formatNumber(md.cyQty)}</span>
-                          <span className={`tbm-ov-qm-growth ${md.growth >= 0 ? 'up' : 'down'}`}>
-                            {md.growth >= 0 ? '+' : ''}{md.growth.toFixed(0)}%
-                          </span>
-                        </div>
-                      ) : null;
-                    })}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-      </div>
+      {/* ==================== MONTHLY TREND REMOVED ==================== */}
+      {/* Monthly Territory Trend bar chart + Quarterly Chips removed per requirement */}
 
       {/* ==================== CATEGORY + TOP PRODUCTS ==================== */}
       <div className="tbm-ov-twin-section">
