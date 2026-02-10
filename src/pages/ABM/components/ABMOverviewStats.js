@@ -264,26 +264,7 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
       </div>
 
       {/* ===== TOP PRODUCTS ===== */}
-      <div className="abm-ov-section">
-        <h3 className="abm-ov-section-title">
-          <i className="fas fa-trophy"></i> Top 5 Products by Revenue
-        </h3>
-        <div className="abm-ov-top-products">
-          {topProducts.map((product, idx) => (
-            <div key={product.id} className="abm-ov-product-row">
-              <span className="abm-ov-product-rank">#{idx + 1}</span>
-              <div className="abm-ov-product-info">
-                <span className="abm-ov-product-name">{product.productName}</span>
-                <span className="abm-ov-product-category">{product.categoryId}</span>
-              </div>
-              <span className="abm-ov-product-revenue">₹{Utils.formatCompact(product.totalCyRev)}</span>
-              <span className={`abm-ov-product-growth ${product.growth >= 0 ? 'positive' : 'negative'}`}>
-                {product.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(product.growth)}
-              </span>
-            </div>
-          ))}
-        </div>
-      </div>
+      
     </div>
   );
 }
