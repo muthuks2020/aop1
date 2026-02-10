@@ -352,7 +352,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                       {/* Row 1: Quarter group headers spanning 3 months + 1 subtotal */}
                       <tr className="qs-table-quarter-row">
                         <th className="qs-th-product" rowSpan="2">Product</th>
-                        {!isRevOnly && <th className="qs-th-unit-cost" rowSpan="2">Unit Cost</th>}
+                       
                         {displayQuarters.map(q => (
                           <th key={q.id} className="qs-th-quarter-group" colSpan={4} style={{ '--q-color': q.color, '--q-bg': q.bg }}>
                             <div className="qs-th-quarter-inner">
