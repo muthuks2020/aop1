@@ -1,9 +1,16 @@
+/**
+ * Header Component — Updated
+ * CHANGE: Removed header-progress bar section
+ * 
+ * @version 3.1.0 - No progress bar
+ */
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Utils } from '../../utils/helpers';
 
-function Header({ user, onRefresh, completionPercent, submittedCount, totalCount, approvedCount, pendingCount }) {
+function Header({ user, onRefresh }) {
   const { logout } = useAuth();
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -55,15 +62,6 @@ function Header({ user, onRefresh, completionPercent, submittedCount, totalCount
               </div>
             )}
           </div>
-        </div>
-      </div>
-      
-      <div className="header-progress">
-        <div className="progress-bar"><div className="progress-fill" style={{ width: `${completionPercent || 0}%` }}></div></div>
-        <div className="progress-stats">
-          <span className="progress-stat"><i className="fas fa-check-circle text-success"></i> {approvedCount || 0} Approved</span>
-          <span className="progress-stat"><i className="fas fa-clock text-warning"></i> {submittedCount || 0} Pending</span>
-          <span className="progress-stat"><i className="fas fa-edit text-info"></i> {pendingCount || 0} Draft</span>
         </div>
       </div>
     </header>

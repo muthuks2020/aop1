@@ -393,11 +393,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                               </div>
                             </div>
                           </td>
-                          {!isRevOnly && (
-                            <td className="qs-td-unit-cost">
-                              <span className="qs-unit-cost-val">₹{formatNumber(product.unitCost)}</span>
-                            </td>
-                          )}
+                        
                           {displayQuarters.map(q => (
                             <React.Fragment key={q.id}>
                               {q.months.map(m => {

@@ -1,59 +1,51 @@
 /**
- * TBM Dashboard Component - Updated Flow
- * @version 6.0.0 - Yearly Targets + removed My Target tab
+ * ABM Dashboard Component v2
  * 
- * FOUR tabs:
- * 1. Sales Rep Targets — Review/correct/approve sales rep submissions
- * 2. Overview & Summary — Territory-level KPIs
- * 3. Territory Target — Territory target entry grid
- * 4. Team Yearly Targets — ★ Set yearly targets for all sales reps
+ * FIVE tabs:
+ * 1. TBM Targets — Review/correct/approve TBM territory submissions
+ * 2. Overview & Summary — Area-level KPIs
+ * 3. Area Target — Area-level target entry grid (reuses Sales Rep TargetEntryGrid)
+ * 4. Team Yearly Targets — Set yearly targets for TBMs
+ * 5. Team Drill-Down — ★ View TBM → Sales Rep hierarchy with read-only target visibility
  * 
- * CHANGES IN v6:
- * - Removed "My Target" tab (TBM individual targets)
- * - Replaced old "Team Targets" with new TeamYearlyTargets component
- * - Integrated yearlyTargetApi methods directly
- * - No changes to Sales Rep page or shared components
+ * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
+ * ABM sets targets for TBMs, has READ-ONLY visibility of TBM→SalesRep targets
  * 
  * @author Appasamy Associates - Product Commitment PWA
+ * @version 2.0.0 — Drill-down + no header-progress
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { TBMApiService } from '../../services/tbmApi';
+import { ABMApiService } from '../../services/abmApi';
 import { Utils } from '../../utils/helpers';
 import Header from '../../components/common/Header';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
-import TBMOverviewStats from './components/TBMOverviewStats';
-import TBMTargetEntryGrid from './components/TBMTargetEntryGrid';
-import TeamYearlyTargets from './components/TeamYearlyTargets';
-import '../../styles/tbm/tbmDashboard.css';
-import '../../styles/tbm/tbmApprovalTableFix.css';
-import TBMTerritoryTargetGrid from './components/TBMTerritoryTargetGrid';
+import ABMOverviewStats from './components/ABMOverviewStats';
+import ABMAreaTargetGrid from './components/ABMAreaTargetGrid';
+import ABMTeamDrilldown from './components/ABMTeamDrilldown';
+import TeamYearlyTargets from '../TBM/components/TeamYearlyTargets';
+import '../../styles/abm/abmDashboard.css';
 
-const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
-const MONTH_LABELS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
+const MONTHS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
+const MONTH_LABELS = ['APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC','JAN','FEB','MAR'];
 
-const TBM_OVERALL_YEARLY_TARGET_QTY = 50000;
-
-function TBMDashboard() {
+function ABMDashboard() {
   const { user } = useAuth();
-  
+
   const [activeTab, setActiveTab] = useState('approvals');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
-  const [salesRepSubmissions, setSalesRepSubmissions] = useState([]);
-  const [tbmTargets, setTbmTargets] = useState([]);
-  const [dashboardStats, setDashboardStats] = useState(null);
-  const [salesRepFilter, setSalesRepFilter] = useState('all');
+  const [tbmSubmissions, setTbmSubmissions] = useState([]);
+  const [abmTargets, setAbmTargets] = useState([]);
+  const [tbmFilter, setTbmFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [toasts, setToasts] = useState([]);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'warning', onConfirm: null });
   const [editedCells, setEditedCells] = useState(new Set());
-
-  // ==================== TOAST HELPER ====================
 
   const showToast = useCallback((title, message, type = 'info') => {
     const id = Date.now();
@@ -61,486 +53,193 @@ function TBMDashboard() {
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }, []);
 
-  // ==================== ONLINE/OFFLINE ====================
-
   useEffect(() => {
-    const handleOnline = () => { setIsOnline(true); showToast('Online', 'Connection restored.', 'success'); };
-    const handleOffline = () => { setIsOnline(false); };
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
-    return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
+    const on = () => { setIsOnline(true); showToast('Online', 'Connection restored.', 'success'); };
+    const off = () => { setIsOnline(false); showToast('Offline', 'Working offline.', 'warning'); };
+    window.addEventListener('online', on); window.addEventListener('offline', off);
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, [showToast]);
-
-  // ==================== DATA LOADING ====================
 
   const loadInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [cats, submissions, targets, stats] = await Promise.all([
-        TBMApiService.getCategories(),
-        TBMApiService.getSalesRepSubmissions(),
-        TBMApiService.getTBMTargets(),
-        TBMApiService.getDashboardStats(),
+      const [cats, subs, targets] = await Promise.all([
+        ABMApiService.getCategories(), ABMApiService.getTBMSubmissions(), ABMApiService.getABMTargets()
       ]);
-      setCategories(cats);
-      setSalesRepSubmissions(submissions);
-      setTbmTargets(targets);
-      setDashboardStats(stats);
+      setCategories(cats); setTbmSubmissions(subs); setAbmTargets(targets);
     } catch (error) {
-      showToast('Error', 'Failed to load data.', 'error');
-    } finally {
-      setIsLoading(false);
+      console.error('Failed to load ABM data:', error);
+      showToast('Error', 'Failed to load dashboard data.', 'error');
     }
+    setIsLoading(false);
   }, [showToast]);
 
   useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
-  // ==================== COMPUTED VALUES ====================
-
   const approvalStats = useMemo(() => {
-    const total = salesRepSubmissions.length;
-    const pending = salesRepSubmissions.filter(s => s.status === 'submitted').length;
-    const approved = salesRepSubmissions.filter(s => s.status === 'approved').length;
-    const rejected = salesRepSubmissions.filter(s => s.status === 'rejected').length;
-    return { total, pending, approved, rejected };
-  }, [salesRepSubmissions]);
+    const total = tbmSubmissions.length;
+    const pending = tbmSubmissions.filter(s => s.status === 'submitted').length;
+    const approved = tbmSubmissions.filter(s => s.status === 'approved').length;
+    return { total, pending, approved };
+  }, [tbmSubmissions]);
 
-  const uniqueSalesReps = useMemo(() => {
-    const reps = {};
-    salesRepSubmissions.forEach(s => {
-      if (!reps[s.salesRepId]) {
-        reps[s.salesRepId] = { id: s.salesRepId, name: s.salesRepName, territory: s.territory };
-      }
-    });
-    return Object.values(reps);
-  }, [salesRepSubmissions]);
-
-  const tbmTargetStats = useMemo(() => ({
-    total: tbmTargets.length,
-    draft: tbmTargets.filter(t => t.status === 'draft').length,
-    submitted: tbmTargets.filter(t => t.status === 'submitted').length,
-    approved: tbmTargets.filter(t => t.status === 'approved').length,
-    rejected: tbmTargets.filter(t => t.status === 'rejected').length,
-  }), [tbmTargets]);
+  const uniqueTBMs = useMemo(() => {
+    const m = {};
+    tbmSubmissions.forEach(s => { if (!m[s.tbmId]) m[s.tbmId] = { id: s.tbmId, name: s.tbmName, territory: s.territory }; });
+    return Object.values(m);
+  }, [tbmSubmissions]);
 
   const filteredSubmissions = useMemo(() => {
-    let result = [...salesRepSubmissions];
-    if (salesRepFilter !== 'all') {
-      result = result.filter(s => String(s.salesRepId) === salesRepFilter);
-    }
-    if (categoryFilter !== 'all') {
-      result = result.filter(s => s.categoryId === categoryFilter);
-    }
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      result = result.filter(s =>
-        s.name.toLowerCase().includes(term) ||
-        s.code.toLowerCase().includes(term) ||
-        s.salesRepName.toLowerCase().includes(term)
-      );
-    }
-    return result;
-  }, [salesRepSubmissions, salesRepFilter, categoryFilter, searchTerm]);
+    let f = tbmSubmissions;
+    if (tbmFilter !== 'all') f = f.filter(s => s.tbmId === tbmFilter);
+    if (categoryFilter !== 'all') f = f.filter(s => s.categoryId === categoryFilter);
+    if (searchTerm.trim()) { const t = searchTerm.toLowerCase(); f = f.filter(s => s.productName?.toLowerCase().includes(t) || s.tbmName?.toLowerCase().includes(t)); }
+    return f;
+  }, [tbmSubmissions, tbmFilter, categoryFilter, searchTerm]);
 
-  // submissionsByRep removed — using flat table layout matching original CSS
+  // ===== HANDLERS =====
+  const handleApproveTBMSubmission = useCallback(async (submissionId) => {
+    try {
+      const sub = tbmSubmissions.find(s => s.id === submissionId);
+      const corrections = {};
+      editedCells.forEach(ck => { if (ck.startsWith(submissionId+'-')) { const m=ck.replace(submissionId+'-',''); const s=tbmSubmissions.find(x=>x.id===submissionId); if(s?.monthlyTargets?.[m]) corrections[m]={cyQty:s.monthlyTargets[m].cyQty}; }});
+      await ABMApiService.approveTBMTarget(submissionId, Object.keys(corrections).length>0?corrections:null);
+      setTbmSubmissions(prev => prev.map(s => s.id===submissionId?{...s,status:'approved'}:s));
+      showToast('Approved', `${sub?.tbmName}'s target approved.`, 'success');
+    } catch (e) { showToast('Error', 'Failed to approve.', 'error'); }
+  }, [tbmSubmissions, editedCells, showToast]);
 
-  // ==================== HANDLERS — APPROVAL ====================
-
-  // Approve a submission (possibly after corrections)
-  const handleApproveSubmission = useCallback(async (submissionId) => {
-    const submission = salesRepSubmissions.find(s => s.id === submissionId);
-    if (!submission) return;
-    
-    const wasEdited = MONTHS.some(m => editedCells.has(`${submissionId}-${m}`));
-    const actionText = wasEdited ? 'Approve with corrections' : 'Approve';
-    
-    setModalConfig({
-      isOpen: true, 
-      title: actionText,
-      message: wasEdited 
-        ? `You've made corrections to "${submission.name}" from ${submission.salesRepName}. Approve with your corrections?`
-        : `Approve "${submission.name}" from ${submission.salesRepName}?`,
-      type: 'success',
+  const handleBulkApprove = useCallback(async () => {
+    const ids = filteredSubmissions.filter(s => s.status==='submitted').map(s => s.id);
+    if (!ids.length) { showToast('Info', 'Nothing to approve.', 'info'); return; }
+    setModalConfig({ isOpen: true, title: 'Bulk Approve', message: `Approve all ${ids.length} pending?`, type: 'warning',
       onConfirm: async () => {
-        try {
-          await TBMApiService.approveSalesRepTarget(submissionId);
-          setSalesRepSubmissions(prev => prev.map(s => s.id === submissionId ? 
-            { ...s, status: 'approved', approvedDate: new Date().toISOString(), approvedBy: user?.name || 'TBM' } : s));
-          showToast('Approved', `Target approved${wasEdited ? ' with corrections' : ''}.`, 'success');
-          setEditedCells(prev => {
-            const next = new Set(prev);
-            MONTHS.forEach(m => next.delete(`${submissionId}-${m}`));
-            return next;
-          });
-        } catch (error) { showToast('Error', 'Failed to approve.', 'error'); }
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
+        try { await ABMApiService.bulkApproveTBM(ids); setTbmSubmissions(prev => prev.map(s => ids.includes(s.id)?{...s,status:'approved'}:s)); showToast('Done', `${ids.length} approved.`, 'success'); }
+        catch(e) { showToast('Error', 'Failed.', 'error'); }
+        setModalConfig(p => ({...p, isOpen: false}));
       }
     });
-  }, [salesRepSubmissions, user, showToast, editedCells]);
+  }, [filteredSubmissions, showToast]);
 
-  // Bulk approve handled inline in JSX
-
-  // Edit a submission cell value (local state update, saved on approve)
-  const handleEditSubmissionValue = useCallback((submissionId, month, newValue) => {
-    setSalesRepSubmissions(prev => prev.map(s => {
-      if (s.id === submissionId) {
-        return {
-          ...s,
-          monthlyTargets: {
-            ...s.monthlyTargets,
-            [month]: { ...s.monthlyTargets[month], cyQty: newValue }
-          }
-        };
-      }
-      return s;
-    }));
-    setEditedCells(prev => new Set(prev).add(`${submissionId}-${month}`));
+  const handleEditTBMCell = useCallback((sid, month, val) => {
+    const n = parseInt(val)||0;
+    setTbmSubmissions(prev => prev.map(s => s.id===sid&&s.monthlyTargets?.[month]?{...s,monthlyTargets:{...s.monthlyTargets,[month]:{...s.monthlyTargets[month],cyQty:n}}}:s));
+    setEditedCells(prev => new Set([...prev, `${sid}-${month}`]));
   }, []);
 
-  // ==================== HANDLERS — TERRITORY TARGET ====================
+  const handleUpdateABMTarget = useCallback((pid, month, val) => {
+    const n = parseInt(val)||0;
+    setAbmTargets(prev => prev.map(t => t.id===pid&&t.monthlyTargets?.[month]?{...t,monthlyTargets:{...t.monthlyTargets,[month]:{...t.monthlyTargets[month],cyQty:n}}}:t));
+  }, []);
 
-  const handleUpdateTBMTarget = useCallback(async (targetId, month, values) => {
-    try {
-      await TBMApiService.updateTBMTarget(targetId, month, values);
-      setTbmTargets(prev => prev.map(t => {
-        if (t.id === targetId) {
-          return {
-            ...t,
-            monthlyTargets: { ...t.monthlyTargets, [month]: { ...t.monthlyTargets[month], ...values } },
-          };
-        }
-        return t;
-      }));
-    } catch (error) {
-      showToast('Error', 'Failed to update target.', 'error');
-    }
-  }, [showToast]);
+  const handleSaveABMTargets = useCallback(async () => {
+    try { await ABMApiService.saveABMTargets(abmTargets); showToast('Saved', 'Area targets saved.', 'success'); }
+    catch(e) { showToast('Error', 'Failed to save.', 'error'); }
+  }, [abmTargets, showToast]);
 
-  const handleSaveTBMTargets = useCallback(async () => {
-    try {
-      await TBMApiService.saveTBMTargets(tbmTargets);
-      showToast('Saved', 'Territory targets saved.', 'success');
-    } catch (error) {
-      showToast('Error', 'Failed to save targets.', 'error');
-    }
-  }, [tbmTargets, showToast]);
-
-  const handleSubmitTBMTargets = useCallback(async () => {
-    setModalConfig({
-      isOpen: true,
-      title: 'Submit Territory Targets',
-      message: 'Submit all territory targets to ABM for approval?',
-      type: 'warning',
+  const handleSubmitABMTargets = useCallback(async () => {
+    setModalConfig({ isOpen: true, title: 'Submit Area Targets', message: 'Submit to ZBM for approval?', type: 'warning',
       onConfirm: async () => {
-        try {
-          await TBMApiService.submitTBMTargets(tbmTargets.map(t => t.id));
-          setTbmTargets(prev => prev.map(t => ({ ...t, status: 'submitted', submittedDate: new Date().toISOString() })));
-          showToast('Submitted', 'Territory targets submitted.', 'success');
-        } catch (error) {
-          showToast('Error', 'Failed to submit targets.', 'error');
-        }
-        setModalConfig(prev => ({ ...prev, isOpen: false }));
-      },
+        try { await ABMApiService.submitABMTargets(abmTargets.map(t=>t.id)); setAbmTargets(prev=>prev.map(t=>({...t,status:'submitted'}))); showToast('Submitted', 'Sent to ZBM.', 'success'); }
+        catch(e) { showToast('Error', 'Failed.', 'error'); }
+        setModalConfig(p=>({...p,isOpen:false}));
+      }
     });
-  }, [tbmTargets, showToast]);
+  }, [abmTargets, showToast]);
 
-  // ==================== MISC HANDLERS ====================
+  const handleRefresh = useCallback(async () => { showToast('Refreshing','...','info'); await loadInitialData(); showToast('Updated','Data refreshed.','success'); }, [showToast, loadInitialData]);
+  const closeModal = useCallback(() => { setModalConfig(p=>({...p,isOpen:false})); }, []);
+  const getQC = (i) => i<3?'q1':i<6?'q2':i<9?'q3':'q4';
 
-  const handleRefresh = useCallback(async () => {
-    showToast('Refreshing', 'Updating...', 'info');
-    await loadInitialData();
-    showToast('Updated', 'Data refreshed.', 'success');
-  }, [showToast, loadInitialData]);
-
-  const closeModal = useCallback(() => { setModalConfig(prev => ({ ...prev, isOpen: false })); }, []);
-
-  const getQuarterClass = (idx) => idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
-
-  // ==================== LOADING STATE ====================
-
-  if (isLoading) {
-    return (
-      <div className="tbm-dashboard">
-        <div className="loading-overlay">
-          <div className="loading-spinner"></div>
-        </div>
-      </div>
-    );
-  }
-
-  // ==================== RENDER ====================
+  if (isLoading) return <div className="abm-dashboard"><div className="loading-overlay"><div className="loading-spinner"></div></div></div>;
 
   return (
-    <div className="tbm-dashboard">
-      {!isOnline && (
-        <div className="offline-banner show">
-          <i className="fas fa-wifi-slash"></i>
-          <span>You're offline.</span>
-        </div>
-      )}
+    <div className="abm-dashboard">
+      {!isOnline && <div className="offline-banner show"><i className="fas fa-wifi-slash"></i><span>You're offline.</span></div>}
 
-      <Header 
-        user={user} 
-        onRefresh={handleRefresh} 
-        completionPercent={Math.round((approvalStats.approved / approvalStats.total) * 100) || 0}
-        submittedCount={approvalStats.pending} 
-        totalCount={approvalStats.total} 
-        approvedCount={approvalStats.approved} 
-        pendingCount={approvalStats.pending} 
-      />
+      <Header user={user} onRefresh={handleRefresh} />
 
-      {/* ==================== 4-TAB NAVIGATION ==================== */}
-      <div className="tbm-tabs">
-        <button 
-          className={`tbm-tab ${activeTab === 'approvals' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('approvals')}
-        >
-          <i className="fas fa-user-check"></i>
-          <span>Sales Rep Targets</span>
-          {approvalStats.pending > 0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
+      {/* ===== 5-TAB NAVIGATION ===== */}
+      <div className="abm-tabs">
+        <button className={`abm-tab ${activeTab==='approvals'?'active':''}`} onClick={()=>setActiveTab('approvals')}>
+          <i className="fas fa-user-check"></i><span>TBM Targets</span>
+          {approvalStats.pending>0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
         </button>
-        <button 
-          className={`tbm-tab ${activeTab === 'overview' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('overview')}
-        >
-          <i className="fas fa-chart-pie"></i>
-          <span>Overview & Summary</span>
+        <button className={`abm-tab ${activeTab==='overview'?'active':''}`} onClick={()=>setActiveTab('overview')}>
+          <i className="fas fa-chart-pie"></i><span>Overview & Summary</span>
         </button>
-        <button 
-          className={`tbm-tab ${activeTab === 'targets' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('targets')}
-        >
-          <i className="fas fa-bullseye"></i>
-          <span>Territory Target</span>
+        <button className={`abm-tab ${activeTab==='targets'?'active':''}`} onClick={()=>setActiveTab('targets')}>
+          <i className="fas fa-bullseye"></i><span>Area Target</span>
         </button>
-        <button 
-          className={`tbm-tab ${activeTab === 'yearlyTargets' ? 'active' : ''}`} 
-          onClick={() => setActiveTab('yearlyTargets')}
-        >
-          <i className="fas fa-calendar-check"></i>
-          <span>Team Yearly Targets</span>
+        <button className={`abm-tab ${activeTab==='yearlyTargets'?'active':''}`} onClick={()=>setActiveTab('yearlyTargets')}>
+          <i className="fas fa-users-cog"></i><span>Team Yearly Targets</span>
+        </button>
+        <button className={`abm-tab ${activeTab==='drilldown'?'active':''}`} onClick={()=>setActiveTab('drilldown')}>
+          <i className="fas fa-sitemap"></i><span>Team Drill-Down</span>
         </button>
       </div>
 
-      <main className="tbm-main">
+      <main className="main excel-main">
 
-        {/* ==================== TAB 1: SALES REP TARGETS (Correct & Approve) ==================== */}
-        {activeTab === 'approvals' && (
-          <>
-            {/* Filters - using original class names that match existing CSS */}
-            <div className="approval-filters">
-              <div className="filter-group">
-                <label>Sales Rep</label>
-                <select className="filter-select" value={salesRepFilter} onChange={(e) => setSalesRepFilter(e.target.value)}>
-                  <option value="all">All Sales Reps</option>
-                  {uniqueSalesReps.map(rep => (
-                    <option key={rep.id} value={rep.id}>{rep.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Category</label>
-                <select className="filter-select" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}>
-                  <option value="all">All Categories</option>
-                  {categories.map(cat => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="search-input-wrapper">
-                <i className="fas fa-search"></i>
-                <input type="text" className="search-input" placeholder="Search products or reps..." 
-                  value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-              </div>
-              {filteredSubmissions.filter(s => s.status === 'submitted').length > 0 && (
-                <button className="bulk-approve-btn" onClick={() => {
-                  const pending = filteredSubmissions.filter(s => s.status === 'submitted');
-                  if (pending.length === 0) return;
-                  setModalConfig({
-                    isOpen: true, title: 'Approve All',
-                    message: `Approve all ${pending.length} pending submissions?`,
-                    type: 'warning',
-                    onConfirm: async () => {
-                      try {
-                        for (const sub of pending) { await TBMApiService.approveSalesRepTarget(sub.id, ''); }
-                        setSalesRepSubmissions(prev => prev.map(s => s.status === 'submitted' ? { ...s, status: 'approved', approvedDate: new Date().toISOString() } : s));
-                        showToast('Approved', `All ${pending.length} targets approved.`, 'success');
-                      } catch (error) { showToast('Error', 'Failed to approve.', 'error'); }
-                      setModalConfig(prev => ({ ...prev, isOpen: false }));
-                    },
-                  });
-                }}>
-                  <i className="fas fa-check-double"></i> Approve All ({filteredSubmissions.filter(s => s.status === 'submitted').length})
-                </button>
-              )}
-            </div>
+        {/* TAB 1: TBM TARGETS APPROVAL */}
+        {activeTab==='approvals' && (<>
+          <div className="abm-approval-stats">
+            <div className="abm-stat-card"><i className="fas fa-inbox"></i><div><span className="abm-stat-value">{approvalStats.total}</span><span className="abm-stat-label">Total</span></div></div>
+            <div className="abm-stat-card abm-stat-pending"><i className="fas fa-clock"></i><div><span className="abm-stat-value">{approvalStats.pending}</span><span className="abm-stat-label">Pending</span></div></div>
+            <div className="abm-stat-card abm-stat-approved"><i className="fas fa-check-circle"></i><div><span className="abm-stat-value">{approvalStats.approved}</span><span className="abm-stat-label">Approved</span></div></div>
+          </div>
+          <div className="abm-approval-filters">
+            <div className="abm-filter-group"><label>TBM:</label><select value={tbmFilter} onChange={e=>setTbmFilter(e.target.value)}><option value="all">All TBMs</option>{uniqueTBMs.map(t=><option key={t.id} value={t.id}>{t.name} — {t.territory}</option>)}</select></div>
+            <div className="abm-filter-group"><label>Category:</label><select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}><option value="all">All</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
+            <div className="abm-filter-group abm-search-group"><i className="fas fa-search"></i><input type="text" placeholder="Search..." value={searchTerm} onChange={e=>setSearchTerm(e.target.value)} /></div>
+            {approvalStats.pending>0 && <button className="abm-bulk-approve-btn" onClick={handleBulkApprove}><i className="fas fa-check-double"></i> Approve All ({approvalStats.pending})</button>}
+          </div>
+          <div className="abm-approval-table-container">
+            {filteredSubmissions.length===0 ? <div className="abm-empty-state"><i className="fas fa-check-circle"></i><p>No submissions.</p></div> : (
+              <table className="abm-approval-table"><thead><tr>
+                <th className="th-tbm">TBM</th><th className="th-territory">Territory</th><th className="th-product">Product</th><th className="th-category">Cat</th>
+                {MONTHS.map((m,i)=><th key={m} className={`th-month th-${getQC(i)}`}>{MONTH_LABELS[i]}</th>)}
+                <th className="th-total">Total</th><th className="th-growth">GR%</th><th className="th-actions">Action</th>
+              </tr></thead><tbody>
+                {filteredSubmissions.map(sub => {
+                  const isSub = sub.status==='submitted';
+                  let ly=0,cy=0; MONTHS.forEach(m=>{ly+=sub.monthlyTargets?.[m]?.lyQty||0;cy+=sub.monthlyTargets?.[m]?.cyQty||0;});
+                  const g=Utils.calcGrowth(ly,cy);
+                  return (<tr key={sub.id} className={`abm-submission-row ${sub.status}`}>
+                    <td className="td-tbm"><div className="abm-tbm-cell-info"><span className="abm-tbm-avatar">{sub.tbmName.split(' ').map(n=>n[0]).join('').substring(0,2)}</span><span>{sub.tbmName}</span></div></td>
+                    <td className="td-territory">{sub.territory}</td><td className="td-product">{sub.productName}</td>
+                    <td className="td-category"><span className={`abm-cat-badge abm-cat-${sub.categoryId}`}>{sub.categoryId.toUpperCase()}</span></td>
+                    {MONTHS.map((m,i)=>{const md=sub.monthlyTargets?.[m]||{};const ed=editedCells.has(`${sub.id}-${m}`); return (
+                      <td key={m} className={`td-month td-${getQC(i)} ${isSub?'td-editable':''} ${ed?'td-edited':''}`} contentEditable={isSub} suppressContentEditableWarning onBlur={e=>{if(isSub)handleEditTBMCell(sub.id,m,e.target.textContent);}}>{Utils.formatNumber(md.cyQty||0)}</td>
+                    );})}
+                    <td className="td-total"><strong>{Utils.formatNumber(cy)}</strong></td>
+                    <td className="td-growth"><span className={g>=0?'growth-positive':'growth-negative'}>{g>=0?'↑':'↓'}{Utils.formatGrowth(g)}</span></td>
+                    <td className="td-actions">{isSub?<div className="action-buttons"><button className="action-btn-sm approve" onClick={()=>handleApproveTBMSubmission(sub.id)}><i className="fas fa-check"></i></button></div>:<span className="status-tag approved"><i className="fas fa-check-circle"></i> Approved</span>}</td>
+                  </tr>);
+                })}
+              </tbody></table>
+            )}
+          </div>
+        </>)}
 
-            {/* Submissions Table - EDITABLE by TBM */}
-            <div className="tbm-submissions-section">
-              {filteredSubmissions.length === 0 ? (
-                <div className="empty-state">
-                  <i className="fas fa-inbox" style={{ fontSize: '2rem', opacity: 0.3 }}></i>
-                  <h3>No Submissions Found</h3>
-                  <p>No sales rep submissions match your filters.</p>
-                </div>
-              ) : (
-                <table className="submissions-table">
-                  <thead>
-                    <tr>
-                      <th className="th-product">Product</th>
-                      <th className="th-rep">Sales Rep</th>
-                      {MONTH_LABELS.map((m, idx) => (
-                        <th key={m} className={`th-month ${getQuarterClass(idx)}`}>{m}</th>
-                      ))}
-                      <th className="th-total">Total</th>
-                      <th className="th-growth">Growth</th>
-                      <th className="th-actions">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredSubmissions.map(sub => {
-                      const isSubmitted = sub.status === 'submitted';
-                      const lyTotal = MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.lyQty || 0), 0);
-                      const cyTotal = MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.cyQty || 0), 0);
-                      const growth = Utils.calcGrowth(lyTotal, cyTotal);
+        {/* TAB 2: OVERVIEW */}
+        {activeTab==='overview' && <ABMOverviewStats abmTargets={abmTargets} categories={categories} tbmSubmissions={tbmSubmissions} approvalStats={approvalStats} />}
 
-                      return (
-                        <tr key={sub.id} className={`status-${sub.status}`}>
-                          <td className="td-product">
-                            <div className="product-info">
-                              <span className="product-name">{sub.name}</span>
-                              <span className="product-code">{sub.code}</span>
-                            </div>
-                          </td>
-                          <td className="td-rep">
-                            <div className="rep-info">
-                              <span className="rep-name">{sub.salesRepName}</span>
-                              <span className="rep-territory">{sub.territory}</span>
-                            </div>
-                          </td>
-                          {MONTHS.map((month, idx) => {
-                            const cyQty = sub.monthlyTargets?.[month]?.cyQty || 0;
-                            const wasEdited = editedCells.has(`${sub.id}-${month}`);
-                            return (
-                              <td key={month} className={`td-month ${getQuarterClass(idx)} ${wasEdited ? 'cell-edited' : ''}`}>
-                                {isSubmitted ? (
-                                  <input
-                                    type="text"
-                                    className={`submission-cell-input ${wasEdited ? 'edited' : ''}`}
-                                    value={cyQty}
-                                    onChange={(e) => {
-                                      const val = parseInt(e.target.value.replace(/[^0-9]/g, '')) || 0;
-                                      handleEditSubmissionValue(sub.id, month, val);
-                                    }}
-                                    style={{ 
-                                      width: '100%', 
-                                      border: wasEdited ? '2px solid #F59E0B' : '1px solid transparent',
-                                      borderRadius: '4px',
-                                      padding: '2px 4px',
-                                      textAlign: 'center',
-                                      fontSize: '0.8125rem',
-                                      fontFamily: 'JetBrains Mono, monospace',
-                                      background: wasEdited ? '#FFFBEB' : 'transparent'
-                                    }}
-                                  />
-                                ) : (
-                                  <span>{Utils.formatNumber(cyQty)}</span>
-                                )}
-                              </td>
-                            );
-                          })}
-                          <td className="td-total">
-                            <strong>{Utils.formatNumber(cyTotal, 0)}</strong>
-                          </td>
-                          <td className="td-growth">
-                            <span className={`growth-pill ${growth >= 0 ? 'positive' : 'negative'}`}>
-                              {growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(growth)}
-                            </span>
-                          </td>
-                          <td className="td-actions">
-                            {isSubmitted ? (
-                              <div className="action-buttons">
-                                <button 
-                                  className="action-btn-sm approve" 
-                                  onClick={() => handleApproveSubmission(sub.id)} 
-                                  title={editedCells.has(`${sub.id}-${MONTHS[0]}`) ? "Approve with corrections" : "Approve"}
-                                >
-                                  <i className="fas fa-check"></i>
-                                </button>
-                              </div>
-                            ) : (
-                              <span className="status-tag approved">
-                                <i className="fas fa-check-circle"></i> Approved
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </>
-        )}
+        {/* TAB 3: AREA TARGET — reuses Sales Rep TargetEntryGrid */}
+        {activeTab==='targets' && <ABMAreaTargetGrid categories={categories} products={abmTargets} onUpdateTarget={handleUpdateABMTarget} onSaveAll={handleSaveABMTargets} onSubmitAll={handleSubmitABMTargets} fiscalYear="2026-27" overallYearlyTargetValue={null} areaName={user?.territory||'Delhi NCR Area'} />}
 
-        {/* ==================== TAB 2: OVERVIEW & SUMMARY ==================== */}
-        {activeTab === 'overview' && (
-          <TBMOverviewStats 
-            tbmTargets={tbmTargets}
-            categories={categories}
-            salesRepSubmissions={salesRepSubmissions}
-            approvalStats={approvalStats}
-          />
-        )}
+        {/* TAB 4: TEAM YEARLY TARGETS — Set targets for TBMs */}
+        {activeTab==='yearlyTargets' && <TeamYearlyTargets role="ABM" fiscalYear="2026-27" teamMembers={uniqueTBMs} showToast={showToast} managerName={user?.name||''} />}
 
-        {/* ==================== TAB 3: TERRITORY TARGET ==================== */}
-        {activeTab === 'targets' && (
-  <TBMTerritoryTargetGrid
-    categories={categories}
-    products={tbmTargets}
-    onUpdateTarget={(productId, month, value) => {
-      handleUpdateTBMTarget(productId, month, { cyQty: value });
-    }}
-    onSaveAll={handleSaveTBMTargets}
-    onSubmitAll={handleSubmitTBMTargets}
-    fiscalYear="2026-27"
-    overallYearlyTargetValue={null}
-    territoryName={user?.territory || 'South Chennai Territory'}
-  />
-)}
+        {/* TAB 5: TEAM DRILL-DOWN — TBM → Sales Rep visibility */}
+        {activeTab==='drilldown' && <ABMTeamDrilldown showToast={showToast} />}
 
-
-        {/* ==================== TAB 4: TEAM YEARLY TARGETS ==================== */}
-        {activeTab === 'yearlyTargets' && (
-          <TeamYearlyTargets
-            role="TBM"
-            fiscalYear="2026-27"
-            teamMembers={uniqueSalesReps}
-            showToast={showToast}
-            managerName={user?.name || ''}
-          />
-        )}
       </main>
 
-      {/* Confirmation Modal */}
-      <Modal 
-        isOpen={modalConfig.isOpen}
-        title={modalConfig.title}
-        message={modalConfig.message}
-        type={modalConfig.type}
-        onConfirm={modalConfig.onConfirm}
-        onCancel={closeModal}
-      />
-
-      {/* Toasts */}
-      <div className="toast-container">
-        {toasts.map(toast => (
-          <Toast key={toast.id} {...toast} onClose={() => setToasts(prev => prev.filter(t => t.id !== toast.id))} />
-        ))}
-      </div>
+      <Modal isOpen={modalConfig.isOpen} title={modalConfig.title} message={modalConfig.message} type={modalConfig.type} onConfirm={modalConfig.onConfirm} onCancel={closeModal} />
+      <div className="toast-container">{toasts.map(t=><Toast key={t.id} {...t} onClose={()=>setToasts(p=>p.filter(x=>x.id!==t.id))} />)}</div>
     </div>
   );
 }
 
-export default TBMDashboard;
+export default ABMDashboard;
