@@ -5,8 +5,14 @@
  * 2. Target Entry Grid (with Overall Target Bar — VALUE-based)
  * 3. Quarterly Summary - Unit Wise
  * 
+ * UPDATED FLOW:
+ * - Sales Rep enters targets and submits to TBM
+ * - TBM will either approve or correct and approve
+ * - No more reject/re-enter cycle
+ * - No status badges shown on products
+ * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.5.0 - VALUE-based Overall Target
+ * @version 3.0.0 - Simplified approval flow
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -64,17 +70,12 @@ function SalesRepDashboard() {
 
   const closeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), []);
 
-  const getStatusCounts = useCallback(() => {
-    const counts = { draft: 0, submitted: 0, approved: 0, rejected: 0 };
-    products.forEach(p => { if (counts[p.status] !== undefined) counts[p.status]++; });
-    return counts;
-  }, [products]);
-
+  // Updated: all products are always editable (no status-based locking)
   const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
         const updatedMonthlyTargets = { ...p.monthlyTargets, [month]: { ...p.monthlyTargets?.[month], cyQty: value } };
-        return { ...p, monthlyTargets: updatedMonthlyTargets, status: p.status === 'rejected' ? 'draft' : p.status };
+        return { ...p, monthlyTargets: updatedMonthlyTargets };
       }
       return p;
     }));
@@ -83,32 +84,23 @@ function SalesRepDashboard() {
   const handleSaveAll = useCallback(async () => {
     try {
       const result = await ApiService.saveAllDrafts(products);
-      showToast('Saved', `${result.savedCount} drafts saved successfully`, 'success');
+      showToast('Saved', 'All targets saved successfully', 'success');
     } catch (error) {
-      showToast('Error', 'Failed to save drafts', 'error');
+      showToast('Error', 'Failed to save targets', 'error');
     }
   }, [products, showToast]);
 
   const handleSubmitAll = useCallback(() => {
-    const draftProducts = products.filter(p => p.status === 'draft' || p.status === 'rejected');
-    if (draftProducts.length === 0) {
-      showToast('Info', 'No drafts to submit', 'info');
-      return;
-    }
-
     setModalConfig({
       isOpen: true,
-      title: 'Submit for Approval',
-      message: `Are you sure you want to submit ${draftProducts.length} product(s) for TBM approval? You won't be able to edit them until they are reviewed.`,
+      title: 'Submit to TBM',
+      message: `Are you sure you want to submit all targets to your TBM for review? TBM will approve or make corrections as needed.`,
       type: 'warning',
       onConfirm: async () => {
         try {
-          const productIds = draftProducts.map(p => p.id);
+          const productIds = products.map(p => p.id);
           await ApiService.submitMultipleProducts(productIds);
-          setProducts(prev => prev.map(p => 
-            draftProducts.find(d => d.id === p.id) ? { ...p, status: 'submitted' } : p
-          ));
-          showToast('Submitted', `${draftProducts.length} products submitted for approval`, 'success');
+          showToast('Submitted', `All targets submitted to TBM for review`, 'success');
         } catch (error) {
           showToast('Error', 'Failed to submit', 'error');
         }
@@ -119,9 +111,7 @@ function SalesRepDashboard() {
 
   const closeModal = useCallback(() => { setModalConfig(prev => ({ ...prev, isOpen: false })); }, []);
 
-  const statusCounts = getStatusCounts();
   const totalProducts = products.length;
-  const completionPercent = totalProducts > 0 ? Math.round(((statusCounts.approved + statusCounts.submitted) / totalProducts) * 100) : 0;
 
   const renderTabContent = () => {
     switch (activeTab) {
@@ -159,11 +149,11 @@ function SalesRepDashboard() {
 
       <Header 
         user={user} 
-        completionPercent={completionPercent}
-        submittedCount={statusCounts.submitted}
+        completionPercent={0}
+        submittedCount={0}
         totalCount={totalProducts}
-        approvedCount={statusCounts.approved}
-        pendingCount={statusCounts.draft + statusCounts.rejected}
+        approvedCount={0}
+        pendingCount={0}
       />
 
       <div className="main-tabs">
