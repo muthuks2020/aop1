@@ -6,6 +6,7 @@ import SalesRepDashboard from './pages/SalesRep/Dashboard';
 import TBMDashboard from './pages/TBM/Dashboard';
 import ABMDashboard from './pages/ABM/Dashboard';
 import ZBMDashboard from './pages/ZBM/Dashboard';
+import SalesHeadDashboard from './pages/SalesHead/Dashboard';
 import ProtectedRoute from './components/auth/ProtectedRoute';
 
 function App() {
@@ -16,7 +17,7 @@ function App() {
       case 'tbm': return <TBMDashboard />;
       case 'abm': return <ABMDashboard />;
       case 'zbm': return <ZBMDashboard />;
-      case 'sales_head': return <ZBMDashboard />;
+      case 'sales_head': return <SalesHeadDashboard />;
       default: return <SalesRepDashboard />;
     }
   };
@@ -27,6 +28,7 @@ function App() {
       <Route path="/tbm/dashboard" element={<TBMDashboard />} />
       <Route path="/abm/dashboard" element={<ABMDashboard />} />
       <Route path="/zbm/dashboard" element={<ZBMDashboard />} />
+      <Route path="/saleshead/dashboard" element={<SalesHeadDashboard />} />
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
