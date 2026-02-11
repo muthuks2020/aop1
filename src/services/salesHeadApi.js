@@ -1,39 +1,103 @@
 /**
- * Sales Head API Service
+ * Sales Head API Service — Product Commitment PWA
  * 
  * Sales Head is the TOP of the hierarchy:
  * Sales Rep → TBM → ABM → ZBM → Sales Head
  * 
- * Sales Head:
- * - Sets targets for ZBMs
- * - Reviews/approves ZBM zone-level submissions
- * - Has READ-ONLY drill-down: ZBM → ABM → TBM → Sales Rep → Product Targets
- * - Sees executive-level analytics with pie charts & KPIs
- * 
- * BACKEND INTEGRATION:
- * - Set USE_MOCK = false and update BASE_URL when backend is ready
- * - All mock data arrays will be replaced by real API calls
- * - Endpoint shapes documented in JSDoc comments
+ * ╔══════════════════════════════════════════════════════════════════╗
+ * ║  BACKEND INTEGRATION GUIDE                                      ║
+ * ║                                                                  ║
+ * ║  1. Set REACT_APP_USE_MOCK=false in your .env file              ║
+ * ║  2. Set REACT_APP_API_URL=https://your-api-server.com/api/v1   ║
+ * ║  3. Implement all endpoints listed in SALESHEAD_API_CONFIG      ║
+ * ║  4. Match the response shapes documented in JSDoc of each method║
+ * ║  5. Auth token is auto-sent via getAuthHeaders()                ║
+ * ║                                                                  ║
+ * ║  Every method has:                                               ║
+ * ║  - JSDoc with HTTP method + endpoint path                       ║
+ * ║  - @param docs for request body/query params                    ║
+ * ║  - @returns with exact response shape your backend must return  ║
+ * ╚══════════════════════════════════════════════════════════════════╝
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * @version 2.0.0 — Full API-ready with analytics + LY achieved
  */
+
+// ==================== CONFIGURATION ====================
 
 const USE_MOCK = process.env.REACT_APP_USE_MOCK !== 'false';
 const BASE_URL = process.env.REACT_APP_API_URL || 'https://api.appasamy.com/v1';
+
+/**
+ * API Endpoint Configuration
+ * When backend is ready, implement each of these endpoints.
+ * All endpoints require Bearer token in Authorization header.
+ */
+export const SALESHEAD_API_CONFIG = {
+  useMock: USE_MOCK,
+  baseUrl: BASE_URL,
+  endpoints: {
+    // ---- Core Data ----
+    getCategories:          'GET    /saleshead/categories',
+    getZBMSubmissions:      'GET    /saleshead/zbm-submissions',
+    getZBMHierarchy:        'GET    /saleshead/zbm-hierarchy',
+
+    // ---- Approvals ----
+    approveZBMTarget:       'PUT    /saleshead/approve-zbm/:submissionId',
+    bulkApproveZBM:         'POST   /saleshead/bulk-approve-zbm',
+
+    // ---- Dashboard Stats ----
+    getDashboardStats:      'GET    /saleshead/dashboard-stats',
+    getUniqueZBMs:          'GET    /saleshead/unique-zbms',
+
+    // ---- Overview Charts ----
+    getRegionalPerformance: 'GET    /saleshead/regional-performance',
+    getMonthlyTrend:        'GET    /saleshead/monthly-trend',
+
+    // ---- Analytics (NEW) ----
+    getAnalyticsDistribution: 'GET  /saleshead/analytics/distribution?level={zone|territory|member}&zoneId=&territoryId=&metric={revenue|qty}&categories=',
+    getAnalyticsComparison:   'GET  /saleshead/analytics/comparison?entityA=&entityB=&level=&metric=&categories=',
+    getAchievementData:       'GET  /saleshead/analytics/achievement?level={zone|territory|member}&zoneId=&territoryId=',
+  },
+  timeout: 30000,
+  retryAttempts: 3
+};
+
+// ==================== UTILITY FUNCTIONS ====================
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('appasamy_token');
-  return { 'Content-Type': 'application/json', ...(token && { 'Authorization': `Bearer ${token}` }) };
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
 };
 
+/**
+ * Generic API request with error handling
+ * @param {string} endpoint - API path (e.g., '/saleshead/zbm-submissions')
+ * @param {Object} options - fetch options (method, body, etc.)
+ * @returns {Promise<Object>} parsed JSON response
+ * @throws {Error} on HTTP errors with status code
+ */
 const apiRequest = async (endpoint, options = {}) => {
   const url = `${BASE_URL}${endpoint}`;
-  const response = await fetch(url, { headers: getAuthHeaders(), ...options });
-  if (!response.ok) throw new Error(`API Error: ${response.status}`);
-  return response.json();
+  try {
+    const response = await fetch(url, {
+      headers: getAuthHeaders(),
+      ...options
+    });
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => '');
+      throw new Error(`API Error ${response.status}: ${response.statusText}${errorBody ? ' - ' + errorBody : ''}`);
+    }
+    return response.json();
+  } catch (err) {
+    if (err.message.startsWith('API Error')) throw err;
+    throw new Error(`Network Error: ${err.message}`);
+  }
 };
 
 // ==================== MOCK DATA ====================
@@ -53,13 +117,46 @@ const genTargets = (baseQty, baseRev) => {
   months.forEach(m => {
     const v = 0.7 + Math.random() * 0.6;
     const lyQ = Math.round(baseQty * v), lyR = Math.round(baseRev * v);
-    t[m] = { lyQty: lyQ, cyQty: Math.round(lyQ * (1 + Math.random()*0.3-0.05)), lyRev: lyR, cyRev: Math.round(lyR * (1 + Math.random()*0.3-0.05)) };
+    // lyAchQty / lyAchRev = actual achieved (88-97% of LY target)
+    const achFactor = 0.88 + Math.random() * 0.09;
+    t[m] = {
+      lyQty: lyQ,
+      cyQty: Math.round(lyQ * (1 + Math.random() * 0.3 - 0.05)),
+      lyRev: lyR,
+      cyRev: Math.round(lyR * (1 + Math.random() * 0.3 - 0.05)),
+      lyAchQty: Math.round(lyQ * achFactor),
+      lyAchRev: Math.round(lyR * achFactor)
+    };
   });
   return t;
 };
 
 /**
  * ZBM Submissions — Zone-level targets submitted by ZBMs to Sales Head for approval
+ *
+ * RESPONSE SHAPE (each item):
+ * {
+ *   id: string,                    // Unique submission ID
+ *   zbmId: string,                 // ZBM user ID
+ *   zbmName: string,               // ZBM display name
+ *   territory: string,             // Zone territory name
+ *   productId: string,             // Product ID
+ *   productName: string,           // Product display name
+ *   categoryId: string,            // Category ID (equipment, iol, ovd, pharma, mis, others)
+ *   unit: string,                  // 'Units' or '₹'
+ *   status: 'submitted'|'approved',// Approval status
+ *   submittedAt: string,           // ISO date string
+ *   monthlyTargets: {              // 12-month target data (apr-mar)
+ *     [month]: {
+ *       lyQty: number,             // Last Year quantity target
+ *       cyQty: number,             // Current Year quantity target
+ *       lyRev: number,             // Last Year revenue target (₹)
+ *       cyRev: number,             // Current Year revenue target (₹)
+ *       lyAchQty: number,          // ★ Last Year ACTUAL achieved quantity
+ *       lyAchRev: number           // ★ Last Year ACTUAL achieved revenue (₹)
+ *     }
+ *   }
+ * }
  */
 const MockZBMSubmissions = [
   // ZBM 1: Amit Singh - Northern Region
@@ -91,6 +188,41 @@ const MockZBMSubmissions = [
 
 /**
  * Full Hierarchy: ZBM → ABM → TBM → Sales Rep for drill-down
+ *
+ * RESPONSE SHAPE:
+ * [
+ *   {
+ *     id, name, territory, designation: 'ZBM',
+ *     abms: [
+ *       {
+ *         id, name, territory, designation: 'ABM',
+ *         tbms: [
+ *           {
+ *             id, name, territory, designation: 'TBM',
+ *             salesReps: [
+ *               {
+ *                 id, name, territory, designation: 'Sales Rep',
+ *                 yearlyTarget: number,   // CY yearly revenue target
+ *                 lyAchieved: number,      // ★ LY actual achieved revenue
+ *                 products: [
+ *                   {
+ *                     productId, productName, categoryId,
+ *                     monthlyTargets: {
+ *                       [month]: {
+ *                         lyQty, cyQty, lyRev, cyRev,
+ *                         lyAchQty, lyAchRev     // ★ actual achieved per month
+ *                       }
+ *                     }
+ *                   }
+ *                 ]
+ *               }
+ *             ]
+ *           }
+ *         ]
+ *       }
+ *     ]
+ *   }
+ * ]
  */
 const MockZBMHierarchy = [
   {
@@ -264,21 +396,31 @@ const MockZBMHierarchy = [
   }
 ];
 
+
 // ==================== SALES HEAD API SERVICE ====================
 
 export const SalesHeadApiService = {
 
+  // ========================
+  //  CORE DATA
+  // ========================
+
   /**
    * GET /saleshead/categories
+   * @returns {Promise<Array<{id:string, name:string, icon:string, color:string, isRevenueOnly:boolean}>>}
    */
   async getCategories() {
     if (USE_MOCK) { await delay(300); return [...MockCategories]; }
-    return apiRequest('/categories');
+    return apiRequest('/saleshead/categories');
   },
 
   /**
    * GET /saleshead/zbm-submissions
-   * Returns ZBM zone-level target submissions for Sales Head review
+   * Returns all ZBM zone-level target submissions for Sales Head review.
+   *
+   * ★ IMPORTANT: monthlyTargets must include lyAchQty + lyAchRev for analytics.
+   *
+   * @returns {Promise<Array>} Array of submission objects (see MockZBMSubmissions shape above)
    */
   async getZBMSubmissions() {
     if (USE_MOCK) { await delay(500); return MockZBMSubmissions.map(s => ({ ...s })); }
@@ -286,8 +428,36 @@ export const SalesHeadApiService = {
   },
 
   /**
+   * GET /saleshead/zbm-hierarchy
+   * Returns full organizational hierarchy: ZBM → ABM → TBM → Sales Rep → Products
+   *
+   * ★ IMPORTANT: Each Sales Rep must have:
+   *   - yearlyTarget: number (CY yearly revenue target)
+   *   - lyAchieved: number (LY actual achieved total revenue)
+   *   - products[].monthlyTargets[month].lyAchQty (actual achieved qty per month)
+   *   - products[].monthlyTargets[month].lyAchRev (actual achieved rev per month)
+   *
+   * @returns {Promise<Array>} Array of ZBM objects with nested hierarchy (see MockZBMHierarchy shape above)
+   */
+  async getZBMHierarchy() {
+    if (USE_MOCK) { await delay(600); return JSON.parse(JSON.stringify(MockZBMHierarchy)); }
+    return apiRequest('/saleshead/zbm-hierarchy');
+  },
+
+  // ========================
+  //  APPROVALS
+  // ========================
+
+  /**
    * PUT /saleshead/approve-zbm/:submissionId
-   * Approve a ZBM's zone-level target with optional corrections
+   * Approve a ZBM's zone-level target with optional corrections.
+   *
+   * @param {string} submissionId - The submission ID to approve
+   * @param {Object|null} corrections - Optional monthly corrections
+   *   { [month]: { cyQty?: number, cyRev?: number } }
+   *   Example: { apr: { cyQty: 65, cyRev: 18500000 }, may: { cyRev: 17000000 } }
+   *
+   * @returns {Promise<{success:boolean}>}
    */
   async approveZBMTarget(submissionId, corrections = null) {
     if (USE_MOCK) {
@@ -305,11 +475,18 @@ export const SalesHeadApiService = {
       }
       return { success: true };
     }
-    return apiRequest(`/saleshead/approve-zbm/${submissionId}`, { method: 'PUT', body: JSON.stringify({ corrections }) });
+    return apiRequest(`/saleshead/approve-zbm/${submissionId}`, {
+      method: 'PUT',
+      body: JSON.stringify({ corrections })
+    });
   },
 
   /**
    * POST /saleshead/bulk-approve-zbm
+   * Bulk approve multiple ZBM submissions at once.
+   *
+   * @param {string[]} submissionIds - Array of submission IDs
+   * @returns {Promise<{success:boolean, approvedCount:number}>}
    */
   async bulkApproveZBM(submissionIds) {
     if (USE_MOCK) {
@@ -320,20 +497,25 @@ export const SalesHeadApiService = {
       });
       return { success: true, approvedCount: submissionIds.length };
     }
-    return apiRequest('/saleshead/bulk-approve-zbm', { method: 'POST', body: JSON.stringify({ submissionIds }) });
+    return apiRequest('/saleshead/bulk-approve-zbm', {
+      method: 'POST',
+      body: JSON.stringify({ submissionIds })
+    });
   },
 
-  /**
-   * GET /saleshead/zbm-hierarchy
-   * Returns full hierarchy: ZBM → ABM → TBM → Sales Rep
-   */
-  async getZBMHierarchy() {
-    if (USE_MOCK) { await delay(600); return JSON.parse(JSON.stringify(MockZBMHierarchy)); }
-    return apiRequest('/saleshead/zbm-hierarchy');
-  },
+  // ========================
+  //  DASHBOARD STATS
+  // ========================
 
   /**
    * GET /saleshead/dashboard-stats
+   * @returns {Promise<{
+   *   zbmSubmissions: { total:number, pending:number, approved:number },
+   *   zbmCount: number,
+   *   totalABMs: number,
+   *   totalTBMs: number,
+   *   totalSalesReps: number
+   * }>}
    */
   async getDashboardStats() {
     if (USE_MOCK) {
@@ -358,6 +540,7 @@ export const SalesHeadApiService = {
 
   /**
    * GET /saleshead/unique-zbms
+   * @returns {Promise<Array<{id:string, name:string, territory:string}>>}
    */
   async getUniqueZBMs() {
     if (USE_MOCK) {
@@ -367,21 +550,32 @@ export const SalesHeadApiService = {
     return apiRequest('/saleshead/unique-zbms');
   },
 
+  // ========================
+  //  OVERVIEW CHARTS
+  // ========================
+
   /**
    * GET /saleshead/regional-performance
-   * Returns revenue breakdown by region for pie charts
+   * Returns aggregated regional data for overview pie charts.
+   *
+   * @returns {Promise<Array<{
+   *   id:string, name:string, territory:string,
+   *   lyRev:number, cyRev:number, lyAchRev:number,
+   *   abmCount:number, tbmCount:number, repCount:number
+   * }>>}
    */
   async getRegionalPerformance() {
     if (USE_MOCK) {
       await delay(400);
       return MockZBMHierarchy.map(zbm => {
-        let lyRev = 0, cyRev = 0;
+        let lyRev = 0, cyRev = 0, lyAchRev = 0;
         const zbmSubs = MockZBMSubmissions.filter(s => s.zbmId === zbm.id);
         zbmSubs.forEach(s => {
           if (s.monthlyTargets) {
             Object.values(s.monthlyTargets).forEach(m => {
               lyRev += m.lyRev || 0;
               cyRev += m.cyRev || 0;
+              lyAchRev += m.lyAchRev || 0;
             });
           }
         });
@@ -391,6 +585,7 @@ export const SalesHeadApiService = {
           territory: zbm.territory,
           lyRev,
           cyRev,
+          lyAchRev,
           abmCount: zbm.abms.length,
           tbmCount: zbm.abms.reduce((s, a) => s + a.tbms.length, 0),
           repCount: zbm.abms.reduce((s, a) => s + a.tbms.reduce((ss, t) => ss + t.salesReps.length, 0), 0),
@@ -402,24 +597,128 @@ export const SalesHeadApiService = {
 
   /**
    * GET /saleshead/monthly-trend
-   * Returns monthly revenue trend data for charts
+   * Returns month-by-month LY vs CY revenue data plus LY achieved.
+   *
+   * @returns {Promise<Array<{month:string, lyRev:number, cyRev:number, lyAchRev:number}>>}
    */
   async getMonthlyTrend() {
     if (USE_MOCK) {
       await delay(300);
       const months = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
       return months.map(m => {
-        let lyRev = 0, cyRev = 0;
+        let lyRev = 0, cyRev = 0, lyAchRev = 0;
         MockZBMSubmissions.forEach(s => {
           if (s.monthlyTargets?.[m]) {
             lyRev += s.monthlyTargets[m].lyRev || 0;
             cyRev += s.monthlyTargets[m].cyRev || 0;
+            lyAchRev += s.monthlyTargets[m].lyAchRev || 0;
           }
         });
-        return { month: m, lyRev, cyRev };
+        return { month: m, lyRev, cyRev, lyAchRev };
       });
     }
     return apiRequest('/saleshead/monthly-trend');
+  },
+
+  // ========================
+  //  ANALYTICS (NEW)
+  // ========================
+
+  /**
+   * GET /saleshead/analytics/distribution
+   * Returns pre-aggregated distribution data for analytics charts.
+   *
+   * ★ OPTIONAL OPTIMIZATION: If your backend can return pre-aggregated data,
+   *   implement this endpoint. Otherwise the frontend calculates it from
+   *   getZBMSubmissions() + getZBMHierarchy() data — which already works.
+   *
+   * Query params:
+   *   - level: 'zone' | 'territory' | 'member'
+   *   - zoneId: optional filter (zbmId)
+   *   - territoryId: optional filter (abmId)
+   *   - metric: 'revenue' | 'qty'
+   *   - categories: comma-separated category IDs
+   *
+   * @returns {Promise<Array<{
+   *   id:string, name:string, subtitle:string,
+   *   lyTarget:number, lyAchieved:number, cyTarget:number,
+   *   growth:number, achievedPct:number,
+   *   segments: Array<{catId:string, catName:string, lyTarget:number, lyAchieved:number, cyTarget:number}>
+   * }>>}
+   */
+  async getAnalyticsDistribution(params = {}) {
+    if (USE_MOCK) {
+      // Frontend calculates from existing data — no separate mock needed
+      return null;
+    }
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/saleshead/analytics/distribution?${query}`);
+  },
+
+  /**
+   * GET /saleshead/analytics/comparison
+   * Returns comparison data for two entities side-by-side.
+   *
+   * ★ OPTIONAL OPTIMIZATION: Same as distribution — frontend can calculate
+   *   from core data. Implement only if you want server-side aggregation.
+   *
+   * Query params:
+   *   - entityA: ID of first entity
+   *   - entityB: ID of second entity
+   *   - level: 'zone' | 'territory' | 'member'
+   *   - metric: 'revenue' | 'qty'
+   *   - categories: comma-separated category IDs
+   *
+   * @returns {Promise<{
+   *   entityA: { id, name, lyTarget, lyAchieved, cyTarget, growth, achievedPct, segments, monthlyData },
+   *   entityB: { id, name, lyTarget, lyAchieved, cyTarget, growth, achievedPct, segments, monthlyData }
+   * }>}
+   */
+  async getAnalyticsComparison(params = {}) {
+    if (USE_MOCK) {
+      // Frontend calculates from existing data — no separate mock needed
+      return null;
+    }
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/saleshead/analytics/comparison?${query}`);
+  },
+
+  /**
+   * GET /saleshead/analytics/achievement
+   * Returns LY achievement data aggregated at the requested level.
+   *
+   * ★ This is the KEY endpoint for LY Achieved data.
+   *   If not implemented, frontend falls back to calculating from
+   *   monthlyTargets.lyAchQty / lyAchRev fields in the hierarchy data.
+   *
+   * Query params:
+   *   - level: 'zone' | 'territory' | 'member'
+   *   - zoneId: optional filter
+   *   - territoryId: optional filter
+   *
+   * @returns {Promise<Array<{
+   *   id: string,
+   *   name: string,
+   *   lyTarget: number,
+   *   lyAchieved: number,
+   *   achievedPct: number,
+   *   cyTarget: number,
+   *   growth: number,
+   *   categoryBreakdown: Array<{
+   *     catId: string,
+   *     lyTarget: number,
+   *     lyAchieved: number,
+   *     cyTarget: number
+   *   }>
+   * }>>}
+   */
+  async getAchievementData(params = {}) {
+    if (USE_MOCK) {
+      // Frontend calculates from existing data — no separate mock needed
+      return null;
+    }
+    const query = new URLSearchParams(params).toString();
+    return apiRequest(`/saleshead/analytics/achievement?${query}`);
   }
 };
 

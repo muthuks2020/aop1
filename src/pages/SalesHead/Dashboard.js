@@ -26,6 +26,7 @@ import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 import SalesHeadOverview from './components/SalesHeadOverview';
 import SalesHeadDrilldown from './components/SalesHeadDrilldown';
+import SalesHeadAnalytics from './components/SalesHeadAnalytics';
 import TeamYearlyTargets from '../TBM/components/TeamYearlyTargets';
 import '../../styles/saleshead/shDashboard.css';
 
@@ -331,6 +332,9 @@ function SalesHeadDashboard() {
         <button className={`sh-tab ${activeTab === 'drilldown' ? 'active' : ''}`} onClick={() => setActiveTab('drilldown')}>
           <i className="fas fa-sitemap"></i> Organization Drill-Down
         </button>
+        <button className={`sh-tab ${activeTab === 'analytics' ? 'active' : ''}`} onClick={() => setActiveTab('analytics')}>
+          <i className="fas fa-chart-area"></i> Analytics & Compare
+        </button>
       </div>
 
       {/* ==================== MAIN CONTENT ==================== */}
@@ -420,6 +424,11 @@ function SalesHeadDashboard() {
             {/* TAB: Organization Drill-Down */}
             {activeTab === 'drilldown' && (
               <SalesHeadDrilldown showToast={showToast} />
+            )}
+
+            {/* TAB: Analytics & Compare */}
+            {activeTab === 'analytics' && (
+              <SalesHeadAnalytics showToast={showToast} />
             )}
           </>
         )}
