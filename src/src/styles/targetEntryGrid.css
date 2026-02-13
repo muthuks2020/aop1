@@ -1,15 +1,7 @@
 /* ============================================
    Enhanced Target Entry Grid Styles
    Product Commitment PWA - Appasamy Associates
-   Version: 4.1.0 - Status Locking + Visibility Clarity + Growth %
-   
-   WORKFLOW (no reject cycle):
-   Sales Rep enters → submits to TBM → TBM edits & approves → LOCKED
-   
-   3 STATES for Sales Rep:
-   - Draft    → teal borders, editable
-   - Submitted → amber tint, locked (pending TBM)
-   - Approved  → green tint, locked (TBM finalized)
+   Version: 2.1.0 - Simplified Quarterly Totals in Header
    ============================================ */
 
 /* ==================== GRID CONTAINER ==================== */
@@ -524,6 +516,11 @@
   color: var(--info);
 }
 
+.status-badge.rejected {
+  background: linear-gradient(135deg, var(--danger-light) 0%, #FECACA 100%);
+  color: var(--danger-dark);
+}
+
 /* ==================== MONTH CELLS ==================== */
 
 .month-cell {
@@ -730,6 +727,10 @@
   background: linear-gradient(135deg, var(--warning) 0%, #D97706 100%);
 }
 
+.year-badge.cy.rejected {
+  background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
+}
+
 .year-badge.ly {
   background: var(--gray-200);
   color: var(--gray-500);
@@ -826,11 +827,7 @@
   }
 }
 
-/* ==================== STATUS CLASSES FOR ROWS (base — enhanced in v4.0.0 section below) ==================== */
-
-/* NOTE: The v4.1.0 section at the bottom of this file provides the 
-   authoritative status-based styles including locking, dimming, etc.
-   These base styles provide fallback gradient backgrounds. */
+/* ==================== STATUS CLASSES FOR ROWS ==================== */
 
 .product-rows.status-approved .cy-row {
   background: linear-gradient(90deg, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
@@ -840,11 +837,15 @@
   background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, transparent 50%);
 }
 
-.product-rows.status-approved .month-cell .cell-value {
+.product-rows.status-rejected .cy-row {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.05) 0%, transparent 50%);
+}
+
+.product-rows.status-approved .month-cell.status-approved .cell-value {
   color: var(--success-dark);
 }
 
-.product-rows.status-submitted .month-cell .cell-value {
+.product-rows.status-submitted .month-cell.status-submitted .cell-value {
   color: var(--warning-dark);
 }
 
@@ -923,6 +924,11 @@
 .product-status-badge.approved {
   background: var(--success-light);
   color: var(--success-dark);
+}
+
+.product-status-badge.rejected {
+  background: var(--danger-light);
+  color: var(--danger-dark);
 }
 
 /* ==================== NO RESULTS MESSAGE ==================== */
@@ -1039,6 +1045,11 @@
   border: 1px solid var(--success);
 }
 
+.legend-color.rejected {
+  background: linear-gradient(135deg, var(--danger-light) 0%, #FECACA 100%);
+  border: 1px solid var(--danger);
+}
+
 /* ==================== RESPONSIVE ADJUSTMENTS ==================== */
 
 @media (max-width: 1200px) {
@@ -1078,28 +1089,20 @@
     transform: none;
   }
 }
-/* ==========================================================================
-   VERSION 4.1.0 — STATUS-BASED LOCKING + VISIBILITY CLARITY + GROWTH %
-   
-   WORKFLOW: Sales Rep enters → submits to TBM → TBM edits (if needed) & approves → LOCKED
-   NO reject cycle. Only 3 states: Draft, Submitted, Approved.
-   
-   Features:
-   1. Approved by TBM → green tinted, LOCKED (non-editable)
-   2. Submitted (pending TBM) → amber tinted, LOCKED
-   3. Draft → teal borders, EDITABLE
-   4. Products with NO CY values → dimmed for visibility
-   5. Growth % column enhanced styling
-   6. Status summary chips in target bar
-   ========================================================================== */
+/* ==================== EDITABLE CELL BORDER BOX STYLING ==================== */
+/* 
+ * ADD THIS CSS TO THE VERY END OF YOUR TargetEntryGridStyles.css FILE
+ * This adds visible border boxes around ALL editable cells
+ * 
+ * Version 2.2.0
+ */
 
 /* ==========================================================================
-   1A. DRAFT — Editable (teal borders)
+   IMPORTANT: These styles add teal border boxes around editable cells
+   so sales team can easily see where to enter values
    ========================================================================== */
-.product-rows.status-draft {
-  border-left: 3px solid transparent;
-}
 
+/* Style for editable cells - Draft status rows */
 .product-rows.status-draft .product-row.cy-row .month-cell {
   padding: 2px;
 }
@@ -1116,7 +1119,6 @@
   justify-content: center !important;
   box-sizing: border-box !important;
   transition: all 0.15s ease !important;
-  cursor: text;
 }
 
 .product-rows.status-draft .product-row.cy-row .month-cell .cell-value:hover,
@@ -1132,106 +1134,48 @@
   outline: none !important;
 }
 
+/* Style for editable cells - Rejected status rows */
+.product-rows.status-rejected .product-row.cy-row .month-cell {
+  padding: 2px;
+}
+
+.product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+.product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
+  border: 2px solid #00A19B !important;
+  border-radius: 4px !important;
+  background: rgba(0, 161, 155, 0.06) !important;
+  padding: 4px 6px !important;
+  min-height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+}
+
 /* ==========================================================================
-   1B. APPROVED by TBM — LOCKED (green tint, no edit)
+   Make sure Submitted and Approved cells do NOT have the border box
    ========================================================================== */
-.product-rows.status-approved {
-  background: linear-gradient(90deg, rgba(5, 150, 105, 0.05) 0%, rgba(5, 150, 105, 0.02) 100%);
-  border-left: 3px solid #059669;
-}
 
-.product-rows.status-approved .product-row.cy-row .month-cell {
-  cursor: not-allowed;
-}
-
+.product-rows.status-submitted .product-row.cy-row .month-cell .cell-value,
 .product-rows.status-approved .product-row.cy-row .month-cell .cell-value {
-  border: none !important;
-  background: rgba(5, 150, 105, 0.06) !important;
-  box-shadow: none !important;
-  color: #065F46;
-  cursor: not-allowed;
-  font-weight: 600;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.product-rows.status-approved .product-row.cy-row .month-cell:hover .cell-value {
-  background: rgba(5, 150, 105, 0.1) !important;
-  transform: none;
-  box-shadow: none !important;
-}
-
-.product-rows.status-approved .total-cell.cy-total {
-  background: rgba(5, 150, 105, 0.14) !important;
-  color: #065F46;
-  font-weight: 800;
-}
-
-/* ==========================================================================
-   1C. SUBMITTED (Pending TBM) — LOCKED (amber tint)
-   ========================================================================== */
-.product-rows.status-submitted {
-  background: linear-gradient(90deg, rgba(217, 119, 6, 0.04) 0%, rgba(217, 119, 6, 0.02) 100%);
-  border-left: 3px solid #D97706;
-}
-
-.product-rows.status-submitted .product-row.cy-row .month-cell {
-  cursor: not-allowed;
-}
-
-.product-rows.status-submitted .product-row.cy-row .month-cell .cell-value {
-  border: none !important;
-  background: rgba(217, 119, 6, 0.06) !important;
-  box-shadow: none !important;
-  color: #92400E;
-  cursor: not-allowed;
-  font-weight: 600;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-}
-
-.product-rows.status-submitted .product-row.cy-row .month-cell:hover .cell-value {
-  background: rgba(217, 119, 6, 0.1) !important;
-  transform: none;
-  box-shadow: none !important;
-}
-
-.product-rows.status-submitted .total-cell.cy-total {
-  background: rgba(217, 119, 6, 0.1) !important;
-  color: #92400E;
-}
-
-/* ==========================================================================
-   2. LOCKED CELL INDICATOR
-   ========================================================================== */
-.month-cell.locked {
-  cursor: not-allowed !important;
-  position: relative;
-}
-
-.month-cell.locked .cell-value {
-  cursor: not-allowed !important;
-}
-
-/* ==========================================================================
-   3. LY (Last Year) — never editable, never bordered
-   ========================================================================== */
-.product-row.ly-row .month-cell .cell-value {
   border: none !important;
   background: transparent !important;
   box-shadow: none !important;
-  cursor: default;
 }
 
 /* ==========================================================================
-   4. REVENUE-ONLY CATEGORIES — editable cells with teal border
+   LY (Last Year) rows should never have border boxes
    ========================================================================== */
+
+.product-row.ly-row .month-cell .cell-value {
+  border: none !important;
+  background: transparent !important;
+}
+
+/* ==========================================================================
+   Revenue Only Categories - Editable cells with border
+   ========================================================================== */
+
 .revenue-row.status-draft .month-cell.editable-revenue,
 .revenue-row .month-cell.editable-revenue {
   padding: 2px;
@@ -1247,183 +1191,29 @@
 }
 
 /* ==========================================================================
-   5. PRODUCTS WITH NO CY VALUES — DIMMED for visibility clarity
-   Products where all CY monthly values = 0 get reduced opacity + dashed border.
-   Hovering restores opacity so they can still be edited.
+   Responsive adjustments
    ========================================================================== */
-.product-rows.no-values-entered {
-  opacity: 0.45;
-  transition: opacity 0.25s ease;
-  border-left: 3px dashed #CBD5E1 !important;
-}
 
-.product-rows.no-values-entered:hover {
-  opacity: 0.85;
-}
-
-/* Un-entered draft products: grey placeholder borders instead of teal */
-.product-rows.no-values-entered.status-draft .product-row.cy-row .month-cell .cell-value {
-  border-color: #CBD5E1 !important;
-  background: rgba(0, 0, 0, 0.02) !important;
-  color: #9CA3AF;
-}
-
-.product-rows.no-values-entered.status-draft .product-row.cy-row .month-cell .cell-value:hover {
-  opacity: 1;
-  border-color: #00A19B !important;
-  background: rgba(0, 161, 155, 0.06) !important;
-  color: #374151;
-}
-
-/* When hovering an un-entered row, restore cells to full visibility */
-.product-rows.no-values-entered:hover .product-row.cy-row .month-cell .cell-value {
-  opacity: 1;
-}
-
-/* ==========================================================================
-   6. GROWTH % COLUMN — enhanced styling
-   ========================================================================== */
-.growth-header {
-  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
-  color: var(--white) !important;
-  font-weight: 800 !important;
-  min-width: 80px !important;
-}
-
-.growth-cell {
-  min-width: 80px;
-}
-
-.growth-value.small {
-  font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-/* ==========================================================================
-   7. STATUS SUMMARY CHIPS (in Overall Target Bar)
-   ========================================================================== */
-.otb-status-chips {
-  display: flex;
-  gap: 0.5rem;
-  padding: 0.5rem 1.5rem 0.75rem;
-  flex-wrap: wrap;
-}
-
-.otb-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.6875rem;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.otb-chip i {
-  font-size: 0.625rem;
-}
-
-.otb-chip-total {
-  background: #F3F4F6;
-  color: #374151;
-}
-
-.otb-chip-entered {
-  background: #E6FAF9;
-  color: #00A19B;
-}
-
-.otb-chip-approved {
-  background: #D1FAE5;
-  color: #059669;
-}
-
-.otb-chip-submitted {
-  background: #FEF3C7;
-  color: #D97706;
-}
-
-.otb-chip-draft {
-  background: #EFF6FF;
-  color: #2563EB;
-}
-
-/* ==========================================================================
-   8. PRODUCT STATUS INDICATOR (inline badge next to product name)
-   ========================================================================== */
-.product-status-indicator {
-  flex-shrink: 0;
-  transition: all 0.15s ease;
-}
-
-/* ==========================================================================
-   9. FILTER TOGGLE — "Show only entered products"
-   ========================================================================== */
-.filter-toggle {
-  user-select: none;
-}
-
-.filter-toggle:hover {
-  background: #E6FAF9 !important;
-  border-color: #00A19B !important;
-}
-
-/* ==========================================================================
-   10. GRID FOOTER INFO BAR
-   ========================================================================== */
-.grid-footer-info span {
-  display: inline-flex;
-  align-items: center;
-  white-space: nowrap;
-}
-
-/* ==========================================================================
-   11. RESPONSIVE — status-based visuals at smaller screens
-   ========================================================================== */
 @media (max-width: 1400px) {
   .product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
-  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input {
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
     min-height: 24px !important;
     padding: 3px 4px !important;
     font-size: 0.75rem !important;
-  }
-
-  .product-rows.status-approved,
-  .product-rows.status-submitted {
-    border-left-width: 2px;
-  }
-
-  .otb-status-chips {
-    padding: 0.375rem 1rem;
-  }
-
-  .grid-legend {
-    display: none !important;
   }
 }
 
 @media (max-width: 1200px) {
   .product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
-  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input {
+  .product-rows.status-draft .product-row.cy-row .month-cell .cell-input,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-value,
+  .product-rows.status-rejected .product-row.cy-row .month-cell .cell-input {
     min-height: 22px !important;
     padding: 2px 3px !important;
     border-width: 1.5px !important;
     font-size: 0.7rem !important;
-  }
-}
-
-@media (max-width: 768px) {
-  .otb-status-chips {
-    flex-wrap: wrap;
-  }
-
-  .grid-footer-info {
-    flex-direction: column;
-    gap: 0.5rem !important;
   }
 }
 

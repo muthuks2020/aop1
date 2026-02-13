@@ -1,0 +1,514 @@
+/**
+ * TBM Target Entry Grid Styles - Light Theme
+ * Matching Sales Rep Dashboard Design
+ * 
+ * @author Appasamy Associates - Product Commitment PWA
+ * @version 2.2.0
+ */
+
+/* ==================== GRID WRAPPER ==================== */
+
+.tbm-grid-wrapper {
+  overflow-x: auto;
+  overflow-y: visible;
+  background: var(--white);
+}
+
+.tbm-excel-grid {
+  min-width: 1600px;
+}
+
+/* ==================== HEADER ROW ==================== */
+
+.tbm-grid-header-row {
+  display: grid;
+  grid-template-columns: 280px repeat(12, minmax(70px, 1fr)) repeat(4, 80px) 100px 90px;
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-bottom: 2px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tbm-header-cell {
+  padding: 0.875rem 0.5rem;
+  font-size: 0.6875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--gray-600);
+  text-align: center;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.125rem;
+}
+
+.tbm-header-cell.product-header {
+  justify-content: space-between;
+  flex-direction: row;
+  padding: 0.875rem 1rem;
+  background: linear-gradient(180deg, #F0FDF9 0%, #E6FFFA 100%);
+  font-size: 0.75rem;
+  color: var(--accent);
+}
+
+.view-mode-indicator {
+  background: var(--accent);
+  color: var(--white);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.625rem;
+  font-weight: 800;
+}
+
+.tbm-header-cell.month-header {
+  position: relative;
+  font-size: 0.75rem;
+  background: var(--white);
+}
+
+.tbm-header-cell.month-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+}
+
+.tbm-header-cell.month-header.q1::before { background: linear-gradient(90deg, var(--q1-color) 0%, #60A5FA 100%); }
+.tbm-header-cell.month-header.q2::before { background: linear-gradient(90deg, var(--q2-color) 0%, #4ADE80 100%); }
+.tbm-header-cell.month-header.q3::before { background: linear-gradient(90deg, var(--q3-color) 0%, #FBBF24 100%); }
+.tbm-header-cell.month-header.q4::before { background: linear-gradient(90deg, var(--q4-color) 0%, #F87171 100%); }
+
+.tbm-header-cell.quarter-header {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.tbm-header-cell.quarter-header.q1 { background: linear-gradient(180deg, var(--q1-color) 0%, #2563EB 100%); }
+.tbm-header-cell.quarter-header.q2 { background: linear-gradient(180deg, var(--q2-color) 0%, #16A34A 100%); }
+.tbm-header-cell.quarter-header.q3 { background: linear-gradient(180deg, var(--q3-color) 0%, #D97706 100%); }
+.tbm-header-cell.quarter-header.q4 { background: linear-gradient(180deg, var(--q4-color) 0%, #DC2626 100%); }
+
+.tbm-header-cell.total-header {
+  background: linear-gradient(180deg, #059669 0%, #047857 100%);
+  color: var(--white);
+  font-size: 0.75rem;
+}
+
+.tbm-header-cell.growth-header {
+  background: linear-gradient(180deg, #D97706 0%, #B45309 100%);
+  color: var(--white);
+  font-size: 0.75rem;
+}
+
+.year-indicator {
+  font-size: 0.5625rem;
+  color: var(--gray-400);
+  font-weight: 600;
+}
+
+/* ==================== CATEGORY SECTION ==================== */
+
+.tbm-category-section {
+  border-bottom: 2px solid var(--border);
+}
+
+.tbm-category-header-row {
+  display: grid;
+  grid-template-columns: 280px repeat(12, minmax(70px, 1fr)) repeat(4, 80px) 100px 90px;
+  background: linear-gradient(180deg, #F8FAFC 0%, #F1F5F9 100%);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tbm-category-header-row:hover {
+  background: linear-gradient(180deg, #F1F5F9 0%, #E2E8F0 100%);
+}
+
+.tbm-category-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  color: var(--gray-800);
+  border-right: 1px solid var(--border);
+}
+
+.chevron-icon {
+  font-size: 0.625rem;
+  color: var(--gray-400);
+  width: 12px;
+  transition: transform 0.2s;
+}
+
+.category-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--white);
+  font-size: 1rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.category-icon.equipment { background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%); }
+.category-icon.iol { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); }
+.category-icon.ovd { background: linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%); }
+.category-icon.mis { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); }
+.category-icon.others { background: linear-gradient(135deg, #64748B 0%, #94A3B8 100%); }
+
+.category-name {
+  flex: 1;
+}
+
+.category-count {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  padding: 0.25rem 0.5rem;
+  background: var(--gray-200);
+  border-radius: 10px;
+}
+
+.revenue-badge {
+  font-size: 0.5625rem;
+  font-weight: 700;
+  padding: 0.25rem 0.625rem;
+  background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%);
+  color: #B45309;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+/* ==================== MONTH CELLS ==================== */
+
+.tbm-month-cell {
+  padding: 0.5rem 0.25rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-family: var(--font-mono);
+  border-right: 1px solid var(--gray-100);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+  color: var(--gray-700);
+  background: var(--white);
+}
+
+.tbm-month-cell.category-total {
+  font-weight: 700;
+  color: var(--gray-800);
+  background: var(--gray-50);
+}
+
+.tbm-month-cell.cy-value {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.tbm-month-cell.ly-value {
+  color: var(--gray-400);
+  font-size: 0.75rem;
+  background: var(--gray-50);
+}
+
+.tbm-month-cell.editable {
+  cursor: pointer;
+  position: relative;
+  background: #F0FDFA;
+}
+
+.tbm-month-cell.editable::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 2px;
+  background: var(--accent);
+  transition: width 0.2s;
+}
+
+.tbm-month-cell.editable:hover {
+  background: #CCFBF1;
+}
+
+.tbm-month-cell.editable:hover::after {
+  width: 80%;
+}
+
+.tbm-month-cell.locked {
+  cursor: not-allowed;
+  opacity: 0.7;
+  background: var(--gray-100);
+}
+
+.tbm-month-cell.active {
+  background: #99F6E4;
+  box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.cell-input {
+  width: 100%;
+  height: 100%;
+  border: none;
+  background: transparent;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  outline: none;
+}
+
+.cell-value {
+  display: block;
+}
+
+/* ==================== QUARTER CELLS ==================== */
+
+.tbm-quarter-cell {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-right: 1px solid var(--gray-200);
+  color: var(--gray-800);
+}
+
+.tbm-quarter-cell.q1 { background: var(--q1-bg); }
+.tbm-quarter-cell.q2 { background: var(--q2-bg); }
+.tbm-quarter-cell.q3 { background: var(--q3-bg); }
+.tbm-quarter-cell.q4 { background: var(--q4-bg); }
+
+.tbm-quarter-cell.ly {
+  color: var(--gray-400);
+  font-weight: 600;
+}
+
+.tbm-quarter-cell.category-total {
+  font-weight: 800;
+}
+
+/* ==================== TOTAL CELLS ==================== */
+
+.tbm-total-cell {
+  padding: 0.5rem;
+  text-align: center;
+  font-size: 0.875rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  border-right: 1px solid var(--gray-200);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tbm-total-cell.category-total {
+  background: #D1FAE5;
+  color: #047857;
+  font-size: 0.9375rem;
+  font-weight: 800;
+}
+
+.tbm-total-cell.cy-total {
+  background: #F0FDF4;
+  color: var(--accent);
+}
+
+.tbm-total-cell.ly-total {
+  color: var(--gray-400);
+  background: var(--gray-50);
+}
+
+/* ==================== GROWTH CELLS ==================== */
+
+.tbm-growth-cell {
+  padding: 0.5rem;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--white);
+}
+
+.growth-badge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  padding: 0.25rem 0.5rem;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.growth-badge.positive {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.growth-badge.negative {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.growth-badge.small {
+  font-size: 0.6875rem;
+  padding: 0.125rem 0.375rem;
+}
+
+/* ==================== PRODUCT ROWS ==================== */
+
+.tbm-products-container {
+  border-top: 1px solid var(--gray-100);
+}
+
+.tbm-product-rows {
+  border-bottom: 1px solid var(--gray-100);
+  transition: all 0.15s ease;
+}
+
+.tbm-product-rows:hover {
+  background: var(--gray-50);
+}
+
+.tbm-product-rows.status-draft {}
+.tbm-product-rows.status-submitted {
+  background: #FFFBEB;
+}
+.tbm-product-rows.status-approved {
+  background: #F0FDF4;
+}
+.tbm-product-rows.status-rejected {
+  background: #FEF2F2;
+}
+
+.tbm-product-row {
+  display: grid;
+  grid-template-columns: 280px repeat(12, minmax(70px, 1fr)) repeat(4, 80px) 100px 90px;
+}
+
+.tbm-product-row.cy-row {
+  background: var(--white);
+  border-bottom: 1px dashed var(--gray-200);
+}
+
+.tbm-product-row.ly-row {
+  background: var(--gray-50);
+}
+
+.tbm-product-name-cell {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem 0.5rem 2.5rem;
+  border-right: 1px solid var(--border);
+  gap: 0.5rem;
+  background: var(--white);
+}
+
+.tbm-product-name-cell.ly-label {
+  padding-left: 3rem;
+  color: var(--gray-500);
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--gray-50);
+}
+
+.product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  overflow: hidden;
+}
+
+.product-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--gray-800);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 180px;
+}
+
+.product-code {
+  font-size: 0.625rem;
+  color: var(--gray-400);
+  font-family: var(--font-mono);
+}
+
+.status-indicator {
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  flex-shrink: 0;
+}
+
+.status-indicator.draft {
+  background: var(--info-light);
+  color: var(--info);
+}
+
+.status-indicator.submitted {
+  background: var(--warning-light);
+  color: #B45309;
+}
+
+.status-indicator.approved {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.status-indicator.rejected {
+  background: var(--danger-light);
+  color: var(--danger);
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 1200px) {
+  .tbm-grid-wrapper {
+    overflow-x: scroll;
+  }
+}
+
+/* ==================== SCROLLBAR ==================== */
+
+.tbm-grid-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tbm-grid-wrapper::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 5px;
+}
+
+.tbm-grid-wrapper::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 5px;
+}
+
+.tbm-grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
