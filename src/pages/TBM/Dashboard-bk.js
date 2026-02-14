@@ -184,10 +184,11 @@ function ABMDashboard() {
 
         {/* TAB 1: TBM TARGETS APPROVAL */}
         {activeTab==='approvals' && (<>
-         <SalesRepGrowthPieChart
-  salesRepSubmissions={tbmSubmissions}
-  approvalStats={approvalStats}
-/>
+          <div className="abm-approval-stats">
+            <div className="abm-stat-card"><i className="fas fa-inbox"></i><div><span className="abm-stat-value">{approvalStats.total}</span><span className="abm-stat-label">Total</span></div></div>
+            <div className="abm-stat-card abm-stat-pending"><i className="fas fa-clock"></i><div><span className="abm-stat-value">{approvalStats.pending}</span><span className="abm-stat-label">Pending</span></div></div>
+            <div className="abm-stat-card abm-stat-approved"><i className="fas fa-check-circle"></i><div><span className="abm-stat-value">{approvalStats.approved}</span><span className="abm-stat-label">Approved</span></div></div>
+          </div>
           <div className="abm-approval-filters">
             <div className="abm-filter-group"><label>TBM:</label><select value={tbmFilter} onChange={e=>setTbmFilter(e.target.value)}><option value="all">All TBMs</option>{uniqueTBMs.map(t=><option key={t.id} value={t.id}>{t.name} — {t.territory}</option>)}</select></div>
             <div className="abm-filter-group"><label>Category:</label><select value={categoryFilter} onChange={e=>setCategoryFilter(e.target.value)}><option value="all">All</option>{categories.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}</select></div>
