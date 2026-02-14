@@ -1,15 +1,19 @@
 /**
- * TBM Territory Target Grid Styles
+ * TBM Territory & Area Target Grid Styles
  * Replicated from Sales Rep TargetEntryGrid with TERRITORY FLAVOUR
  * Uses 'tgt-' prefix to avoid conflicts with Sales Rep ('') and Individual ('ind-') grids
  *
- * TERRITORY COLOUR SCHEME:
+ * SHARED BY:
+ * - TBMTerritoryTargetGrid.js (Territory Target tab)
+ * - ABMAreaTargetGrid.js (Area Target tab) — same tgt-* classes, different labels
+ *
+ * TERRITORY / AREA COLOUR SCHEME:
  * - Primary: Navy (#1B4D7A) + Teal (#00A19B)
  * - Territory accent: #0D9488 (deeper teal)
  * - Submitted to ABM: Blue (#3B82F6)
  *
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * @version 1.1.0 — Added Area Target grid support (footer, progress, ly-row, readonly)
  */
 
 /* ==================== CSS VARIABLES ==================== */
@@ -917,6 +921,119 @@
   background: linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%);
 }
 
+/* ==================== GROWTH ICON (OTB Card) ==================== */
+
+.tgt-growth-icon {
+  background: linear-gradient(135deg, #059669 0%, #34D399 100%) !important;
+  color: var(--tgt-white) !important;
+}
+
+/* ==================== LY ROW ==================== */
+
+.tgt-ly-row {
+  background: var(--tgt-gray-50);
+}
+
+.tgt-ly-row .tgt-product-name-cell {
+  justify-content: flex-end;
+}
+
+/* Read-only cell (LY values) */
+.tgt-readonly-cell {
+  cursor: default;
+}
+
+.tgt-readonly-cell .tgt-cell-value,
+.tgt-cell-value.tgt-ly-value {
+  color: var(--tgt-gray-400);
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.tgt-ly-total {
+  color: var(--tgt-gray-400) !important;
+  font-size: 0.75rem !important;
+  font-weight: 500 !important;
+}
+
+/* ==================== CY ROW ==================== */
+
+.tgt-cy-row {
+  background: var(--tgt-white);
+  border-bottom: 1px dashed var(--tgt-gray-200);
+}
+
+/* ==================== PROGRESS SECTION (Overall Target Bar) ==================== */
+
+.tgt-otb-progress-section {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--tgt-gray-200);
+}
+
+.tgt-otb-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tgt-gray-600);
+}
+
+.tgt-otb-progress-percent {
+  font-weight: 800;
+  color: var(--tgt-accent-deep);
+  font-family: var(--tgt-font-mono);
+}
+
+/* ==================== GRID FOOTER ==================== */
+
+.tgt-grid-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.25rem;
+  background: var(--tgt-gray-50);
+  border-top: 1px solid var(--tgt-border);
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.tgt-footer-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--tgt-gray-400);
+}
+
+.tgt-footer-info i {
+  font-size: 0.875rem;
+  color: var(--tgt-gray-300);
+}
+
+.tgt-footer-stats {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tgt-footer-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--tgt-gray-500);
+  font-family: var(--tgt-font-mono);
+}
+
+.tgt-footer-stat i {
+  font-size: 0.6875rem;
+  color: var(--tgt-accent);
+}
+
 /* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1200px) {
@@ -974,6 +1091,17 @@
   .tgt-monthly-totals-row {
     display: none;
   }
+
+  .tgt-grid-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.375rem;
+  }
+
+  .tgt-footer-stats {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
 }
 
 /* ==================== PRINT ==================== */
@@ -982,7 +1110,8 @@
   .tgt-grid-header,
   .tgt-grid-search-bar,
   .tgt-grid-actions,
-  .tgt-info-banner {
+  .tgt-info-banner,
+  .tgt-grid-footer {
     display: none;
   }
 
