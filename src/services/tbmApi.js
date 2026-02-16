@@ -13,6 +13,8 @@
 
 // ==================== CONFIGURATION ====================
 // Toggle this to switch between mock and real API
+import teamTargetMethods from './tbmApi_teamTargets_addition';
+
 const USE_MOCK = process.env.REACT_APP_USE_MOCK !== 'false';
 const BASE_URL = process.env.REACT_APP_API_URL || 'https://api.appasamy.com/v1';
 
@@ -1053,5 +1055,7 @@ export const TBMApiService = {
     return Object.values(salesReps);
   }
 };
+
+Object.assign(TBMApiService, teamTargetMethods);
 
 export default TBMApiService;

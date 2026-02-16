@@ -542,17 +542,19 @@ function TeamYearlyTargets({
           onBlur={handleEditComplete}
           onKeyDown={handleEditKeyDown}
           min="0"
+          placeholder="Enter amount"
         />
       );
     }
 
+    // Always show a clickable box — filled style when value exists, empty prompt when not
     return (
       <span
-        className="tyt-editable-value"
+        className={`tyt-editable-value ${value > 0 ? 'tyt-has-value' : 'tyt-empty-target'}`}
         onClick={() => handleEditStart(memberId, field, value)}
-        title="Click to edit"
+        title="Click to enter target"
       >
-        {value > 0 ? Utils.formatShortCurrency(value) : '—'}
+        {value > 0 ? Utils.formatShortCurrency(value) : '₹ Enter Target'}
       </span>
     );
   };
@@ -644,23 +646,31 @@ function TeamYearlyTargets({
             </div>
           </div>
 
-          {/* CY Target (Editable - Value only) */}
+          {/* CY Target (Editable - Value only) + Growth Badge */}
           <div className="tyt-target-col tyt-cy-target">
             <div className="tyt-col-label">
               <i className="fas fa-flag"></i>
               CY Target <span className="tyt-fy-badge">FY {fiscalYear}</span>
             </div>
-            <div className="tyt-col-values tyt-editable">
-              <div className="tyt-primary-value">
+            <div className="tyt-cy-row">
+              <div className="tyt-cy-input-box">
                 {renderEditableValueCell(member.id, 'cyTargetValue', member.cyTargetValue)}
               </div>
-            </div>
-            {member.cyTargetValue > 0 && (
-              <div className={`tyt-growth-indicator ${getGrowthClass(getGrowthPct(member.lyTargetValue, member.cyTargetValue))}`}>
-                <i className={`fas fa-arrow-${getGrowthPct(member.lyTargetValue, member.cyTargetValue) >= 0 ? 'up' : 'down'}`}></i>
-                {Math.abs(getGrowthPct(member.lyTargetValue, member.cyTargetValue)).toFixed(1)}% vs LY
+              <div className={`tyt-growth-badge ${member.cyTargetValue > 0 ? getGrowthClass(getGrowthPct(member.lyTargetValue, member.cyTargetValue)) : 'waiting'}`}>
+                {member.cyTargetValue > 0 ? (
+                  <>
+                    <i className={`fas fa-arrow-${getGrowthPct(member.lyTargetValue, member.cyTargetValue) >= 0 ? 'up' : 'down'}`}></i>
+                    <span className="tyt-growth-num">{getGrowthPct(member.lyTargetValue, member.cyTargetValue) >= 0 ? '+' : ''}{getGrowthPct(member.lyTargetValue, member.cyTargetValue).toFixed(1)}%</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-percentage"></i>
+                    <span className="tyt-growth-num">—</span>
+                  </>
+                )}
+                <span className="tyt-growth-vs">vs LY</span>
               </div>
-            )}
+            </div>
           </div>
         </div>
 
