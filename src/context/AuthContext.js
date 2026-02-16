@@ -1,3 +1,12 @@
+/**
+ * AuthContext — Updated with Admin role
+ * 
+ * CHANGE: Added 'admin' role to USER_ROLES, ROLE_LABELS, and DUMMY_USERS
+ * No other changes to existing functionality.
+ *
+ * @version 2.0.0
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
@@ -7,7 +16,8 @@ export const USER_ROLES = {
   TBM: 'tbm',
   ABM: 'abm',
   ZBM: 'zbm',
-  SALES_HEAD: 'sales_head'
+  SALES_HEAD: 'sales_head',
+  ADMIN: 'admin',              // ← NEW
 };
 
 export const ROLE_LABELS = {
@@ -15,7 +25,8 @@ export const ROLE_LABELS = {
   tbm: 'Territory Business Manager',
   abm: 'Area Business Manager',
   zbm: 'Zonal Business Manager',
-  sales_head: 'Sales Head'
+  sales_head: 'Sales Head',
+  admin: 'System Administrator', // ← NEW
 };
 
 const DUMMY_USERS = [
@@ -23,7 +34,8 @@ const DUMMY_USERS = [
   { id: 2, username: 'tbm', password: 'demo123', name: 'Rajesh Kumar', role: USER_ROLES.TBM, territory: 'North Zone' },
   { id: 3, username: 'abm', password: 'demo123', name: 'Priya Sharma', role: USER_ROLES.ABM, territory: 'Delhi NCR' },
   { id: 4, username: 'zbm', password: 'demo123', name: 'Amit Singh', role: USER_ROLES.ZBM, territory: 'Northern Region' },
-  { id: 5, username: 'saleshead', password: 'demo123', name: 'Dr. Srinivasan', role: USER_ROLES.SALES_HEAD, territory: 'All India' }
+  { id: 5, username: 'saleshead', password: 'demo123', name: 'Dr. Srinivasan', role: USER_ROLES.SALES_HEAD, territory: 'All India' },
+  { id: 6, username: 'admin', password: 'demo123', name: 'System Admin', role: USER_ROLES.ADMIN, territory: 'System' },  // ← NEW
 ];
 
 export function AuthProvider({ children }) {

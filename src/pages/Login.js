@@ -1,3 +1,9 @@
+/**
+ * Login.js — Updated with Admin demo credential
+ * CHANGE: Added admin entry to demoCredentials array. No other changes.
+ * @version 2.0.0
+ */
+
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -18,34 +24,29 @@ function Login() {
     e.preventDefault();
     setError('');
     setLoading(true);
-    
     if (!username || !password) {
       setError('Please enter both username and password');
       setLoading(false);
       return;
     }
-    
     try {
       const result = await login(username, password);
-      if (result.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(result.error);
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.');
-    } finally {
-      setLoading(false);
-    }
+      if (result.success) { navigate(from, { replace: true }); }
+      else { setError(result.error); }
+    } catch (err) { setError('An error occurred. Please try again.'); }
+    finally { setLoading(false); }
   };
 
+  /* ──────────────── ONLY CHANGE: added admin entry ──────────────── */
   const demoCredentials = [
     { username: 'salesrep', role: 'Sales Representative', name: 'Vasanthakumar C' },
     { username: 'tbm', role: 'Territory Business Manager', name: 'Rajesh Kumar' },
     { username: 'abm', role: 'Area Business Manager', name: 'Priya Sharma' },
     { username: 'zbm', role: 'Zonal Business Manager', name: 'Amit Singh' },
-    { username: 'saleshead', role: 'Sales Head', name: 'Dr. Srinivasan' }
+    { username: 'saleshead', role: 'Sales Head', name: 'Dr. Srinivasan' },
+    { username: 'admin', role: 'System Administrator', name: 'System Admin' },
   ];
+  /* ─────────────────────────────────────────────────────────────── */
 
   const handleDemoLogin = (demoUsername) => {
     setUsername(demoUsername);
@@ -59,7 +60,6 @@ function Login() {
         <div className="pattern-circle pattern-2"></div>
         <div className="pattern-circle pattern-3"></div>
       </div>
-
       <div className="login-container">
         <div className="login-branding">
           <div className="branding-content">
@@ -75,21 +75,13 @@ function Login() {
             </div>
           </div>
         </div>
-
         <div className="login-form-section">
           <div className="login-form-container">
             <div className="form-header">
               <h2>Welcome Back</h2>
               <p>Sign in to your account to continue</p>
             </div>
-
-            {error && (
-              <div className="error-alert">
-                <i className="fas fa-exclamation-circle"></i>
-                <span>{error}</span>
-              </div>
-            )}
-
+            {error && (<div className="error-alert"><i className="fas fa-exclamation-circle"></i><span>{error}</span></div>)}
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
                 <label htmlFor="username">Username</label>
@@ -98,7 +90,6 @@ function Login() {
                   <input type="text" id="username" value={username} onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username" disabled={loading} autoComplete="username" />
                 </div>
               </div>
-
               <div className="form-group">
                 <label htmlFor="password">Password</label>
                 <div className="input-wrapper">
@@ -109,12 +100,10 @@ function Login() {
                   </button>
                 </div>
               </div>
-
               <button type="submit" className="login-btn" disabled={loading}>
                 {loading ? (<><span className="btn-spinner"></span>Signing in...</>) : (<><span>Sign In</span><i className="fas fa-arrow-right"></i></>)}
               </button>
             </form>
-
             <div className="demo-section">
               <div className="demo-header">
                 <span className="demo-divider"></span>
