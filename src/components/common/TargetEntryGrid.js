@@ -354,6 +354,24 @@ function TargetEntryGrid({
               <div className="total-cell ly-value">{Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0))}</div>
               <div className="growth-cell">-</div>
             </div>
+            {/* AOP Revenue Row — Read Only */}
+            <div className="revenue-row aop-row">
+              <div className="product-name-cell"><span className="year-label aop">AOP Target</span></div>
+              {MONTHS.map(month => {
+                const monthData = firstProduct?.monthlyTargets?.[month] || {};
+                return (
+                  <div key={month} className="month-cell aop-value">
+                    {Utils.formatNumber(monthData.aopRev || 0)}
+                  </div>
+                );
+              })}
+              <div className="total-cell aop-value">
+                {Utils.formatNumber(
+                  MONTHS.reduce((s, m) => s + (firstProduct?.monthlyTargets?.[m]?.aopRev || 0), 0)
+                )}
+              </div>
+              <div className="growth-cell">—</div>
+            </div>
           </div>
         )}
       </div>
@@ -516,6 +534,39 @@ function TargetEntryGrid({
                         {Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}
                       </div>
                       <div className="growth-cell"></div>
+                    </div>
+
+                    {/* AOP Row — Read Only (Annual Operating Plan) */}
+                    <div className="product-row aop-row">
+                      <div className="product-name-cell">
+                        <span className="year-label aop">AOP</span>
+                      </div>
+                      {MONTHS.map(month => {
+                        const monthData = product.monthlyTargets?.[month] || {};
+                        return (
+                          <div key={month} className="month-cell aop-value">
+                            {Utils.formatNumber(monthData.aopQty || 0)}
+                          </div>
+                        );
+                      })}
+                      <div className="total-cell aop-value">
+                        {Utils.formatNumber(
+                          MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)
+                        )}
+                      </div>
+                      <div className="growth-cell">
+                        {(() => {
+                          const aopTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
+                          const lyTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0);
+                          if (lyTotal === 0 && aopTotal === 0) return <span className="growth-value neutral">—</span>;
+                          const growth = Utils.calcGrowth(lyTotal, aopTotal);
+                          return (
+                            <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>
+                              {Utils.formatGrowth(growth)}
+                            </span>
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 );

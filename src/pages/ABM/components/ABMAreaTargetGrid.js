@@ -84,23 +84,27 @@ function ABMAreaTargetGrid({
   // ==================== OVERALL TARGET SUMMARY ====================
 
   const overallTargetSummary = useMemo(() => {
-    let totalCyQty = 0, totalLyQty = 0, totalCyRev = 0, totalLyRev = 0;
+    let totalCyQty = 0, totalLyQty = 0, totalAopQty = 0, totalCyRev = 0, totalLyRev = 0, totalAopRev = 0;
     products.forEach(p => {
       if (p.monthlyTargets) {
         Object.values(p.monthlyTargets).forEach(m => {
           totalCyQty += m.cyQty || 0;
           totalLyQty += m.lyQty || 0;
+          totalAopQty += m.aopQty || 0;
           totalCyRev += m.cyRev || 0;
           totalLyRev += m.lyRev || 0;
+          totalAopRev += m.aopRev || 0;
         });
       }
     });
 
     return {
-      totalCyQty, totalLyQty, totalCyRev, totalLyRev,
+      totalCyQty, totalLyQty, totalAopQty, totalCyRev, totalLyRev, totalAopRev,
       yearlyTargetValue: overallYearlyTargetValue,
       qtyGrowth: Utils.calcGrowth(totalLyQty, totalCyQty),
       revGrowth: Utils.calcGrowth(totalLyRev, totalCyRev),
+      aopAchievementQty: totalAopQty > 0 ? ((totalCyQty / totalAopQty) * 100).toFixed(1) : 0,
+      aopAchievementRev: totalAopRev > 0 ? ((totalCyRev / totalAopRev) * 100).toFixed(1) : 0,
       completionPercent: overallYearlyTargetValue
         ? Math.min(100, Math.round((totalCyRev / overallYearlyTargetValue) * 100))
         : null
@@ -276,6 +280,24 @@ function ABMAreaTargetGrid({
               </div>
               <div className="abm-tgt-growth-cell">—</div>
             </div>
+            {/* AOP Revenue Row — Read Only */}
+            <div className="abm-tgt-revenue-row abm-tgt-aop-row">
+              <div className="abm-tgt-product-cell abm-tgt-aop-label">AOP Target</div>
+              {MONTHS.map(month => {
+                const monthData = firstProduct.monthlyTargets?.[month] || {};
+                return (
+                  <div key={month} className="abm-tgt-month-cell abm-tgt-aop">
+                    <span className="abm-tgt-cell-value">
+                      ₹{Utils.formatCompact(monthData.aopRev || 0)}
+                    </span>
+                  </div>
+                );
+              })}
+              <div className="abm-tgt-total-cell abm-tgt-aop">
+                ₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (firstProduct.monthlyTargets?.[m]?.aopRev || 0), 0))}
+              </div>
+              <div className="abm-tgt-growth-cell">—</div>
+            </div>
           </div>
         )}
       </div>
@@ -294,14 +316,16 @@ function ABMAreaTargetGrid({
     if (catProducts.length === 0 && searchTerm) return null;
 
     // Category totals
-    let catLyQty = 0, catCyQty = 0, catLyRev = 0, catCyRev = 0;
+    let catLyQty = 0, catCyQty = 0, catAopQty = 0, catLyRev = 0, catCyRev = 0, catAopRev = 0;
     catProducts.forEach(p => {
       if (p.monthlyTargets) {
         Object.values(p.monthlyTargets).forEach(m => {
           catLyQty += m.lyQty || 0;
           catCyQty += m.cyQty || 0;
+          catAopQty += m.aopQty || 0;
           catLyRev += m.lyRev || 0;
           catCyRev += m.cyRev || 0;
+          catAopRev += m.aopRev || 0;
         });
       }
     });
@@ -399,6 +423,34 @@ function ABMAreaTargetGrid({
                     })}
                     <div className="abm-tgt-total-cell abm-tgt-cy-total">{Utils.formatNumber(cyTotal)}</div>
                     <div className="abm-tgt-growth-cell abm-tgt-hidden-mobile"></div>
+                  </div>
+                  {/* AOP Row — Read Only (Annual Operating Plan) */}
+                  <div className="abm-tgt-grid-row abm-tgt-aop-row">
+                    <div className="abm-tgt-product-cell abm-tgt-hidden-mobile"></div>
+                    <div className="abm-tgt-type-cell abm-tgt-aop-label">AOP</div>
+                    {MONTHS.map(month => (
+                      <div key={month} className="abm-tgt-month-cell abm-tgt-aop">
+                        {Utils.formatNumber(product.monthlyTargets?.[month]?.aopQty || 0)}
+                      </div>
+                    ))}
+                    <div className="abm-tgt-total-cell abm-tgt-aop">
+                      {Utils.formatNumber(
+                        MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)
+                      )}
+                    </div>
+                    <div className="abm-tgt-growth-cell abm-tgt-hidden-mobile">
+                      {(() => {
+                        const aopT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
+                        const lyT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0);
+                        if (lyT === 0 && aopT === 0) return '—';
+                        const g = Utils.calcGrowth(lyT, aopT);
+                        return (
+                          <span className={`abm-tgt-growth-badge ${g >= 0 ? 'positive' : 'negative'}`}>
+                            {g >= 0 ? '↑' : '↓'}{Utils.formatGrowth(g)}
+                          </span>
+                        );
+                      })()}
+                    </div>
                   </div>
                 </React.Fragment>
               );

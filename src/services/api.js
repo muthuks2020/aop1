@@ -30,10 +30,12 @@ const generateMonthlyTargets = (baseQty, baseRev, variance = 0.2) => {
     
     const lyQty = Math.round(baseQty * seasonalFactor * randomVariance);
     const cyQty = Math.round(lyQty * (1 + Math.random() * 0.3));
+    const aopQty = Math.round(lyQty * (1 + Math.random() * 0.15 + 0.05)); // AOP: management target (LY + 5-20%)
     const lyRev = Math.round(baseRev * seasonalFactor * randomVariance);
     const cyRev = Math.round(lyRev * (1 + Math.random() * 0.3));
+    const aopRev = Math.round(lyRev * (1 + Math.random() * 0.15 + 0.05)); // AOP: management target (LY + 5-20%)
     
-    targets[month] = { lyQty, cyQty, lyRev, cyRev };
+    targets[month] = { lyQty, cyQty, aopQty, lyRev, cyRev, aopRev };
   });
   
   return targets;
@@ -204,6 +206,77 @@ export const ApiService = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ reason })
+    });
+    return response.json();
+  },
+
+  // ==================== BACKEND-READY API ENDPOINTS ====================
+  // These return null in mock mode (frontend computes from products).
+  // When backend is ready, set USE_MOCK = false and these will call real APIs.
+
+  /**
+   * GET /api/v1/aop-targets
+   * Returns AOP (Annual Operating Plan) targets set by management.
+   * In mock mode, aopQty/aopRev are already embedded in product.monthlyTargets.
+   * @param {string} userId
+   * @param {string} fiscalYear e.g. '2026-27'
+   * @returns {Promise<Array<{productId, months: {apr: {qty, rev}, ...}}> | null>}
+   */
+  async getAOPTargets(userId, fiscalYear) {
+    if (USE_MOCK) {
+      // AOP data is already in monthlyTargets mock — no separate call needed
+      return null;
+    }
+    const response = await fetch(`${BASE_URL}/aop-targets?userId=${userId}&fy=${fiscalYear}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.json();
+  },
+
+  /**
+   * GET /api/v1/salesrep/dashboard-summary
+   * Pre-aggregated totals for the Overview & Summary tab.
+   * @returns {Promise<{lyQty,cyQty,aopQty,lyRev,cyRev,aopRev,qtyGrowth,revGrowth,aopAchievementPct} | null>}
+   */
+  async getSalesRepDashboardSummary() {
+    if (USE_MOCK) {
+      // Frontend computes from products — no separate API needed
+      return null;
+    }
+    const response = await fetch(`${BASE_URL}/salesrep/dashboard-summary`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.json();
+  },
+
+  /**
+   * GET /api/v1/salesrep/quarterly-summary
+   * Pre-computed quarterly breakdowns for Quarterly Summary tab.
+   * @param {string} fiscalYear
+   * @returns {Promise<{categories: Array} | null>}
+   */
+  async getSalesRepQuarterlySummary(fiscalYear) {
+    if (USE_MOCK) {
+      // Frontend computes from products + pricing
+      return null;
+    }
+    const response = await fetch(`${BASE_URL}/salesrep/quarterly-summary?fy=${fiscalYear}`, {
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return response.json();
+  },
+
+  /**
+   * GET /api/v1/salesrep/category-performance
+   * Per-category metrics with AOP achievement.
+   * @returns {Promise<Array<{categoryId,name,lyQty,cyQty,aopQty,growth,contribution}> | null>}
+   */
+  async getCategoryPerformance() {
+    if (USE_MOCK) {
+      return null;
+    }
+    const response = await fetch(`${BASE_URL}/salesrep/category-performance`, {
+      headers: { 'Content-Type': 'application/json' }
     });
     return response.json();
   }

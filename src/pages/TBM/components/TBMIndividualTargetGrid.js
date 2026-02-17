@@ -362,6 +362,60 @@ function TBMIndividualTargetGrid({
           </div>
           <div className="ind-growth-cell"></div>
         </div>
+
+        {/* AOP Row — Read Only (Annual Operating Plan) */}
+        <div className="ind-product-row aop-row">
+          <div className="ind-product-name-cell aop-label">
+            <span>AOP ({currentField === 'qty' ? 'Qty' : 'Rev'})</span>
+          </div>
+          {MONTHS.map((month, idx) => {
+            const monthData = product.monthlyTargets?.[month] || {};
+            const value = currentField === 'qty' ? (monthData.aopQty || 0) : (monthData.aopRev || 0);
+            return (
+              <div key={month} className={`ind-month-cell aop-value ${getQuarterColor(idx)}`}>
+                <span className="ind-cell-value">
+                  {currentField === 'qty'
+                    ? Utils.formatNumber(value)
+                    : `₹${Utils.formatCompact(value)}`
+                  }
+                </span>
+              </div>
+            );
+          })}
+          {QUARTERS.map(quarter => {
+            const qTotal = quarter.months.reduce((sum, m) => {
+              const mt = product.monthlyTargets?.[m] || {};
+              return sum + (currentField === 'qty' ? (mt.aopQty || 0) : (mt.aopRev || 0));
+            }, 0);
+            return (
+              <div key={quarter.id} className={`ind-quarter-cell ${quarter.color} aop`}>
+                {currentField === 'qty' ? Utils.formatNumber(qTotal) : `₹${Utils.formatCompact(qTotal)}`}
+              </div>
+            );
+          })}
+          <div className="ind-total-cell aop-total">
+            {(() => {
+              const total = MONTHS.reduce((s, m) => {
+                const mt = product.monthlyTargets?.[m] || {};
+                return s + (currentField === 'qty' ? (mt.aopQty || 0) : (mt.aopRev || 0));
+              }, 0);
+              return currentField === 'qty' ? Utils.formatNumber(total) : `₹${Utils.formatCompact(total)}`;
+            })()}
+          </div>
+          <div className="ind-growth-cell">
+            {(() => {
+              const aopT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.[currentField === 'qty' ? 'aopQty' : 'aopRev'] || 0), 0);
+              const lyT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.[currentField === 'qty' ? 'lyQty' : 'lyRev'] || 0), 0);
+              if (lyT === 0 && aopT === 0) return '';
+              const g = Utils.calcGrowth(lyT, aopT);
+              return (
+                <span className={`growth-badge ${g >= 0 ? 'positive' : 'negative'}`} style={{ opacity: 0.7 }}>
+                  {Utils.formatGrowth(g)}
+                </span>
+              );
+            })()}
+          </div>
+        </div>
       </div>
     );
   };

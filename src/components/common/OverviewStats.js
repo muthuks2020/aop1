@@ -237,21 +237,25 @@ function OverviewStats({ products, categories }) {
   // ==================== COMPUTED DATA ====================
 
   const overallTotals = useMemo(() => {
-    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+    let lyQty = 0, cyQty = 0, aopQty = 0, lyRev = 0, cyRev = 0, aopRev = 0;
     products.forEach(p => {
       if (p.monthlyTargets) {
         Object.values(p.monthlyTargets).forEach(m => {
           lyQty += m.lyQty || 0;
           cyQty += m.cyQty || 0;
+          aopQty += m.aopQty || 0;
           lyRev += m.lyRev || 0;
           cyRev += m.cyRev || 0;
+          aopRev += m.aopRev || 0;
         });
       }
     });
     return {
-      lyQty, cyQty, lyRev, cyRev,
+      lyQty, cyQty, aopQty, lyRev, cyRev, aopRev,
       qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
-      revGrowth: Utils.calcGrowth(lyRev, cyRev)
+      revGrowth: Utils.calcGrowth(lyRev, cyRev),
+      aopAchievementQty: aopQty > 0 ? ((cyQty / aopQty) * 100).toFixed(1) : 0,
+      aopAchievementRev: aopRev > 0 ? ((cyRev / aopRev) * 100).toFixed(1) : 0
     };
   }, [products]);
 
@@ -374,6 +378,19 @@ function OverviewStats({ products, categories }) {
               <path className="ov-ring-fill" strokeDasharray={`${Math.min(achievementRate, 150)}, 150`}
                 d="M18 2.0845a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
             </svg>
+          </div>
+        </div>
+
+        <div className="ov-hero-card ov-hero-aop" style={{ '--delay': '0.175s' }}>
+          <div className="ov-hero-icon-wrap" style={{ background: 'linear-gradient(135deg, #6366F1, #4F46E5)' }}>
+            <div className="ov-hero-icon"><i className="fas fa-bullseye"></i></div>
+          </div>
+          <div className="ov-hero-data">
+            <span className="ov-hero-value" style={{ color: '#4338CA' }}>{overallTotals.aopAchievementQty}%</span>
+            <span className="ov-hero-label">AOP Achievement (Qty)</span>
+          </div>
+          <div className="ov-hero-sub-info" style={{ color: '#6366F1' }}>
+            <span>CY {Utils.formatNumber(overallTotals.cyQty)} / AOP {Utils.formatNumber(overallTotals.aopQty)}</span>
           </div>
         </div>
 

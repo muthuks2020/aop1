@@ -319,7 +319,7 @@ function ZBMTeamDrilldown({ showToast }) {
                                           {rep.products.map((product, pIdx) => (
                                             <React.Fragment key={pIdx}>
                                               <tr className="zbm-dd-ly-row">
-                                                <td className="zbm-dd-td-product" rowSpan="2">{product.productName}</td>
+                                                <td className="zbm-dd-td-product" rowSpan="3">{product.productName}</td>
                                                 <td className="zbm-dd-td-type ly">LY</td>
                                                 {MONTHS.map(m => (
                                                   <td key={m} className="zbm-dd-td-val ly">
@@ -339,6 +339,17 @@ function ZBMTeamDrilldown({ showToast }) {
                                                 ))}
                                                 <td className="zbm-dd-td-total cy">
                                                   {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.cyQty || 0), 0)}
+                                                </td>
+                                              </tr>
+                                              <tr className="zbm-dd-aop-row">
+                                                <td className="zbm-dd-td-type aop">AOP</td>
+                                                {MONTHS.map(m => (
+                                                  <td key={m} className="zbm-dd-td-val aop">
+                                                    {product.monthlyTargets?.[m]?.aopQty || 0}
+                                                  </td>
+                                                ))}
+                                                <td className="zbm-dd-td-total aop">
+                                                  {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)}
                                                 </td>
                                               </tr>
                                             </React.Fragment>

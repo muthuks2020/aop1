@@ -30,21 +30,25 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
   // ==================== COMPUTED DATA ====================
 
   const overallTotals = useMemo(() => {
-    let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+    let lyQty = 0, cyQty = 0, aopQty = 0, lyRev = 0, cyRev = 0, aopRev = 0;
     abmTargets.forEach(p => {
       if (p.monthlyTargets) {
         Object.values(p.monthlyTargets).forEach(m => {
           lyQty += m.lyQty || 0;
           cyQty += m.cyQty || 0;
+          aopQty += m.aopQty || 0;
           lyRev += m.lyRev || 0;
           cyRev += m.cyRev || 0;
+          aopRev += m.aopRev || 0;
         });
       }
     });
     return {
-      lyQty, cyQty, lyRev, cyRev,
+      lyQty, cyQty, aopQty, lyRev, cyRev, aopRev,
       qtyGrowth: Utils.calcGrowth(lyQty, cyQty),
-      revGrowth: Utils.calcGrowth(lyRev, cyRev)
+      revGrowth: Utils.calcGrowth(lyRev, cyRev),
+      aopAchievementQty: aopQty > 0 ? ((cyQty / aopQty) * 100).toFixed(1) : 0,
+      aopAchievementRev: aopRev > 0 ? ((cyRev / aopRev) * 100).toFixed(1) : 0
     };
   }, [abmTargets]);
 
@@ -52,14 +56,16 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
   const categoryPerformance = useMemo(() => {
     return categories.map(cat => {
       const catProducts = abmTargets.filter(p => p.categoryId === cat.id);
-      let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
+      let lyQty = 0, cyQty = 0, aopQty = 0, lyRev = 0, cyRev = 0, aopRev = 0;
       catProducts.forEach(p => {
         if (p.monthlyTargets) {
           Object.values(p.monthlyTargets).forEach(m => {
             lyQty += m.lyQty || 0;
             cyQty += m.cyQty || 0;
+            aopQty += m.aopQty || 0;
             lyRev += m.lyRev || 0;
             cyRev += m.cyRev || 0;
+            aopRev += m.aopRev || 0;
           });
         }
       });
@@ -67,9 +73,10 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
       const contribution = overallTotals.cyQty > 0 ? ((cyQty / overallTotals.cyQty) * 100).toFixed(1) : 0;
       return {
         ...cat,
-        lyQty, cyQty, lyRev, cyRev,
+        lyQty, cyQty, aopQty, lyRev, cyRev, aopRev,
         growth,
         contribution,
+        aopAchievement: aopQty > 0 ? ((cyQty / aopQty) * 100).toFixed(1) : 0,
         productCount: catProducts.length
       };
     }).filter(c => c.productCount > 0);
@@ -103,8 +110,10 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
           territory: sub.territory,
           totalCyQty: 0,
           totalLyQty: 0,
+          totalAopQty: 0,
           totalCyRev: 0,
           totalLyRev: 0,
+          totalAopRev: 0,
           submitted: 0,
           approved: 0,
           total: 0
@@ -118,8 +127,10 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
         Object.values(sub.monthlyTargets).forEach(m => {
           tbm.totalCyQty += m.cyQty || 0;
           tbm.totalLyQty += m.lyQty || 0;
+          tbm.totalAopQty += m.aopQty || 0;
           tbm.totalCyRev += m.cyRev || 0;
           tbm.totalLyRev += m.lyRev || 0;
+          tbm.totalAopRev += m.aopRev || 0;
         });
       }
     });
@@ -179,6 +190,19 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
                 style={{ width: `${approvalStats.total > 0 ? (approvalStats.approved / approvalStats.total) * 100 : 0}%` }}
               ></div>
             </div>
+          </div>
+        </div>
+
+        <div className="abm-ov-kpi-card abm-ov-kpi-aop">
+          <div className="abm-ov-kpi-icon" style={{ background: 'linear-gradient(135deg, #6366F1, #4F46E5)', color: '#fff' }}>
+            <i className="fas fa-bullseye"></i>
+          </div>
+          <div className="abm-ov-kpi-content">
+            <span className="abm-ov-kpi-label">AOP Achievement (Qty)</span>
+            <span className="abm-ov-kpi-value" style={{ color: '#4338CA' }}>{overallTotals.aopAchievementQty}%</span>
+            <span className="abm-ov-kpi-sub">
+              CY {Utils.formatNumber(overallTotals.cyQty)} / AOP {Utils.formatNumber(overallTotals.aopQty)}
+            </span>
           </div>
         </div>
       </div>
@@ -251,11 +275,19 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
                   <span>CY Qty</span>
                   <span className="abm-ov-cat-bold">{Utils.formatNumber(cat.cyQty)}</span>
                 </div>
+                <div className="abm-ov-cat-row" style={{ borderLeft: '3px solid #6366F1', paddingLeft: '0.5rem' }}>
+                  <span style={{ color: '#6366F1', fontWeight: 600 }}>AOP Qty</span>
+                  <span style={{ color: '#4338CA', fontWeight: 600 }}>{Utils.formatNumber(cat.aopQty)}</span>
+                </div>
                 <div className="abm-ov-cat-row">
                   <span>Growth</span>
                   <span className={cat.growth >= 0 ? 'positive' : 'negative'}>
                     {cat.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(cat.growth)}
                   </span>
+                </div>
+                <div className="abm-ov-cat-row" style={{ borderLeft: '3px solid #6366F1', paddingLeft: '0.5rem' }}>
+                  <span style={{ color: '#6366F1', fontSize: '0.75rem' }}>AOP Achievement</span>
+                  <span style={{ color: '#4338CA', fontWeight: 700 }}>{cat.aopAchievement}%</span>
                 </div>
               </div>
             </div>

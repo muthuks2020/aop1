@@ -343,6 +343,27 @@ function ABMAreaTargetGrid({
                 </div>
                 <div className="tgt-growth-cell"></div>
               </div>
+
+              {/* AOP Revenue Row — Read Only */}
+              <div className="tgt-product-row tgt-aop-row">
+                <div className="tgt-product-name-cell">
+                  <span className="tgt-year-label tgt-aop">AOP Rev</span>
+                </div>
+                {MONTHS.map(month => {
+                  const monthData = firstProduct.monthlyTargets?.[month] || {};
+                  return (
+                    <div key={month} className="tgt-month-cell tgt-readonly-cell">
+                      <span className="tgt-cell-value tgt-aop-value">
+                        {Utils.formatCompact ? `₹${Utils.formatCompact(monthData.aopRev || 0)}` : (monthData.aopRev || 0)}
+                      </span>
+                    </div>
+                  );
+                })}
+                <div className="tgt-total-cell tgt-aop-total">
+                  ₹{Utils.formatCompact ? Utils.formatCompact(MONTHS.reduce((s, m) => s + (firstProduct.monthlyTargets?.[m]?.aopRev || 0), 0)) : 0}
+                </div>
+                <div className="tgt-growth-cell">&mdash;</div>
+              </div>
             </div>
           </div>
         )}
@@ -470,6 +491,37 @@ function ABMAreaTargetGrid({
                     {Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}
                   </div>
                   <div className="tgt-growth-cell"></div>
+                </div>
+
+                {/* AOP Row — Read Only (Annual Operating Plan) */}
+                <div className="tgt-product-row tgt-aop-row">
+                  <div className="tgt-product-name-cell">
+                    <span className="tgt-year-label tgt-aop">AOP</span>
+                  </div>
+                  {MONTHS.map(month => {
+                    const monthData = product.monthlyTargets?.[month] || {};
+                    return (
+                      <div key={month} className="tgt-month-cell tgt-readonly-cell">
+                        <span className="tgt-cell-value tgt-aop-value">
+                          {Utils.formatNumber(monthData.aopQty || 0)}
+                        </span>
+                      </div>
+                    );
+                  })}
+                  <div className="tgt-total-cell tgt-aop-total">
+                    {Utils.formatNumber(
+                      MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)
+                    )}
+                  </div>
+                  <div className="tgt-growth-cell">
+                    {(() => {
+                      const aopT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
+                      const lyT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0);
+                      if (lyT === 0 && aopT === 0) return '';
+                      const g = Utils.calcGrowth(lyT, aopT);
+                      return <span className={`tgt-growth-value ${g >= 0 ? 'tgt-positive' : 'tgt-negative'}`}>{Utils.formatGrowth(g)}</span>;
+                    })()}
+                  </div>
                 </div>
               </div>
             ))}

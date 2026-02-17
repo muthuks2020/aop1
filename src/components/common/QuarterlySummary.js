@@ -78,43 +78,53 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         const quarterData = {};
         const monthData = {};
         let fyTotalQty = 0, fyTotalValue = 0, lyFyTotalQty = 0, lyFyTotalValue = 0;
+        let aopFyTotalQty = 0, aopFyTotalValue = 0;
 
         QUARTERS.forEach(quarter => {
-          let qtyTotal = 0, lyQtyTotal = 0, valueTotal = 0, lyValueTotal = 0;
+          let qtyTotal = 0, lyQtyTotal = 0, aopQtyTotal = 0, valueTotal = 0, lyValueTotal = 0, aopValueTotal = 0;
 
           quarter.months.forEach(month => {
             const mt = product.monthlyTargets?.[month] || {};
             const cyQty = mt.cyQty || 0;
             const lyQty = mt.lyQty || 0;
+            const aopQty = mt.aopQty || 0;
             const cyRev = mt.cyRev || 0;
             const lyRev = mt.lyRev || 0;
+            const aopRev = mt.aopRev || 0;
 
             qtyTotal += cyQty;
             lyQtyTotal += lyQty;
+            aopQtyTotal += aopQty;
 
-            let monthValue, lyMonthValue;
+            let monthValue, lyMonthValue, aopMonthValue;
             if (isRevenueOnly || pricing.isRevenueOnly) {
               monthValue = cyRev;
               lyMonthValue = lyRev;
+              aopMonthValue = aopRev;
             } else {
               monthValue = cyQty * pricing.unitCost;
               lyMonthValue = lyQty * pricing.unitCost;
+              aopMonthValue = aopQty * pricing.unitCost;
             }
             valueTotal += monthValue;
             lyValueTotal += lyMonthValue;
+            aopValueTotal += aopMonthValue;
 
-            monthData[month] = { cyQty, lyQty, cyValue: monthValue, lyValue: lyMonthValue };
+            monthData[month] = { cyQty, lyQty, aopQty, cyValue: monthValue, lyValue: lyMonthValue, aopValue: aopMonthValue };
           });
 
           fyTotalQty += qtyTotal;
           fyTotalValue += valueTotal;
           lyFyTotalQty += lyQtyTotal;
           lyFyTotalValue += lyValueTotal;
+          aopFyTotalQty += aopQtyTotal;
+          aopFyTotalValue += aopValueTotal;
 
           quarterData[quarter.id] = {
-            cyQty: qtyTotal, lyQty: lyQtyTotal,
-            cyValue: valueTotal, lyValue: lyValueTotal,
-            growth: lyValueTotal > 0 ? ((valueTotal - lyValueTotal) / lyValueTotal) * 100 : 0
+            cyQty: qtyTotal, lyQty: lyQtyTotal, aopQty: aopQtyTotal,
+            cyValue: valueTotal, lyValue: lyValueTotal, aopValue: aopValueTotal,
+            growth: lyValueTotal > 0 ? ((valueTotal - lyValueTotal) / lyValueTotal) * 100 : 0,
+            aopVariance: aopValueTotal > 0 ? ((valueTotal - aopValueTotal) / aopValueTotal) * 100 : 0
           };
         });
 
@@ -126,34 +136,41 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
           months: monthData, quarters: quarterData,
           fyTotal: { qty: fyTotalQty, value: fyTotalValue },
           lyFyTotal: { qty: lyFyTotalQty, value: lyFyTotalValue },
+          aopFyTotal: { qty: aopFyTotalQty, value: aopFyTotalValue },
           fyGrowth: lyFyTotalValue > 0 ? ((fyTotalValue - lyFyTotalValue) / lyFyTotalValue) * 100 : 0
         };
       });
 
       // Category totals
-      const categoryTotals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 } };
+      const categoryTotals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 }, aopFyTotal: { qty: 0, value: 0 } };
       QUARTERS.forEach(q => {
-        categoryTotals.quarters[q.id] = { cyQty: 0, lyQty: 0, cyValue: 0, lyValue: 0 };
-        q.months.forEach(m => { categoryTotals.months[m] = { cyQty: 0, lyQty: 0, cyValue: 0, lyValue: 0 }; });
+        categoryTotals.quarters[q.id] = { cyQty: 0, lyQty: 0, aopQty: 0, cyValue: 0, lyValue: 0, aopValue: 0 };
+        q.months.forEach(m => { categoryTotals.months[m] = { cyQty: 0, lyQty: 0, aopQty: 0, cyValue: 0, lyValue: 0, aopValue: 0 }; });
       });
 
       productSummaries.forEach(ps => {
         Object.entries(ps.months).forEach(([m, md]) => {
           categoryTotals.months[m].cyQty += md.cyQty;
           categoryTotals.months[m].lyQty += md.lyQty;
+          categoryTotals.months[m].aopQty += md.aopQty || 0;
           categoryTotals.months[m].cyValue += md.cyValue;
           categoryTotals.months[m].lyValue += md.lyValue;
+          categoryTotals.months[m].aopValue += md.aopValue || 0;
         });
         QUARTERS.forEach(q => {
           categoryTotals.quarters[q.id].cyQty += ps.quarters[q.id].cyQty;
           categoryTotals.quarters[q.id].lyQty += ps.quarters[q.id].lyQty;
+          categoryTotals.quarters[q.id].aopQty += ps.quarters[q.id].aopQty || 0;
           categoryTotals.quarters[q.id].cyValue += ps.quarters[q.id].cyValue;
           categoryTotals.quarters[q.id].lyValue += ps.quarters[q.id].lyValue;
+          categoryTotals.quarters[q.id].aopValue += ps.quarters[q.id].aopValue || 0;
         });
         categoryTotals.fyTotal.qty += ps.fyTotal.qty;
         categoryTotals.fyTotal.value += ps.fyTotal.value;
         categoryTotals.lyFyTotal.qty += ps.lyFyTotal.qty;
         categoryTotals.lyFyTotal.value += ps.lyFyTotal.value;
+        categoryTotals.aopFyTotal.qty += ps.aopFyTotal.qty;
+        categoryTotals.aopFyTotal.value += ps.aopFyTotal.value;
       });
 
       categoryTotals.fyGrowth = categoryTotals.lyFyTotal.value > 0
@@ -166,31 +183,39 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
 
   // Grand totals
   const grandTotals = useMemo(() => {
-    const totals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 } };
+    const totals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 }, aopFyTotal: { qty: 0, value: 0 } };
     QUARTERS.forEach(q => {
-      totals.quarters[q.id] = { cyQty: 0, lyQty: 0, cyValue: 0, lyValue: 0 };
-      q.months.forEach(m => { totals.months[m] = { cyQty: 0, lyQty: 0, cyValue: 0, lyValue: 0 }; });
+      totals.quarters[q.id] = { cyQty: 0, lyQty: 0, aopQty: 0, cyValue: 0, lyValue: 0, aopValue: 0 };
+      q.months.forEach(m => { totals.months[m] = { cyQty: 0, lyQty: 0, aopQty: 0, cyValue: 0, lyValue: 0, aopValue: 0 }; });
     });
     Object.values(quarterlySummaryData).forEach(catData => {
       Object.entries(catData.totals.months).forEach(([m, md]) => {
         totals.months[m].cyQty += md.cyQty;
         totals.months[m].lyQty += md.lyQty;
+        totals.months[m].aopQty += md.aopQty || 0;
         totals.months[m].cyValue += md.cyValue;
         totals.months[m].lyValue += md.lyValue;
+        totals.months[m].aopValue += md.aopValue || 0;
       });
       QUARTERS.forEach(q => {
         totals.quarters[q.id].cyQty += catData.totals.quarters[q.id]?.cyQty || 0;
         totals.quarters[q.id].lyQty += catData.totals.quarters[q.id]?.lyQty || 0;
+        totals.quarters[q.id].aopQty += catData.totals.quarters[q.id]?.aopQty || 0;
         totals.quarters[q.id].cyValue += catData.totals.quarters[q.id]?.cyValue || 0;
         totals.quarters[q.id].lyValue += catData.totals.quarters[q.id]?.lyValue || 0;
+        totals.quarters[q.id].aopValue += catData.totals.quarters[q.id]?.aopValue || 0;
       });
       totals.fyTotal.qty += catData.totals.fyTotal.qty;
       totals.fyTotal.value += catData.totals.fyTotal.value;
       totals.lyFyTotal.qty += catData.totals.lyFyTotal.qty;
       totals.lyFyTotal.value += catData.totals.lyFyTotal.value;
+      totals.aopFyTotal.qty += catData.totals.aopFyTotal?.qty || 0;
+      totals.aopFyTotal.value += catData.totals.aopFyTotal?.value || 0;
     });
     totals.fyGrowth = totals.lyFyTotal.value > 0
       ? ((totals.fyTotal.value - totals.lyFyTotal.value) / totals.lyFyTotal.value) * 100 : 0;
+    totals.aopVariance = totals.aopFyTotal.value > 0
+      ? ((totals.fyTotal.value - totals.aopFyTotal.value) / totals.aopFyTotal.value) * 100 : 0;
     return totals;
   }, [quarterlySummaryData]);
 

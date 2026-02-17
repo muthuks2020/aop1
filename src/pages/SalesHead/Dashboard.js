@@ -234,7 +234,7 @@ function SalesHeadDashboard() {
                   <td key={m} className="td-val ly">₹{Utils.formatCompact(submission.monthlyTargets?.[m]?.lyRev || 0)}</td>
                 ))}
                 <td className="td-total ly">₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.lyRev || 0), 0))}</td>
-                <td rowSpan={2} className="td-growth">
+                <td rowSpan={3} className="td-growth">
                   {(() => {
                     const lyT = MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.lyRev || 0), 0);
                     const cyT = MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyRev || 0), 0);
@@ -263,6 +263,14 @@ function SalesHeadDashboard() {
                 })}
                 <td className="td-total cy">₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyRev || 0), 0))}</td>
               </tr>
+              {/* AOP Revenue Row — Read Only */}
+              <tr className="sh-row-aop">
+                <td className="type-tag aop">AOP Rev</td>
+                {MONTHS.map(m => (
+                  <td key={m} className="td-val aop">₹{Utils.formatCompact(submission.monthlyTargets?.[m]?.aopRev || 0)}</td>
+                ))}
+                <td className="td-total aop">₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.aopRev || 0), 0))}</td>
+              </tr>
               {/* Qty rows (if not revenue-only) */}
               {!isRevenueOnly && (
                 <>
@@ -272,7 +280,7 @@ function SalesHeadDashboard() {
                       <td key={m} className="td-val ly">{Utils.formatNumber(submission.monthlyTargets?.[m]?.lyQty || 0)}</td>
                     ))}
                     <td className="td-total ly">{Utils.formatNumber(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.lyQty || 0), 0))}</td>
-                    <td rowSpan={2} className="td-growth">
+                    <td rowSpan={3} className="td-growth">
                       {(() => {
                         const lyT = MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.lyQty || 0), 0);
                         const cyT = MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyQty || 0), 0);
@@ -299,6 +307,14 @@ function SalesHeadDashboard() {
                       );
                     })}
                     <td className="td-total cy">{Utils.formatNumber(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyQty || 0), 0))}</td>
+                  </tr>
+                  {/* AOP Qty Row — Read Only */}
+                  <tr className="sh-row-aop">
+                    <td className="type-tag aop">AOP Qty</td>
+                    {MONTHS.map(m => (
+                      <td key={m} className="td-val aop">{Utils.formatNumber(submission.monthlyTargets?.[m]?.aopQty || 0)}</td>
+                    ))}
+                    <td className="td-total aop">{Utils.formatNumber(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.aopQty || 0), 0))}</td>
                   </tr>
                 </>
               )}
