@@ -1,7 +1,7 @@
 /**
- * Login.js — Updated with Admin demo credential
- * CHANGE: Added admin entry to demoCredentials array. No other changes.
- * @version 2.0.0
+ * Login.js — Updated with Specialist demo credential
+ * CHANGE: Added specialist entry to demoCredentials array. No other changes.
+ * @version 3.0.0
  */
 
 import React, { useState } from 'react';
@@ -37,13 +37,14 @@ function Login() {
     finally { setLoading(false); }
   };
 
-  /* ──────────────── ONLY CHANGE: added admin entry ──────────────── */
+  /* ──────────────── ONLY CHANGE: added specialist entry ──────────────── */
   const demoCredentials = [
     { username: 'salesrep', role: 'Sales Representative', name: 'Vasanthakumar C' },
     { username: 'tbm', role: 'Territory Business Manager', name: 'Rajesh Kumar' },
     { username: 'abm', role: 'Area Business Manager', name: 'Priya Sharma' },
     { username: 'zbm', role: 'Zonal Business Manager', name: 'Amit Singh' },
     { username: 'saleshead', role: 'Sales Head', name: 'Dr. Srinivasan' },
+    { username: 'specialist', role: 'Specialist', name: 'Dr. Ananya Rao' },          // ← NEW
     { username: 'admin', role: 'System Administrator', name: 'System Admin' },
   ];
   /* ─────────────────────────────────────────────────────────────── */

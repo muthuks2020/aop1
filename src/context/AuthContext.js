@@ -1,10 +1,12 @@
 /**
- * AuthContext — Updated with Admin role
+ * AuthContext — Updated with Specialist role
  * 
- * CHANGE: Added 'admin' role to USER_ROLES, ROLE_LABELS, and DUMMY_USERS
- * No other changes to existing functionality.
+ * CHANGES from v2.0.0:
+ * - Added 'SPECIALIST' to USER_ROLES
+ * - Added 'specialist' to ROLE_LABELS
+ * - Added specialist entry to DUMMY_USERS
  *
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
@@ -17,7 +19,8 @@ export const USER_ROLES = {
   ABM: 'abm',
   ZBM: 'zbm',
   SALES_HEAD: 'sales_head',
-  ADMIN: 'admin',              // ← NEW
+  ADMIN: 'admin',
+  SPECIALIST: 'specialist',        // ← NEW
 };
 
 export const ROLE_LABELS = {
@@ -26,16 +29,18 @@ export const ROLE_LABELS = {
   abm: 'Area Business Manager',
   zbm: 'Zonal Business Manager',
   sales_head: 'Sales Head',
-  admin: 'System Administrator', // ← NEW
+  admin: 'System Administrator',
+  specialist: 'Specialist',         // ← NEW
 };
 
 const DUMMY_USERS = [
-  { id: 1, username: 'salesrep', password: 'demo123', name: 'Vasanthakumar C', role: USER_ROLES.SALES_REP, territory: 'Central Delhi' },
-  { id: 2, username: 'tbm', password: 'demo123', name: 'Rajesh Kumar', role: USER_ROLES.TBM, territory: 'North Zone' },
-  { id: 3, username: 'abm', password: 'demo123', name: 'Priya Sharma', role: USER_ROLES.ABM, territory: 'Delhi NCR' },
-  { id: 4, username: 'zbm', password: 'demo123', name: 'Amit Singh', role: USER_ROLES.ZBM, territory: 'Northern Region' },
-  { id: 5, username: 'saleshead', password: 'demo123', name: 'Dr. Srinivasan', role: USER_ROLES.SALES_HEAD, territory: 'All India' },
-  { id: 6, username: 'admin', password: 'demo123', name: 'System Admin', role: USER_ROLES.ADMIN, territory: 'System' },  // ← NEW
+  { id: 1, username: 'salesrep', password: 'demo123', name: 'Vasanthakumar C', role: USER_ROLES.SALES_REP, territory: 'Central Delhi', employeeCode: 'SR-001' },
+  { id: 2, username: 'tbm', password: 'demo123', name: 'Rajesh Kumar', role: USER_ROLES.TBM, territory: 'North Zone', employeeCode: 'TBM-001' },
+  { id: 3, username: 'abm', password: 'demo123', name: 'Priya Sharma', role: USER_ROLES.ABM, territory: 'Delhi NCR', employeeCode: 'ABM-001' },
+  { id: 4, username: 'zbm', password: 'demo123', name: 'Amit Singh', role: USER_ROLES.ZBM, territory: 'Northern Region', employeeCode: 'ZBM-001' },
+  { id: 5, username: 'saleshead', password: 'demo123', name: 'Dr. Srinivasan', role: USER_ROLES.SALES_HEAD, territory: 'All India', employeeCode: 'SH-001' },
+  { id: 6, username: 'admin', password: 'demo123', name: 'System Admin', role: USER_ROLES.ADMIN, territory: 'System', employeeCode: 'ADM-001' },
+  { id: 7, username: 'specialist', password: 'demo123', name: 'Dr. Ananya Rao', role: USER_ROLES.SPECIALIST, territory: 'Delhi NCR', employeeCode: 'SP-001' },  // ← NEW
 ];
 
 export function AuthProvider({ children }) {
@@ -68,6 +73,7 @@ export function AuthProvider({ children }) {
         username: foundUser.username,
         role: foundUser.role,
         territory: foundUser.territory,
+        employeeCode: foundUser.employeeCode,
         roleLabel: ROLE_LABELS[foundUser.role]
       };
       setUser(userData);
@@ -81,6 +87,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     localStorage.removeItem('appasamy_user');
+    localStorage.removeItem('appasamy_token');
   };
 
   const value = {
@@ -88,7 +95,7 @@ export function AuthProvider({ children }) {
     login,
     logout,
     loading,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
   };
 
   return (

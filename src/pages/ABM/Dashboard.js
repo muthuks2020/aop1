@@ -2,16 +2,19 @@
  * ABM Dashboard Component
  * Area Business Manager Dashboard
  * 
- * FOUR tabs (mirrors TBM structure):
+ * SIX tabs:
  * 1. TBM Targets — Review/correct/approve TBM territory submissions
  * 2. Overview & Summary — Area-level KPIs
  * 3. Area Target — Area-level target entry grid (same as Sales Rep grid)
  * 4. Team Yearly Targets — Set yearly targets for all TBMs
+ * 5. Specialist Approvals — Review/correct/approve Specialist submissions (NEW)
+ * 6. Specialist Yearly Targets — Set yearly value targets for Specialists (NEW)
  * 
  * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
+ *            Specialist → ABM → ZBM → Sales Head
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * @version 2.0.0
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
@@ -24,6 +27,11 @@ import Modal from '../../components/common/Modal';
 import ABMOverviewStats from './components/ABMOverviewStats';
 import ABMAreaTargetGrid from './components/ABMAreaTargetGrid';
 import TeamYearlyTargets from '../TBM/components/TeamYearlyTargets';
+// ─── STEP 1: Specialist imports ───────────────────────────────────
+import ABMSpecialistApprovals from './components/ABMSpecialistApprovals';
+import ABMSpecialistYearlyTargets from './components/ABMSpecialistYearlyTargets';
+import ABMSpecialistApiService from '../../services/abmSpecialistApi';
+// ──────────────────────────────────────────────────────────────────
 import '../../styles/abm/abmDashboard.css';
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
@@ -44,6 +52,13 @@ function ABMDashboard() {
   const [toasts, setToasts] = useState([]);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'warning', onConfirm: null });
   const [editedCells, setEditedCells] = useState(new Set());
+
+  // ─── STEP 2: Specialist state variables ─────────────────────────
+  const [specialistSubmissions, setSpecialistSubmissions] = useState([]);
+  const [specialists, setSpecialists] = useState([]);
+  const [specialistYearlyTargets, setSpecialistYearlyTargets] = useState([]);
+  const [specialistEditedCells, setSpecialistEditedCells] = useState(new Set());
+  // ────────────────────────────────────────────────────────────────
 
   // ==================== TOAST ====================
   const showToast = useCallback((title, message, type = 'info') => {
@@ -73,6 +88,18 @@ function ABMDashboard() {
       setCategories(cats);
       setTbmSubmissions(tbmSubs);
       setAbmTargets(areaTargets);
+
+      // ─── STEP 3: Load specialist data ─────────────────────────
+      const [specSubs, specList, specYearly] = await Promise.all([
+        ABMSpecialistApiService.getSpecialistSubmissions(),
+        ABMSpecialistApiService.getSpecialists(),
+        ABMSpecialistApiService.getSpecialistYearlyTargets('FY26_27'),
+      ]);
+      setSpecialistSubmissions(specSubs);
+      setSpecialists(specList);
+      setSpecialistYearlyTargets(specYearly);
+      // ──────────────────────────────────────────────────────────
+
     } catch (error) {
       console.error('Failed to load ABM data:', error);
       showToast('Error', 'Failed to load dashboard data.', 'error');
@@ -89,6 +116,14 @@ function ABMDashboard() {
     const approved = tbmSubmissions.filter(s => s.status === 'approved').length;
     return { total, pending, approved };
   }, [tbmSubmissions]);
+
+  // ─── STEP 5: Specialist approval stats ──────────────────────────
+  const specialistApprovalStats = useMemo(() => ({
+    total: specialistSubmissions.length,
+    pending: specialistSubmissions.filter(s => s.status === 'submitted').length,
+    approved: specialistSubmissions.filter(s => s.status === 'approved').length
+  }), [specialistSubmissions]);
+  // ────────────────────────────────────────────────────────────────
 
   const uniqueTBMs = useMemo(() => {
     const tbmMap = {};
@@ -187,6 +222,85 @@ function ABMDashboard() {
     });
   }, [abmTargets, showToast]);
 
+  // ─── STEP 4: Specialist handlers ────────────────────────────────
+
+  const handleApproveSpecialistSubmission = useCallback(async (submissionId) => {
+    try {
+      const sub = specialistSubmissions.find(s => s.id === submissionId);
+      const corrections = {};
+      MONTHS.forEach(month => {
+        if (specialistEditedCells.has(`${submissionId}-${month}`)) {
+          corrections[month] = { cyQty: sub.monthlyTargets[month].cyQty };
+        }
+      });
+      await ABMSpecialistApiService.approveSpecialistTarget(
+        submissionId,
+        Object.keys(corrections).length > 0 ? corrections : null
+      );
+      setSpecialistSubmissions(prev =>
+        prev.map(s => s.id === submissionId
+          ? { ...s, status: 'approved', approvedDate: new Date().toISOString() }
+          : s
+        )
+      );
+      showToast('Approved', `${sub?.specialistName}'s target approved.`, 'success');
+    } catch (error) {
+      showToast('Error', 'Failed to approve specialist target.', 'error');
+    }
+  }, [specialistSubmissions, specialistEditedCells, showToast]);
+
+  const handleBulkApproveSpecialists = useCallback(async () => {
+    const pendingIds = specialistSubmissions
+      .filter(s => s.status === 'submitted')
+      .map(s => s.id);
+    if (pendingIds.length === 0) { showToast('Info', 'No pending specialist submissions.', 'info'); return; }
+    setModalConfig({
+      isOpen: true,
+      title: 'Bulk Approve Specialist Targets',
+      message: `Approve all ${pendingIds.length} pending specialist submissions?`,
+      type: 'warning',
+      onConfirm: async () => {
+        try {
+          await ABMSpecialistApiService.bulkApproveSpecialist(pendingIds);
+          setSpecialistSubmissions(prev =>
+            prev.map(s => pendingIds.includes(s.id) ? { ...s, status: 'approved' } : s)
+          );
+          showToast('Approved', `${pendingIds.length} specialist targets approved.`, 'success');
+        } catch (error) { showToast('Error', 'Failed to bulk approve.', 'error'); }
+        setModalConfig(prev => ({ ...prev, isOpen: false }));
+      }
+    });
+  }, [specialistSubmissions, showToast]);
+
+  const handleEditSpecialistCell = useCallback((submissionId, month, value) => {
+    const numValue = parseInt(value) || 0;
+    setSpecialistSubmissions(prev => prev.map(s => {
+      if (s.id === submissionId && s.monthlyTargets?.[month]) {
+        return {
+          ...s,
+          monthlyTargets: {
+            ...s.monthlyTargets,
+            [month]: { ...s.monthlyTargets[month], cyQty: numValue }
+          }
+        };
+      }
+      return s;
+    }));
+    setSpecialistEditedCells(prev => new Set([...prev, `${submissionId}-${month}`]));
+  }, []);
+
+  const handleSaveSpecialistYearlyTargets = useCallback(async (targets) => {
+    await ABMSpecialistApiService.saveSpecialistYearlyTargets(targets);
+    setSpecialistYearlyTargets(targets);
+  }, []);
+
+  const handlePublishSpecialistYearlyTargets = useCallback(async (targets) => {
+    await ABMSpecialistApiService.publishSpecialistYearlyTargets(targets);
+    setSpecialistYearlyTargets(targets.map(t => ({ ...t, status: 'published' })));
+  }, []);
+
+  // ────────────────────────────────────────────────────────────────
+
   // ==================== MISC ====================
   const handleRefresh = useCallback(async () => {
     showToast('Refreshing', 'Updating...', 'info');
@@ -213,7 +327,7 @@ function ABMDashboard() {
         approvedCount={approvalStats.approved} pendingCount={approvalStats.pending}
       />
 
-      {/* ==================== 4-TAB NAVIGATION ==================== */}
+      {/* ==================== 6-TAB NAVIGATION ==================== */}
       <div className="abm-tabs">
         <button className={`abm-tab ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
           <i className="fas fa-user-check"></i><span>TBM Targets</span>
@@ -228,6 +342,15 @@ function ABMDashboard() {
         <button className={`abm-tab ${activeTab === 'yearlyTargets' ? 'active' : ''}`} onClick={() => setActiveTab('yearlyTargets')}>
           <i className="fas fa-users-cog"></i><span>Team Yearly Targets</span>
         </button>
+        {/* ─── STEP 6: 2 new specialist tab buttons ──────────────── */}
+        <button className={`abm-tab ${activeTab === 'specialistApprovals' ? 'active' : ''}`} onClick={() => setActiveTab('specialistApprovals')}>
+          <i className="fas fa-user-tie"></i><span>Specialist Approvals</span>
+          {specialistApprovalStats.pending > 0 && <span className="tab-badge pending">{specialistApprovalStats.pending}</span>}
+        </button>
+        <button className={`abm-tab ${activeTab === 'specialistYearly' ? 'active' : ''}`} onClick={() => setActiveTab('specialistYearly')}>
+          <i className="fas fa-user-cog"></i><span>Specialist Yearly Targets</span>
+        </button>
+        {/* ───────────────────────────────────────────────────────── */}
       </div>
 
       <main className="main excel-main">
@@ -364,6 +487,31 @@ function ABMDashboard() {
             teamMembers={uniqueTBMs}
             showToast={showToast}
             managerName={user?.name || ''}
+          />
+        )}
+
+        {/* ==================== TAB 5: SPECIALIST APPROVALS (NEW) ==================== */}
+        {activeTab === 'specialistApprovals' && (
+          <ABMSpecialistApprovals
+            submissions={specialistSubmissions}
+            categories={categories}
+            onApprove={handleApproveSpecialistSubmission}
+            onBulkApprove={handleBulkApproveSpecialists}
+            onEditCell={handleEditSpecialistCell}
+            editedCells={specialistEditedCells}
+            showToast={showToast}
+          />
+        )}
+
+        {/* ==================== TAB 6: SPECIALIST YEARLY TARGETS (NEW) ==================== */}
+        {activeTab === 'specialistYearly' && (
+          <ABMSpecialistYearlyTargets
+            fiscalYear="2026-27"
+            specialists={specialists}
+            yearlyTargets={specialistYearlyTargets}
+            onSaveTargets={handleSaveSpecialistYearlyTargets}
+            onPublishTargets={handlePublishSpecialistYearlyTargets}
+            showToast={showToast}
           />
         )}
       </main>

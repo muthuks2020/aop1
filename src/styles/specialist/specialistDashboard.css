@@ -1,0 +1,83 @@
+
+
+.specialist-role-banner {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.specialist-role-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #fff;
+  font-size: 0.85rem;
+}
+
+.specialist-role-info i {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+.specialist-role-label {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  font-size: 0.8rem;
+}
+
+.specialist-separator {
+  opacity: 0.5;
+}
+
+.specialist-area {
+  opacity: 0.9;
+}
+
+.specialist-reports-to {
+  opacity: 0.8;
+  font-size: 0.8rem;
+}
+
+/* ==================== SPECIALIST THEME ACCENT ==================== */
+
+.specialist-dashboard .main-tab.active {
+  border-bottom-color: #6366f1;
+  color: #6366f1;
+}
+
+.specialist-dashboard .main-tab:hover:not(.active) {
+  color: #6366f1;
+}
+
+/* ==================== RESPONSIVE ==================== */
+
+@media (max-width: 768px) {
+  .specialist-role-banner {
+    padding: 6px 12px;
+  }
+
+  .specialist-role-info {
+    font-size: 0.75rem;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .specialist-reports-to {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .specialist-role-info {
+    font-size: 0.7rem;
+  }
+
+  .specialist-separator:last-of-type,
+  .specialist-area {
+    display: none;
+  }
+}

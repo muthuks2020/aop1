@@ -1,11 +1,12 @@
 /**
- * App.js — Updated with Admin Dashboard route
+ * App.js — Updated with Specialist Dashboard route
  * 
- * CHANGE: Added AdminDashboard import and 'admin' case in getDashboardByRole
- * Added /admin/dashboard direct route
- * No other changes to existing routes.
+ * CHANGES from v2.0.0:
+ * - Added SpecialistDashboard import
+ * - Added 'specialist' case in getDashboardByRole
+ * - Added /specialist/dashboard direct route
  *
- * @version 2.0.0
+ * @version 3.0.0
  */
 
 import React from 'react';
@@ -17,23 +18,27 @@ import TBMDashboard from './pages/TBM/Dashboard';
 import ABMDashboard from './pages/ABM/Dashboard';
 import ZBMDashboard from './pages/ZBM/Dashboard';
 import SalesHeadDashboard from './pages/SalesHead/Dashboard';
-import AdminDashboard from './pages/Admin/Dashboard';       // ← NEW
+import AdminDashboard from './pages/Admin/Dashboard';
+import SpecialistDashboard from './pages/Specialist/Dashboard';  // ← NEW
 import ProtectedRoute from './components/auth/ProtectedRoute';
 import './styles/aopRowStyles.css';
 
 function App() {
   const { user } = useAuth();
+
   const getDashboardByRole = (role) => {
     switch (role) {
-      case 'sales_rep': return <SalesRepDashboard />;
-      case 'tbm': return <TBMDashboard />;
-      case 'abm': return <ABMDashboard />;
-      case 'zbm': return <ZBMDashboard />;
-      case 'sales_head': return <SalesHeadDashboard />;
-      case 'admin': return <AdminDashboard />;              // ← NEW
-      default: return <SalesRepDashboard />;
+      case 'sales_rep':   return <SalesRepDashboard />;
+      case 'tbm':         return <TBMDashboard />;
+      case 'abm':         return <ABMDashboard />;
+      case 'zbm':         return <ZBMDashboard />;
+      case 'sales_head':  return <SalesHeadDashboard />;
+      case 'admin':       return <AdminDashboard />;
+      case 'specialist':  return <SpecialistDashboard />;         // ← NEW
+      default:            return <SalesRepDashboard />;
     }
   };
+
   return (
     <Routes>
       <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <Login />} />
@@ -42,10 +47,12 @@ function App() {
       <Route path="/abm/dashboard" element={<ABMDashboard />} />
       <Route path="/zbm/dashboard" element={<ZBMDashboard />} />
       <Route path="/saleshead/dashboard" element={<SalesHeadDashboard />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />  {/* ← NEW */}
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/specialist/dashboard" element={<SpecialistDashboard />} />  {/* ← NEW */}
       <Route path="/" element={<Navigate to={user ? "/dashboard" : "/login"} replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+
 export default App;
