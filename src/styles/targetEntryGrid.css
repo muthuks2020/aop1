@@ -1,16 +1,4 @@
-/* ============================================
-   Enhanced Target Entry Grid Styles
-   Product Commitment PWA - Appasamy Associates
-   Version: 4.1.0 - Status Locking + Visibility Clarity + Growth %
-   
-   WORKFLOW (no reject cycle):
-   Sales Rep enters → submits to TBM → TBM edits & approves → LOCKED
-   
-   3 STATES for Sales Rep:
-   - Draft    → teal borders, editable
-   - Submitted → amber tint, locked (pending TBM)
-   - Approved  → green tint, locked (TBM finalized)
-   ============================================ */
+
 
 /* ==================== GRID CONTAINER ==================== */
 
@@ -18,8 +6,18 @@
   background: var(--white);
   border-radius: var(--radius-xl);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1), 0 2px 8px rgba(0, 0, 0, 0.06);
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid var(--gray-200);
+}
+
+/* Preserve rounded corners on header and footer since container is overflow:visible */
+.target-entry-container > .grid-header {
+  border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+}
+
+.target-entry-container > .grid-footer-info:last-child,
+.target-entry-container > .grid-footer:last-child {
+  border-radius: 0 0 var(--radius-xl) var(--radius-xl);
 }
 
 /* ==================== GRID HEADER ==================== */
@@ -283,6 +281,25 @@
 .grid-wrapper {
   overflow-x: auto;
   overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+}
+
+.grid-wrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.grid-wrapper::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.grid-wrapper::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 5px;
+}
+
+.grid-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
 }
 
 .excel-grid {
@@ -1407,6 +1424,22 @@
 }
 
 @media (max-width: 1200px) {
+  .grid-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+  
+  .grid-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+  
+  .header-stats {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+
   .product-rows.status-draft .product-row.cy-row .month-cell .cell-value,
   .product-rows.status-draft .product-row.cy-row .month-cell .cell-input {
     min-height: 22px !important;
@@ -1488,4 +1521,24 @@
 /* Growth spacer cell */
 .monthly-totals-cell.growth-spacer {
   background: transparent;
+}
+
+/* ==================== PRINT STYLES ==================== */
+
+@media print {
+  .grid-header,
+  .grid-search-bar,
+  .grid-footer,
+  .grid-actions {
+    display: none;
+  }
+  
+  .excel-grid {
+    min-width: 100% !important;
+  }
+  
+  .cell-value.editable:hover {
+    background: transparent;
+    transform: none;
+  }
 }

@@ -50,10 +50,19 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--tgt-white);
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   margin: 1rem 0;
   border: 1px solid var(--tgt-gray-200);
+}
+
+/* Preserve rounded corners on header and footer since container is overflow:visible */
+.tgt-territory-container > .tgt-grid-header {
+  border-radius: 16px 16px 0 0;
+}
+
+.tgt-territory-container > .tgt-grid-footer {
+  border-radius: 0 0 16px 16px;
 }
 
 /* ==================== GRID HEADER ==================== */
@@ -558,6 +567,30 @@
 .tgt-excel-grid {
   min-width: 1400px;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Scrollbar styling for the grid scroll area */
+.tgt-excel-grid::-webkit-scrollbar,
+.tgt-territory-container::-webkit-scrollbar {
+  height: 10px;
+}
+
+.tgt-excel-grid::-webkit-scrollbar-track,
+.tgt-territory-container::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.tgt-excel-grid::-webkit-scrollbar-thumb,
+.tgt-territory-container::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 5px;
+}
+
+.tgt-excel-grid::-webkit-scrollbar-thumb:hover,
+.tgt-territory-container::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
 }
 
 /* Header Row */

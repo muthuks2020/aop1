@@ -41,10 +41,15 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   background: var(--abm-white);
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
   margin: 1rem 0;
   border: 1px solid var(--abm-gray-200);
+}
+
+/* Preserve rounded corners on header since container is overflow:visible */
+.abm-tgt-container > .abm-tgt-grid-header {
+  border-radius: 16px 16px 0 0;
 }
 
 /* ==================== GRID HEADER ==================== */
@@ -341,6 +346,24 @@
   -webkit-overflow-scrolling: touch;
 }
 
+.abm-tgt-grid-table::-webkit-scrollbar {
+  height: 10px;
+}
+
+.abm-tgt-grid-table::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.abm-tgt-grid-table::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 5px;
+}
+
+.abm-tgt-grid-table::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
 .abm-tgt-grid-row {
   display: grid;
   grid-template-columns: 180px 40px repeat(12, minmax(55px, 1fr)) 70px 60px;
@@ -471,7 +494,28 @@
 .abm-tgt-header.abm-tgt-q4 { background: rgba(239, 68, 68, 0.15); }
 
 /* Revenue only grid */
-.abm-tgt-revenue-grid { overflow-x: auto; }
+.abm-tgt-revenue-grid {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.abm-tgt-revenue-grid::-webkit-scrollbar {
+  height: 10px;
+}
+
+.abm-tgt-revenue-grid::-webkit-scrollbar-track {
+  background: #F3F4F6;
+  border-radius: 5px;
+}
+
+.abm-tgt-revenue-grid::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 5px;
+}
+
+.abm-tgt-revenue-grid::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
 .abm-tgt-revenue-row {
   display: grid;
   grid-template-columns: 180px repeat(12, minmax(55px, 1fr)) 70px 60px;
