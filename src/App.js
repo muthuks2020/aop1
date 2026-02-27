@@ -1,13 +1,4 @@
-/**
- * App.js — Updated with Specialist Dashboard route
- * 
- * CHANGES from v2.0.0:
- * - Added SpecialistDashboard import
- * - Added 'specialist' case in getDashboardByRole
- * - Added /specialist/dashboard direct route
- *
- * @version 3.0.0
- */
+
 
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
