@@ -67,7 +67,7 @@
 .branding-content { position: relative; z-index: 1; }
 
 .brand-logo { margin-bottom: 2rem; }
-.brand-logo-img { max-width: 180px; height: auto;  }
+.brand-logo-img { max-width: 180px; height: auto; }
 
 .brand-headline {
   font-size: 2.5rem;
@@ -200,6 +200,40 @@
 
 .login-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0, 161, 155, 0.35); }
 .login-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+.sso-btn {
+  background: #fff !important;
+  color: #5E5E5E !important;
+  border: 1px solid #8C8C8C !important;
+  margin-top: 0;
+}
+
+.sso-btn:hover:not(:disabled) {
+  background: #F8FAFC !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+}
+
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.login-divider span:first-child,
+.login-divider span:last-child {
+  flex: 1;
+  height: 1px;
+  background: #E2E8F0;
+}
+
+.login-divider-text {
+  font-size: 0.75rem;
+  color: #94A3B8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
 
 .btn-spinner {
   width: 20px;
