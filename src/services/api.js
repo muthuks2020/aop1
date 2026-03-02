@@ -1,19 +1,17 @@
 /**
  * api.js — Sales Rep API Service (v5 Live Backend)
  *
- * ALL mock data and USE_MOCK branches REMOVED.
- * All requests go through apiRequest() with auto auth + 401 refresh.
+ * ★ v5.1.0 CHANGES:
+ *   - Imports shared normalizers from normalizers.js
+ *   - getProducts() → normalizeArray(raw, normalizeProduct)
+ *   - getCategories() → normalizeArray(raw, normalizeCategory)
+ *   - getProductsByCategory() → normalizeArray(raw, normalizeProduct)
  *
- * Field mapping applied:
- *   product.name → product.productName (backend returns new shape)
- *   product.code → product.productCode
- *   product.subcategory → product.productFamily
- *   Revenue = qty × product.unitCost (from product_master)
- *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest, API_URL } from './apiClient';
+import { normalizeProduct, normalizeCategory, normalizeArray } from './normalizers';
 
 export const API_CONFIG = {
   baseUrl: API_URL,
@@ -37,17 +35,20 @@ export const ApiService = {
   // ==================== CATEGORIES ====================
 
   async getCategories() {
-    return apiRequest('/categories');
+    const raw = await apiRequest('/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   // ==================== PRODUCTS ====================
 
   async getProducts() {
-    return apiRequest('/products');
+    const raw = await apiRequest('/products');
+    return normalizeArray(raw, normalizeProduct);
   },
 
   async getProductsByCategory(categoryId) {
-    return apiRequest(`/products?category=${categoryId}`);
+    const raw = await apiRequest(`/products?category=${categoryId}`);
+    return normalizeArray(raw, normalizeProduct);
   },
 
   // ==================== TARGET ENTRY ====================
@@ -88,7 +89,7 @@ export const ApiService = {
     });
   },
 
-  // ==================== APPROVALS (kept for backward compat) ====================
+  // ==================== APPROVALS ====================
 
   async approveProduct(productId, comments = '') {
     return apiRequest(`/products/${productId}/approve`, {

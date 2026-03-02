@@ -2,12 +2,13 @@
  * ABM Specialist API Service — v5 Live Backend
  *
  * Specialist submissions flow: Specialist → ABM → ZBM → Sales Head
- * ALL mock data REMOVED.
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest } from './apiClient';
+import { normalizeSubmission, normalizeArray } from './normalizers';
 
 const ABMSpecialistApiService = {
 
@@ -19,7 +20,8 @@ const ABMSpecialistApiService = {
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.specialistId) params.set('specialistId', filters.specialistId);
     const query = params.toString();
-    return apiRequest(`/abm/specialist-submissions${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/abm/specialist-submissions${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeSubmission);
   },
 
   // ==================== APPROVALS ====================

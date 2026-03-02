@@ -1,11 +1,12 @@
 /**
  * App.js — v5 Updated Routing
  *
- * CHANGES:
- * - Added specialist subtype roles to getDashboardByRole()
- * - All other routes preserved
+ * ★ v5.2.0 CHANGES:
+ *   - All role-specific direct routes now wrapped in ProtectedRoute
+ *   - Added allowedRoles enforcement to prevent cross-role dashboard access
+ *   - Added role debug logging
  *
- * @version 5.0.0
+ * @version 5.2.0
  */
 
 import React from 'react';
@@ -63,18 +64,66 @@ function App() {
         path="/login"
         element={user ? <Navigate to="/dashboard" replace /> : <Login />}
       />
+
+      {/* ★ Main dashboard — renders based on user.role */}
       <Route
         path="/dashboard/*"
         element={
           <ProtectedRoute>{getDashboardByRole(user?.role)}</ProtectedRoute>
         }
       />
-      <Route path="/tbm/dashboard" element={<TBMDashboard />} />
-      <Route path="/abm/dashboard" element={<ABMDashboard />} />
-      <Route path="/zbm/dashboard" element={<ZBMDashboard />} />
-      <Route path="/saleshead/dashboard" element={<SalesHeadDashboard />} />
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/specialist/dashboard" element={<SpecialistDashboard />} />
+
+      {/* ★ Direct role routes — now ALL protected with allowedRoles */}
+      <Route
+        path="/tbm/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['tbm']}>
+            <TBMDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/abm/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['abm']}>
+            <ABMDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/zbm/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['zbm']}>
+            <ZBMDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/saleshead/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['sales_head']}>
+            <SalesHeadDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/specialist/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={SPECIALIST_ROLES}>
+            <SpecialistDashboard />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Default redirect */}
       <Route
         path="/"
         element={<Navigate to={user ? '/dashboard' : '/login'} replace />}

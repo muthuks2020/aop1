@@ -2,19 +2,29 @@
  * AuthContext — v5 Configurable Auth (Mock + Live API + SSO)
  *
  * MODE SWITCH (in .env):
- *   REACT_APP_USE_MOCK=true   → Mock login with DUMMY_USERS (DEFAULT)
- *   REACT_APP_USE_MOCK=false  → Live backend API at REACT_APP_API_URL
+ *   REACT_APP_USE_MOCK=true   → Mock login with DUMMY_USERS
+ *   REACT_APP_USE_MOCK=false  → Live backend API at REACT_APP_API_URL (DEFAULT)
  *   REACT_APP_SSO_ENABLED=true → Show SSO button on login page
  *
- * @version 5.1.0
+ * ★ v5.2.0 CHANGES:
+ *   - USE_MOCK = false (backend is live)
+ *   - API_URL aligned with apiClient.js default (localhost:5000)
+ *   - DUMMY_USERS retained for mock testing but inactive by default
+ *   - Added role debug logging during session restore
+ *
+ * @version 5.2.0
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
-const USE_MOCK = true;  // ← SET TO false WHEN BACKEND IS LIVE
-const API_URL  = process.env.REACT_APP_API_URL || 'http://10.0.2.227:3002/api/v1';
+// ★ SET TO false — backend is live at port 5000
+// Toggle via env: REACT_APP_USE_MOCK=true to re-enable mock mode
+const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
+
+// ★ Aligned with apiClient.js — both default to localhost:5000
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ROLE CONSTANTS
@@ -53,7 +63,7 @@ export const ROLE_LABELS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MOCK USERS — used when USE_MOCK = true
+// MOCK USERS — used ONLY when USE_MOCK = true (REACT_APP_USE_MOCK=true)
 // ═══════════════════════════════════════════════════════════════════════════
 
 const DUMMY_USERS = [
@@ -169,6 +179,7 @@ export function AuthProvider({ children }) {
           if (response.ok) {
             const data = await response.json();
             const mappedUser = mapUserFromBackend(data.user || data);
+            console.log('[Auth] Session restored — role:', mappedUser?.role);
             setUser(mappedUser);
             localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
           } else {
@@ -180,6 +191,7 @@ export function AuthProvider({ children }) {
               if (retryResp.ok) {
                 const retryData = await retryResp.json();
                 const mappedUser = mapUserFromBackend(retryData.user || retryData);
+                console.log('[Auth] Session refreshed — role:', mappedUser?.role);
                 setUser(mappedUser);
                 localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
               } else { logout(); }
@@ -248,6 +260,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem('appasamy_token', data.token);
       if (data.refresh_token) localStorage.setItem('appasamy_refresh_token', data.refresh_token);
       const mappedUser = mapUserFromBackend(data.user);
+      console.log('[Auth] Login success — role:', mappedUser?.role);
       setUser(mappedUser);
       localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
       return { success: true, user: mappedUser };
@@ -259,7 +272,6 @@ export function AuthProvider({ children }) {
   // ─── SSO Login (Azure AD token exchange) ────────────────────────────
   const ssoLogin = async (azureIdToken, userData = {}) => {
     if (USE_MOCK) {
-      // Mock SSO: derive a user from Azure claims
       const role = 'sales_rep';
       const mockUser = {
         id: Date.now(),

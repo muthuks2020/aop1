@@ -1,19 +1,24 @@
 /**
  * ABM API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest } from './apiClient';
+import {
+  normalizeCategory, normalizeSubmission, normalizeGeoTarget,
+  normalizeArray
+} from './normalizers';
 
 export const ABMApiService = {
 
   // ==================== CATEGORIES ====================
 
   async getCategories() {
-    return apiRequest('/categories');
+    const raw = await apiRequest('/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   // ==================== TBM SUBMISSIONS ====================
@@ -24,7 +29,8 @@ export const ABMApiService = {
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.tbmId) params.set('tbmId', filters.tbmId);
     const query = params.toString();
-    return apiRequest(`/abm/tbm-submissions${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/abm/tbm-submissions${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeSubmission);
   },
 
   // ==================== APPROVALS ====================
@@ -53,7 +59,8 @@ export const ABMApiService = {
   // ==================== ABM AREA TARGETS ====================
 
   async getABMTargets() {
-    return apiRequest('/abm/area-targets');
+    const raw = await apiRequest('/abm/area-targets');
+    return normalizeArray(raw, normalizeGeoTarget);
   },
 
   async saveABMTarget(productId, monthlyTargets) {

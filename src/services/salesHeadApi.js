@@ -1,12 +1,13 @@
 /**
  * Sales Head API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest, API_URL } from './apiClient';
+import { normalizeCategory, normalizeSubmission, normalizeArray } from './normalizers';
 
 export const SALESHEAD_API_CONFIG = {
   baseUrl: API_URL,
@@ -26,7 +27,8 @@ export const SalesHeadApiService = {
   // ==================== CATEGORIES ====================
 
   async getCategories() {
-    return apiRequest('/saleshead/categories');
+    const raw = await apiRequest('/saleshead/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   // ==================== ZBM SUBMISSIONS ====================
@@ -37,7 +39,8 @@ export const SalesHeadApiService = {
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.zbmId) params.set('zbmId', filters.zbmId);
     const query = params.toString();
-    return apiRequest(`/saleshead/zbm-submissions${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/saleshead/zbm-submissions${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeSubmission);
   },
 
   // ==================== APPROVALS ====================
@@ -96,7 +99,7 @@ export const SalesHeadApiService = {
     return apiRequest('/saleshead/unique-zbms');
   },
 
-  // ==================== ANALYTICS (OPTIONAL) ====================
+  // ==================== ANALYTICS ====================
 
   async getRegionalPerformance() {
     return apiRequest('/saleshead/regional-performance');

@@ -1,25 +1,29 @@
 /**
  * Admin API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
- * Field renames: name→productName, code→productCode, subcategory→productFamily,
- *   listPrice→unitCost, hierarchy id→employeeCode, name→fullName
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest } from './apiClient';
+import {
+  normalizeAdminProduct, normalizeCategory, normalizeUser,
+  normalizeArray
+} from './normalizers';
 
 export const AdminApiService = {
 
   // ==================== PRODUCT MANAGEMENT ====================
 
   async getProducts() {
-    return apiRequest('/admin/products');
+    const raw = await apiRequest('/admin/products');
+    return normalizeArray(raw, normalizeAdminProduct);
   },
 
   async getCategories() {
-    return apiRequest('/admin/categories');
+    const raw = await apiRequest('/admin/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   async createProduct(productData) {
@@ -59,7 +63,8 @@ export const AdminApiService = {
     if (filters.role) params.set('role', filters.role);
     if (filters.isActive !== undefined) params.set('isActive', filters.isActive);
     const query = params.toString();
-    return apiRequest(`/admin/users${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/admin/users${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeUser);
   },
 
   async createUser(userData) {

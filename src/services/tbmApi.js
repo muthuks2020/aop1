@@ -1,13 +1,17 @@
 /**
  * TBM API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
- * Field renames applied per migration guide.
+ * ★ FIELD NORMALIZATION via shared normalizers.js
+ * ★ Team target + yearly target methods integrated
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest, API_URL } from './apiClient';
+import {
+  normalizeProduct, normalizeCategory, normalizeSubmission,
+  normalizeArray
+} from './normalizers';
 
 export const TBM_API_CONFIG = {
   baseUrl: API_URL,
@@ -26,6 +30,9 @@ export const TBM_API_CONFIG = {
     getTBMDashboardStats: '/tbm/dashboard-stats',
     getCategories: '/categories',
     getProducts: '/products',
+    getYearlyTargets: '/tbm/yearly-targets',
+    saveYearlyTargets: '/tbm/yearly-targets/save',
+    publishYearlyTargets: '/tbm/yearly-targets/publish',
   },
 };
 
@@ -34,11 +41,13 @@ export const TBMApiService = {
   // ==================== CATEGORIES & PRODUCTS ====================
 
   async getCategories() {
-    return apiRequest('/categories');
+    const raw = await apiRequest('/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   async getProducts() {
-    return apiRequest('/products');
+    const raw = await apiRequest('/products');
+    return normalizeArray(raw, normalizeProduct);
   },
 
   // ==================== SALES REP SUBMISSIONS ====================
@@ -49,7 +58,8 @@ export const TBMApiService = {
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.salesRepId) params.set('employeeCode', filters.salesRepId || filters.employeeCode);
     const query = params.toString();
-    return apiRequest(`/tbm/sales-rep-submissions${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/tbm/sales-rep-submissions${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeSubmission);
   },
 
   // ==================== APPROVALS ====================
@@ -85,14 +95,8 @@ export const TBMApiService = {
   // ==================== TBM TERRITORY TARGETS ====================
 
   async getTBMTargets() {
-    return apiRequest('/tbm/territory-targets');
-  },
-
-  async saveTBMTarget(productId, monthlyTargets) {
-    return apiRequest(`/tbm/territory-targets/${productId}/save`, {
-      method: 'PUT',
-      body: JSON.stringify({ monthlyTargets }),
-    });
+    const raw = await apiRequest('/tbm/territory-targets');
+    return normalizeArray(raw, normalizeProduct);
   },
 
   async saveTBMTargets(targets) {
@@ -102,34 +106,67 @@ export const TBMApiService = {
     });
   },
 
-  async submitTBMTargets(productIds) {
+  async submitTBMTargets(targetIds) {
     return apiRequest('/tbm/territory-targets/submit', {
       method: 'POST',
-      body: JSON.stringify({ productIds }),
+      body: JSON.stringify({ targetIds }),
     });
   },
 
   // ==================== TBM INDIVIDUAL TARGETS ====================
 
   async getTBMIndividualTargets() {
-    return apiRequest('/tbm/individual-targets');
+    const raw = await apiRequest('/tbm/individual-targets');
+    return normalizeArray(raw, normalizeProduct);
   },
 
-  async saveTBMIndividualTarget(productId, monthlyTargets) {
-    return apiRequest(`/tbm/individual-targets/${productId}/save`, {
-      method: 'PUT',
-      body: JSON.stringify({ monthlyTargets }),
+  async saveTBMIndividualTargets(targets) {
+    return apiRequest('/tbm/individual-targets/save', {
+      method: 'POST',
+      body: JSON.stringify({ targets }),
     });
   },
 
-  async submitTBMIndividualTargets(productIds) {
+  async submitTBMIndividualTargets(targetIds) {
     return apiRequest('/tbm/individual-targets/submit', {
       method: 'POST',
-      body: JSON.stringify({ productIds }),
+      body: JSON.stringify({ targetIds }),
     });
   },
 
   // ==================== TEAM YEARLY TARGETS ====================
+
+  async getYearlyTargets(fiscalYear) {
+    return apiRequest(`/tbm/yearly-targets?fy=${fiscalYear}`);
+  },
+
+  async saveYearlyTargets(fiscalYear, members) {
+    return apiRequest('/tbm/yearly-targets/save', {
+      method: 'POST',
+      body: JSON.stringify({
+        fiscalYear,
+        members: members.map((m) => ({
+          id: m.id,
+          cyTarget: m.cyTarget,
+          cyTargetValue: m.cyTargetValue,
+          categoryBreakdown: m.categoryBreakdown?.map((c) => ({
+            id: c.id,
+            cyTarget: c.cyTarget,
+            cyTargetValue: c.cyTargetValue,
+          })),
+        })),
+      }),
+    });
+  },
+
+  async publishYearlyTargets(fiscalYear, memberIds) {
+    return apiRequest('/tbm/yearly-targets/publish', {
+      method: 'POST',
+      body: JSON.stringify({ fiscalYear, memberIds }),
+    });
+  },
+
+  // ==================== TEAM MEMBERS ====================
 
   async getTeamMembers() {
     return apiRequest('/tbm/team-members');
@@ -146,14 +183,10 @@ export const TBMApiService = {
     });
   },
 
-  // ==================== DASHBOARD STATS ====================
+  // ==================== DASHBOARD ====================
 
-  async getDashboardStats() {
+  async getTBMDashboardStats() {
     return apiRequest('/tbm/dashboard-stats');
-  },
-
-  async getUniqueReps() {
-    return apiRequest('/tbm/unique-reps');
   },
 };
 

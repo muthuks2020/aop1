@@ -1,19 +1,21 @@
 /**
  * ZBM API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest } from './apiClient';
+import { normalizeCategory, normalizeSubmission, normalizeArray } from './normalizers';
 
 export const ZBMApiService = {
 
   // ==================== CATEGORIES ====================
 
   async getCategories() {
-    return apiRequest('/categories');
+    const raw = await apiRequest('/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   // ==================== ABM SUBMISSIONS ====================
@@ -24,7 +26,8 @@ export const ZBMApiService = {
     if (filters.categoryId) params.set('categoryId', filters.categoryId);
     if (filters.abmId) params.set('abmId', filters.abmId);
     const query = params.toString();
-    return apiRequest(`/zbm/abm-submissions${query ? '?' + query : ''}`);
+    const raw = await apiRequest(`/zbm/abm-submissions${query ? '?' + query : ''}`);
+    return normalizeArray(raw, normalizeSubmission);
   },
 
   // ==================== APPROVALS ====================

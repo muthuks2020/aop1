@@ -1,12 +1,13 @@
 /**
  * Specialist API Service — v5 Live Backend
  *
- * ALL mock data REMOVED. Live API calls via shared apiRequest().
+ * ★ FIELD NORMALIZATION via shared normalizers.js
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import { apiRequest, API_URL } from './apiClient';
+import { normalizeProduct, normalizeCategory, normalizeArray } from './normalizers';
 
 export const SPECIALIST_API_CONFIG = {
   baseUrl: API_URL,
@@ -29,13 +30,15 @@ export const SpecialistApiService = {
   // ==================== CATEGORIES ====================
 
   async getCategories() {
-    return apiRequest('/categories');
+    const raw = await apiRequest('/categories');
+    return normalizeArray(raw, normalizeCategory);
   },
 
   // ==================== PRODUCTS ====================
 
   async getProducts() {
-    return apiRequest('/specialist/products');
+    const raw = await apiRequest('/specialist/products');
+    return normalizeArray(raw, normalizeProduct);
   },
 
   // ==================== TARGET ENTRY ====================
