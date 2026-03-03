@@ -11,7 +11,7 @@
  *     Level 3: Sales Rep cards under each TBM (with product target grid)
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * @version 1.0.1 — Patched: defensive null checks on tbms/salesReps
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -60,44 +60,46 @@ function ZBMTeamDrilldown({ showToast }) {
     setExpandedReps(prev => { const n = new Set(prev); n.has(repId) ? n.delete(repId) : n.add(repId); return n; });
   }, []);
 
+  // PATCHED: Added optional chaining for tbms and salesReps
   const expandAll = () => {
     setExpandedABMs(new Set(hierarchy.map(a => a.id)));
-    setExpandedTBMs(new Set(hierarchy.flatMap(a => a.tbms.map(t => t.id))));
-    setExpandedReps(new Set(hierarchy.flatMap(a => a.tbms.flatMap(t => t.salesReps.map(r => r.id)))));
+    setExpandedTBMs(new Set(hierarchy.flatMap(a => (a.tbms || []).map(t => t.id))));
+    setExpandedReps(new Set(hierarchy.flatMap(a => (a.tbms || []).flatMap(t => (t.salesReps || []).map(r => r.id)))));
   };
 
   const collapseAll = () => { setExpandedABMs(new Set()); setExpandedTBMs(new Set()); setExpandedReps(new Set()); };
 
-  // Filter by search
+  // PATCHED: Added optional chaining for tbms and salesReps in filter logic
   const filteredHierarchy = useMemo(() => {
     if (!searchTerm.trim()) return hierarchy;
     const term = searchTerm.toLowerCase();
     return hierarchy.map(abm => ({
       ...abm,
-      tbms: abm.tbms.map(tbm => ({
+      tbms: (abm.tbms || []).map(tbm => ({
         ...tbm,
-        salesReps: tbm.salesReps.filter(rep =>
-          rep.name.toLowerCase().includes(term) ||
-          rep.territory.toLowerCase().includes(term) ||
-          rep.products?.some(p => p.productName.toLowerCase().includes(term))
+        salesReps: (tbm.salesReps || []).filter(rep =>
+          rep.name?.toLowerCase().includes(term) ||
+          rep.territory?.toLowerCase().includes(term) ||
+          rep.products?.some(p => p.productName?.toLowerCase().includes(term))
         )
       })).filter(tbm =>
-        tbm.name.toLowerCase().includes(term) ||
-        tbm.territory.toLowerCase().includes(term) ||
-        tbm.salesReps.length > 0
+        tbm.name?.toLowerCase().includes(term) ||
+        tbm.territory?.toLowerCase().includes(term) ||
+        (tbm.salesReps || []).length > 0
       )
     })).filter(abm =>
-      abm.name.toLowerCase().includes(term) ||
-      abm.territory.toLowerCase().includes(term) ||
-      abm.tbms.length > 0
+      abm.name?.toLowerCase().includes(term) ||
+      abm.territory?.toLowerCase().includes(term) ||
+      (abm.tbms || []).length > 0
     );
   }, [hierarchy, searchTerm]);
 
   // ==================== TOTALS HELPERS ====================
+  // PATCHED: Added defensive (|| []) for tbms, salesReps
   const getABMTotals = (abm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
-    abm.tbms.forEach(tbm => {
-      tbm.salesReps.forEach(rep => {
+    (abm.tbms || []).forEach(tbm => {
+      (tbm.salesReps || []).forEach(rep => {
         rep.products?.forEach(p => {
           MONTHS.forEach(m => {
             totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
@@ -111,9 +113,10 @@ function ZBMTeamDrilldown({ showToast }) {
     return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
+  // PATCHED: Added defensive (|| []) for salesReps
   const getTBMTotals = (tbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
-    tbm.salesReps.forEach(rep => {
+    (tbm.salesReps || []).forEach(rep => {
       rep.products?.forEach(p => {
         MONTHS.forEach(m => {
           totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
@@ -139,11 +142,11 @@ function ZBMTeamDrilldown({ showToast }) {
     return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
-  // Zone-level summary
+  // PATCHED: Zone-level summary with defensive checks
   const zoneSummary = useMemo(() => {
     let totalABMs = hierarchy.length;
-    let totalTBMs = hierarchy.reduce((s, a) => s + a.tbms.length, 0);
-    let totalReps = hierarchy.reduce((s, a) => s + a.tbms.reduce((ss, t) => ss + t.salesReps.length, 0), 0);
+    let totalTBMs = hierarchy.reduce((s, a) => s + (a.tbms?.length || 0), 0);
+    let totalReps = hierarchy.reduce((s, a) => s + (a.tbms || []).reduce((ss, t) => ss + (t.salesReps?.length || 0), 0), 0);
     return { totalABMs, totalTBMs, totalReps };
   }, [hierarchy]);
 
@@ -196,21 +199,23 @@ function ZBMTeamDrilldown({ showToast }) {
                 <div className="zbm-dd-abm-left">
                   <i className={`fas fa-chevron-${isABMExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
                   <div className="zbm-dd-abm-avatar">
-                    {abm.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    {(abm.name || '??').split(' ').map(n => n[0]).join('').substring(0, 2)}
                   </div>
                   <div>
-                    <span className="zbm-dd-abm-name">{abm.name}</span>
-                    <span className="zbm-dd-abm-territory"><i className="fas fa-map-marker-alt"></i> {abm.territory}</span>
+                    <span className="zbm-dd-abm-name">{abm.name || 'Unknown ABM'}</span>
+                    <span className="zbm-dd-abm-territory"><i className="fas fa-map-marker-alt"></i> {abm.territory || '—'}</span>
                   </div>
                 </div>
                 <div className="zbm-dd-abm-stats">
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">TBMs</span>
-                    <span className="zbm-dd-mini-value">{abm.tbms.length}</span>
+                    {/* PATCHED: defensive check */}
+                    <span className="zbm-dd-mini-value">{(abm.tbms || []).length}</span>
                   </div>
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">Reps</span>
-                    <span className="zbm-dd-mini-value">{abm.tbms.reduce((s, t) => s + t.salesReps.length, 0)}</span>
+                    {/* PATCHED: defensive check */}
+                    <span className="zbm-dd-mini-value">{(abm.tbms || []).reduce((s, t) => s + (t.salesReps?.length || 0), 0)}</span>
                   </div>
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">CY Rev</span>
@@ -228,7 +233,8 @@ function ZBMTeamDrilldown({ showToast }) {
               {/* Expanded ABM Content — TBM Cards */}
               {isABMExpanded && (
                 <div className="zbm-dd-abm-body">
-                  {abm.tbms.map(tbm => {
+                  {/* PATCHED: defensive check */}
+                  {(abm.tbms || []).map(tbm => {
                     const isTBMExpanded = expandedTBMs.has(tbm.id);
                     const tbmTotals = getTBMTotals(tbm);
 
@@ -239,17 +245,18 @@ function ZBMTeamDrilldown({ showToast }) {
                           <div className="zbm-dd-tbm-left">
                             <i className={`fas fa-chevron-${isTBMExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
                             <div className="zbm-dd-tbm-avatar">
-                              {tbm.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                              {(tbm.name || '??').split(' ').map(n => n[0]).join('').substring(0, 2)}
                             </div>
                             <div>
-                              <span className="zbm-dd-tbm-name">{tbm.name}</span>
-                              <span className="zbm-dd-tbm-territory"><i className="fas fa-map-pin"></i> {tbm.territory}</span>
+                              <span className="zbm-dd-tbm-name">{tbm.name || 'Unknown TBM'}</span>
+                              <span className="zbm-dd-tbm-territory"><i className="fas fa-map-pin"></i> {tbm.territory || '—'}</span>
                             </div>
                           </div>
                           <div className="zbm-dd-tbm-stats">
                             <div className="zbm-dd-mini-stat">
                               <span className="zbm-dd-mini-label">Reps</span>
-                              <span className="zbm-dd-mini-value">{tbm.salesReps.length}</span>
+                              {/* PATCHED: defensive check */}
+                              <span className="zbm-dd-mini-value">{(tbm.salesReps || []).length}</span>
                             </div>
                             <div className="zbm-dd-mini-stat">
                               <span className="zbm-dd-mini-label">CY Rev</span>
@@ -267,7 +274,8 @@ function ZBMTeamDrilldown({ showToast }) {
                         {/* Expanded TBM Content — Sales Rep Cards */}
                         {isTBMExpanded && (
                           <div className="zbm-dd-tbm-body">
-                            {tbm.salesReps.map(rep => {
+                            {/* PATCHED: defensive check */}
+                            {(tbm.salesReps || []).map(rep => {
                               const isRepExpanded = expandedReps.has(rep.id);
                               const repTotals = getRepTotals(rep);
 
@@ -278,11 +286,11 @@ function ZBMTeamDrilldown({ showToast }) {
                                     <div className="zbm-dd-rep-left">
                                       <i className={`fas fa-chevron-${isRepExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
                                       <div className="zbm-dd-rep-avatar">
-                                        {rep.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                                        {(rep.name || '??').split(' ').map(n => n[0]).join('').substring(0, 2)}
                                       </div>
                                       <div>
-                                        <span className="zbm-dd-rep-name">{rep.name}</span>
-                                        <span className="zbm-dd-rep-territory"><i className="fas fa-map-marker-alt"></i> {rep.territory}</span>
+                                        <span className="zbm-dd-rep-name">{rep.name || 'Unknown Rep'}</span>
+                                        <span className="zbm-dd-rep-territory"><i className="fas fa-map-marker-alt"></i> {rep.territory || '—'}</span>
                                       </div>
                                     </div>
                                     <div className="zbm-dd-rep-stats">
@@ -303,59 +311,76 @@ function ZBMTeamDrilldown({ showToast }) {
                                     </div>
                                   </div>
 
-                                  {/* Expanded Sales Rep — Product Target Table */}
-                                  {isRepExpanded && rep.products && rep.products.length > 0 && (
-                                    <div className="zbm-dd-products-wrapper">
-                                      <table className="zbm-dd-product-table">
-                                        <thead>
-                                          <tr>
-                                            <th className="zbm-dd-th-product">Product</th>
-                                            <th className="zbm-dd-th-type">Type</th>
-                                            {MONTH_LABELS.map(m => <th key={m} className="zbm-dd-th-month">{m}</th>)}
-                                            <th className="zbm-dd-th-total">Total</th>
-                                          </tr>
-                                        </thead>
-                                        <tbody>
-                                          {rep.products.map((product, pIdx) => (
-                                            <React.Fragment key={pIdx}>
-                                              <tr className="zbm-dd-ly-row">
-                                                <td className="zbm-dd-td-product" rowSpan="3">{product.productName}</td>
-                                                <td className="zbm-dd-td-type ly">LY</td>
-                                                {MONTHS.map(m => (
-                                                  <td key={m} className="zbm-dd-td-val ly">
-                                                    {product.monthlyTargets?.[m]?.lyQty || 0}
-                                                  </td>
+                                  {/* Expanded Rep Content — Product Target Grid */}
+                                  {isRepExpanded && (
+                                    <div className="zbm-dd-rep-body">
+                                      {(!rep.products || rep.products.length === 0) ? (
+                                        <div className="zbm-dd-no-products">
+                                          <i className="fas fa-box-open"></i> No products assigned
+                                        </div>
+                                      ) : (
+                                        <div className="zbm-dd-product-grid-wrapper">
+                                          <table className="zbm-dd-product-table">
+                                            <thead>
+                                              <tr>
+                                                <th className="zbm-dd-th-product">Product</th>
+                                                <th className="zbm-dd-th-type"></th>
+                                                {MONTH_LABELS.map(m => (
+                                                  <th key={m} className="zbm-dd-th-month">{m}</th>
                                                 ))}
-                                                <td className="zbm-dd-td-total ly">
-                                                  {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0)}
-                                                </td>
+                                                <th className="zbm-dd-th-total">TOTAL</th>
                                               </tr>
-                                              <tr className="zbm-dd-cy-row">
-                                                <td className="zbm-dd-td-type cy">CY</td>
-                                                {MONTHS.map(m => (
-                                                  <td key={m} className="zbm-dd-td-val cy">
-                                                    {product.monthlyTargets?.[m]?.cyQty || 0}
-                                                  </td>
-                                                ))}
-                                                <td className="zbm-dd-td-total cy">
-                                                  {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.cyQty || 0), 0)}
-                                                </td>
-                                              </tr>
-                                              <tr className="zbm-dd-aop-row">
-                                                <td className="zbm-dd-td-type aop">AOP</td>
-                                                {MONTHS.map(m => (
-                                                  <td key={m} className="zbm-dd-td-val aop">
-                                                    {product.monthlyTargets?.[m]?.aopQty || 0}
-                                                  </td>
-                                                ))}
-                                                <td className="zbm-dd-td-total aop">
-                                                  {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)}
-                                                </td>
-                                              </tr>
-                                            </React.Fragment>
-                                          ))}
-                                        </tbody>
-                                      </table>
+                                            </thead>
+                                            <tbody>
+                                              {rep.products.map(product => (
+                                                <React.Fragment key={product.productId || product.productName}>
+                                                  <tr className="zbm-dd-product-name-row">
+                                                    <td colSpan={MONTHS.length + 3} className="zbm-dd-td-product-name">
+                                                      {product.productName}
+                                                    </td>
+                                                  </tr>
+                                                  <tr className="zbm-dd-ly-row">
+                                                    <td className="zbm-dd-td-type ly">LY</td>
+                                                    <td className="zbm-dd-td-type ly"></td>
+                                                    {MONTHS.map(m => (
+                                                      <td key={m} className="zbm-dd-td-val ly">
+                                                        {product.monthlyTargets?.[m]?.lyQty || 0}
+                                                      </td>
+                                                    ))}
+                                                    <td className="zbm-dd-td-total ly">
+                                                      {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0)}
+                                                    </td>
+                                                  </tr>
+                                                  <tr className="zbm-dd-cy-row">
+                                                    <td className="zbm-dd-td-type cy">CY</td>
+                                                    <td className="zbm-dd-td-type cy"></td>
+                                                    {MONTHS.map(m => (
+                                                      <td key={m} className="zbm-dd-td-val cy">
+                                                        {product.monthlyTargets?.[m]?.cyQty || 0}
+                                                      </td>
+                                                    ))}
+                                                    <td className="zbm-dd-td-total cy">
+                                                      {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.cyQty || 0), 0)}
+                                                    </td>
+                                                  </tr>
+                                                  <tr className="zbm-dd-aop-row">
+                                                    <td className="zbm-dd-td-type aop">AOP</td>
+                                                    <td className="zbm-dd-td-type aop"></td>
+                                                    {MONTHS.map(m => (
+                                                      <td key={m} className="zbm-dd-td-val aop">
+                                                        {product.monthlyTargets?.[m]?.aopQty || 0}
+                                                      </td>
+                                                    ))}
+                                                    <td className="zbm-dd-td-total aop">
+                                                      {MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)}
+                                                    </td>
+                                                  </tr>
+                                                </React.Fragment>
+                                              ))}
+                                            </tbody>
+                                          </table>
+                                        </div>
+                                      )}
                                     </div>
                                   )}
                                 </div>

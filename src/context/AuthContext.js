@@ -24,7 +24,7 @@ const AuthContext = createContext(null);
 const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
 
 // ★ Aligned with apiClient.js — both default to localhost:5000
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1';
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ROLE CONSTANTS

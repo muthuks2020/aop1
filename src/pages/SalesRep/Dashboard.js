@@ -94,15 +94,30 @@ function SalesRepDashboard() {
     setModalConfig({
       isOpen: true,
       title: 'Submit to TBM',
-      message: `Are you sure you want to submit all targets to your TBM for review? TBM will approve or make corrections as needed.`,
+      message: `Are you sure you want to submit all targets to your TBM for review?\nTBM will approve or make corrections as needed.`,
       type: 'warning',
       onConfirm: async () => {
         try {
+          // Step 1: Auto-save all products first
+          const productsToSave = products.map(p => ({
+            id: p.id,
+            monthlyTargets: p.monthlyTargets || {}
+          }));
+          const saveResult = await ApiService.saveAllDrafts(productsToSave);
+          
+          // Check if save actually worked
+          if (!saveResult || !saveResult.success || saveResult.savedCount === 0) {
+            showToast('Warning', 'No products were saved. Please enter target values first.', 'warning');
+            setModalConfig(prev => ({ ...prev, isOpen: false }));
+            return;
+          }
+
+          // Step 2: Now submit all draft products to TBM
           const productIds = products.map(p => p.id);
           await ApiService.submitMultipleProducts(productIds);
-          showToast('Submitted', `All targets submitted to TBM for review`, 'success');
+          showToast('Submitted', 'All targets submitted to TBM for review', 'success');
         } catch (error) {
-          showToast('Error', 'Failed to submit', 'error');
+          showToast('Error', `Failed to submit: ${error.message || 'Unknown error'}`, 'error');
         }
         setModalConfig(prev => ({ ...prev, isOpen: false }));
       }
