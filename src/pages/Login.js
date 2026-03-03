@@ -6,8 +6,10 @@
  * - login() now calls live API via AuthContext (no more mock)
  * - Added "Sign in with Microsoft" SSO button (hidden when disabled)
  * - Added specialist + admin demo credentials
+ * - ★ v5.1: Added initializeMsal() before ssoLoginPopup() to fix
+ *   uninitialized_public_client_application error
  *
- * @version 5.0.0
+ * @version 5.1.0
  */
 
 import React, { useState } from 'react';
@@ -52,8 +54,12 @@ function Login() {
     setError('');
     setLoading(true);
     try {
-      const { ssoLoginPopup, exchangeTokenWithBackend } =
+      const { initializeMsal, ssoLoginPopup, exchangeTokenWithBackend } =
         await import('../services/ssoAuth');
+
+      // ★ Initialize MSAL before any other call
+      await initializeMsal();
+
       const result = await ssoLoginPopup();
       if (!result.success) {
         setError(result.error || 'SSO login cancelled');
