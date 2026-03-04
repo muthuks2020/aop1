@@ -16,6 +16,7 @@
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { getRoleByEmail, ROLE_LABELS as SSO_ROLE_LABELS } from '../config/ssoRoleMap';
 
 const AuthContext = createContext(null);
 
@@ -269,55 +270,45 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ─── SSO Login (Azure AD token exchange) ────────────────────────────
-  const ssoLogin = async (azureIdToken, userData = {}) => {
-    if (USE_MOCK) {
-      const role = 'sales_rep';
-      const mockUser = {
-        id: Date.now(),
-        employeeCode: `SSO-${Math.floor(Math.random() * 900) + 100}`,
-        username: (userData.email || 'ssouser').split('@')[0],
-        name: userData.name || 'SSO User',
-        fullName: userData.name || 'SSO User',
-        email: userData.email,
-        role,
-        roleLabel: ROLE_LABELS[role],
-        territory: 'Unassigned',
-        authProvider: 'azure_ad',
-        isActive: true,
-      };
-      setUser(mockUser);
-      localStorage.setItem('appasamy_user', JSON.stringify(mockUser));
-      localStorage.setItem('appasamy_token', `mock-sso-jwt-${Date.now()}`);
-      return { success: true, user: mockUser };
+  // ─── SSO Login — email-based role mapping (no backend call needed) ──────
+  const ssoLogin = async (_azureIdToken, userData = {}) => {
+    const email = (userData.email || '').trim().toLowerCase();
+
+    if (!email) {
+      return { success: false, error: 'No email returned from Microsoft login.' };
     }
 
-    // Live SSO
-    try {
-      const response = await fetch(`${API_URL}/auth/sso-login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          azure_token: azureIdToken,
-          email: userData.email,
-          name: userData.name,
-          azure_oid: userData.azure_oid,
-        }),
-      });
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.message || 'SSO login failed');
-      }
-      const data = await response.json();
-      localStorage.setItem('appasamy_token', data.token);
-      if (data.refresh_token) localStorage.setItem('appasamy_refresh_token', data.refresh_token);
-      const mappedUser = mapUserFromBackend(data.user);
-      setUser(mappedUser);
-      localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
-      return { success: true, user: mappedUser };
-    } catch (error) {
-      return { success: false, error: error.message };
+    // Look up role from email map in ssoRoleMap.js
+    const roleInfo = getRoleByEmail(email);
+
+    if (!roleInfo) {
+      return {
+        success: false,
+        error: `Access denied. Your account (${email}) has not been set up in the system. Please contact your administrator.`,
+      };
     }
+
+    const ssoUser = {
+      id: Date.now(),
+      employeeCode: `SSO-${email.split('@')[0].toUpperCase()}`,
+      username: email.split('@')[0],
+      name: userData.name || email.split('@')[0],
+      fullName: userData.name || email.split('@')[0],
+      email,
+      role: roleInfo.role,
+      roleLabel: SSO_ROLE_LABELS[roleInfo.role] || roleInfo.role,
+      territory: 'Assigned',
+      authProvider: 'azure_ad',
+      isActive: true,
+    };
+
+    console.log('[SSO] Login success — email:', email, '| role:', ssoUser.role);
+
+    setUser(ssoUser);
+    localStorage.setItem('appasamy_user', JSON.stringify(ssoUser));
+    localStorage.setItem('appasamy_token', `sso-session-${Date.now()}`);
+
+    return { success: true, user: ssoUser };
   };
 
   // ─── Context Value ──────────────────────────────────────────────────
