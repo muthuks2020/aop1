@@ -306,7 +306,7 @@ export function AuthProvider({ children }) {
 
     setUser(ssoUser);
     localStorage.setItem('appasamy_user', JSON.stringify(ssoUser));
-    localStorage.setItem('appasamy_token', `sso-session-${Date.now()}`);
+    localStorage.setItem('appasamy_token', `sso-session-${email}`);
 
     return { success: true, user: ssoUser };
   };
