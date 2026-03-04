@@ -1,16 +1,4 @@
-/**
- * Login.js — v5 Live Backend Auth + SSO Ready
- * Restored original two-panel layout from v4.
- *
- * CHANGES from v4:
- * - login() now calls live API via AuthContext (no more mock)
- * - Added "Sign in with Microsoft" SSO button (hidden when disabled)
- * - Added specialist + admin demo credentials
- * - ★ v5.1: Added initializeMsal() before ssoLoginPopup() to fix
- *   uninitialized_public_client_application error
- *
- * @version 5.1.0
- */
+
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -50,11 +38,12 @@ function Login() {
   };
 
   // ─── SSO Login ──────────────────────────────────────────────────────
+  // ★ v5.2: Single backend call via AuthContext.ssoLogin (fixed double-call bug)
   const handleSSOLogin = async () => {
     setError('');
     setLoading(true);
     try {
-      const { initializeMsal, ssoLoginPopup, exchangeTokenWithBackend } =
+      const { initializeMsal, ssoLoginPopup } =
         await import('../services/ssoAuth');
 
       // ★ Initialize MSAL before any other call
@@ -66,12 +55,14 @@ function Login() {
         setLoading(false);
         return;
       }
-      const backendResult = await exchangeTokenWithBackend(result.idToken, result.userData);
-      if (backendResult.success) {
-        const loginResult = await ssoLogin(result.idToken, result.userData);
-        if (loginResult.success) { navigate(from, { replace: true }); }
-        else { setError(loginResult.error || 'SSO authentication failed'); }
-      } else { setError(backendResult.error || 'Backend authentication failed'); }
+
+      // ★ Go directly to AuthContext.ssoLogin — it calls the backend + does setUser
+      const loginResult = await ssoLogin(result.idToken, result.userData);
+      if (loginResult.success) {
+        navigate(from, { replace: true });
+      } else {
+        setError(loginResult.error || 'SSO authentication failed');
+      }
     } catch (err) {
       console.error('[SSO] Login error:', err);
       setError('SSO login failed. Please try again.');

@@ -28,6 +28,9 @@ typings/
 # Optional npm cache directory
 .npm
 
+
+.env
+.env.*
 # Optional eslint cache
 .eslintcache
 
