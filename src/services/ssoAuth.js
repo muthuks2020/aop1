@@ -1,4 +1,18 @@
-
+/**
+ * ssoAuth.js — SSO Authentication Service
+ * 
+ * Handles:
+ * 1. MSAL popup/redirect login with Azure AD
+ * 2. Exchanging Azure AD token with backend for app JWT
+ * 3. Auto-provisioning logic (backend creates user on first SSO login)
+ * 4. Default admin email detection
+ *
+ * ★ v1.1.0: Fixed USE_MOCK flag — was `!== 'false'` which defaulted to true.
+ *   Now uses `=== 'true'` to match AuthContext.js logic.
+ * 
+ * @version 1.1.0
+ * @author Appasamy Associates - Target Setting PWA
+ */
 
 import { PublicClientApplication } from '@azure/msal-browser';
 import { msalConfig, loginRequest, tokenRequest, DEFAULT_ADMIN_EMAILS } from '../config/msalConfig';
@@ -114,8 +128,9 @@ export function getActiveAccount() {
 }
 
 export async function exchangeTokenWithBackend(idToken, userData) {
-  // ★ FIXED: was `!== 'false'` which defaulted to mock mode when env var was missing
-  // Now matches AuthContext.js — only uses mock when explicitly REACT_APP_USE_MOCK=true
+  // ★ FIXED: was `!== 'false'` which defaulted to TRUE (mock mode) when
+  //   REACT_APP_USE_MOCK was undefined or missing from .env
+  //   Now matches AuthContext.js logic — only mock when explicitly 'true'
   const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
   const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api/v1';
 

@@ -1,4 +1,18 @@
-
+/**
+ * Login.js — v5 Live Backend Auth + SSO Ready
+ * Restored original two-panel layout from v4.
+ *
+ * CHANGES from v4:
+ * - login() now calls live API via AuthContext (no more mock)
+ * - Added "Sign in with Microsoft" SSO button (hidden when disabled)
+ * - Added specialist + admin demo credentials
+ * - ★ v5.1: Added initializeMsal() before ssoLoginPopup() to fix
+ *   uninitialized_public_client_application error
+ * - ★ v5.2: Fixed SSO redirect-to-login bug — removed exchangeTokenWithBackend
+ *   double-call, now goes directly to AuthContext.ssoLogin (single backend call)
+ *
+ * @version 5.2.0
+ */
 
 import React, { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -39,6 +53,15 @@ function Login() {
 
   // ─── SSO Login ──────────────────────────────────────────────────────
   // ★ v5.2: Single backend call via AuthContext.ssoLogin (fixed double-call bug)
+  //
+  // OLD (broken) flow:
+  //   ssoLoginPopup → exchangeTokenWithBackend (call #1) → ssoLogin (call #2)
+  //   exchangeTokenWithBackend was in mock mode (USE_MOCK defaulted true),
+  //   so call #1 returned fake success, call #2 hit real backend and failed.
+  //
+  // NEW (fixed) flow:
+  //   ssoLoginPopup → AuthContext.ssoLogin (single call → setUser → navigate)
+  //
   const handleSSOLogin = async () => {
     setError('');
     setLoading(true);
@@ -56,7 +79,10 @@ function Login() {
         return;
       }
 
-      // ★ Go directly to AuthContext.ssoLogin — it calls the backend + does setUser
+      // ★ Go directly to AuthContext.ssoLogin — it handles:
+      //   1. POST /auth/sso-login to backend
+      //   2. Stores token + user in localStorage
+      //   3. Calls setUser() so ProtectedRoute sees the user
       const loginResult = await ssoLogin(result.idToken, result.userData);
       if (loginResult.success) {
         navigate(from, { replace: true });
