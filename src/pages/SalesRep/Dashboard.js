@@ -62,8 +62,9 @@ function SalesRepDashboard() {
     return () => { window.removeEventListener('online', handleOnline); window.removeEventListener('offline', handleOffline); };
   }, []);
 
+  const toastCounter = React.useRef(0);
   const showToast = useCallback((title, message, type = 'success') => {
-    const id = Date.now();
+    const id = ++toastCounter.current;
     setToasts(prev => [...prev, { id, title, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 5000);
   }, []);
