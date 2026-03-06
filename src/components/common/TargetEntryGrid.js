@@ -104,7 +104,8 @@ function TargetEntryGrid({
       result = result.filter(p =>
         p.name.toLowerCase().includes(term) ||
         p.code.toLowerCase().includes(term) ||
-        (p.subcategory && p.subcategory.toLowerCase().includes(term))
+        (p.subcategory && p.subcategory.toLowerCase().includes(term)) ||
+        (p.subgroup && p.subgroup.toLowerCase().includes(term))
       );
     }
 
@@ -121,6 +122,16 @@ function TargetEntryGrid({
       if (p.subcategory) subs.add(p.subcategory);
     });
     return Array.from(subs);
+  }, [filteredProducts]);
+
+  const getSubgroups = useCallback((categoryId, subcategory) => {
+    const groups = new Set();
+    filteredProducts
+      .filter(p => p.categoryId === categoryId && p.subcategory === subcategory)
+      .forEach(p => {
+        if (p.subgroup) groups.add(p.subgroup);
+      });
+    return Array.from(groups);
   }, [filteredProducts]);
 
   // ==================== CALCULATIONS ====================
@@ -378,7 +389,108 @@ function TargetEntryGrid({
     );
   };
 
-  // ==================== PRODUCT CATEGORY RENDERER ====================
+  // ==================== PRODUCT ROWS RENDERER (shared) ====================
+  const renderProductRows = (product) => {
+    const canEdit = isEditable(product);
+    const productHasValues = hasAnyCYValue(product);
+    const statusInfo = getStatusInfo(product.status);
+
+    return (
+      <div
+        key={product.id}
+        className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'} ${!productHasValues ? 'no-values-entered' : ''}`}
+      >
+        {/* CY Row */}
+        <div className="product-row cy-row">
+          <div className="product-name-cell">
+            <span className="product-name" title={product.name}>
+              {highlightMatch(product.name, searchTerm)}
+            </span>
+            <span className="product-code">{product.code}</span>
+            <span className="year-label">CY</span>
+            <span
+              className="product-status-indicator"
+              title={statusInfo.label}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '2px 8px', borderRadius: '12px', fontSize: '0.625rem',
+                fontWeight: 700, background: statusInfo.bg, color: statusInfo.color,
+                marginLeft: '6px', whiteSpace: 'nowrap', letterSpacing: '0.02em'
+              }}
+            >
+              <i className={`fas ${statusInfo.icon}`} style={{ fontSize: '0.5625rem' }}></i>
+              {product.status === 'approved' ? 'Locked' : product.status === 'submitted' ? 'Pending' : 'Draft'}
+            </span>
+          </div>
+          {MONTHS.map(month => {
+            const monthData = product.monthlyTargets?.[month] || {};
+            const isActive = activeCell?.productId === product.id && activeCell?.month === month;
+            return (
+              <div
+                key={month}
+                className={`month-cell ${canEdit ? 'editable' : 'locked'} ${isActive ? 'active-cell' : ''}`}
+                onClick={() => handleCellClick(product, month, monthData.cyQty)}
+                title={!canEdit ? `${statusInfo.label} — values are locked` : 'Click to edit'}
+              >
+                {isActive ? (
+                  <input ref={inputRef} type="text" className="cell-input" value={editValue}
+                    onChange={handleCellChange} onBlur={handleCellBlur} onKeyDown={handleCellKeyDown} />
+                ) : (
+                  <span className={`cell-value ${canEdit ? 'editable' : ''}`}>
+                    {Utils.formatNumber(monthData.cyQty || 0)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
+          <div className="total-cell cy-total">{Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}</div>
+          <div className="growth-cell">
+            {(() => {
+              const growth = calculateGrowth(product.id);
+              return <span className={`growth-value small ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
+            })()}
+          </div>
+        </div>
+
+        {/* LY Row */}
+        <div className="product-row ly-row">
+          <div className="product-name-cell"><span className="year-label ly">LY</span></div>
+          {MONTHS.map(month => {
+            const monthData = product.monthlyTargets?.[month] || {};
+            return <div key={month} className="month-cell ly-value">{Utils.formatNumber(monthData.lyQty || 0)}</div>;
+          })}
+          <div className="total-cell ly-value">{Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}</div>
+          <div className="growth-cell"></div>
+        </div>
+
+        {/* AOP Row */}
+        <div className="product-row aop-row">
+          <div className="product-name-cell"><span className="year-label aop">AOP</span></div>
+          {MONTHS.map(month => {
+            const monthData = product.monthlyTargets?.[month] || {};
+            return <div key={month} className="month-cell aop-value">{Utils.formatNumber(monthData.aopQty || 0)}</div>;
+          })}
+          <div className="total-cell aop-value">
+            {Utils.formatNumber(MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0))}
+          </div>
+          <div className="growth-cell">
+            {(() => {
+              const aopTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
+              const lyTotal  = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty  || 0), 0);
+              if (lyTotal === 0 && aopTotal === 0) return <span className="growth-value neutral">—</span>;
+              const growth = Utils.calcGrowth(lyTotal, aopTotal);
+              return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
+            })()}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ==================== PRODUCT CATEGORY RENDERER (3 levels) ====================
+  // Level 1: Category  (product_master.product_category via ts_product_categories)
+  // Level 2: Family    (product_master.product_family  → p.subcategory)
+  // Level 3: Subgroup  (product_master.product_subgroup → p.subgroup)
   const renderProductCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
     const subcategories = getSubcategories(category.id);
@@ -387,6 +499,7 @@ function TargetEntryGrid({
 
     return (
       <div key={category.id} className="category-section">
+        {/* ── Level 1: Category header ── */}
         <div className="category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
@@ -413,164 +526,49 @@ function TargetEntryGrid({
           </div>
         </div>
 
+        {/* ── Level 2: Family (subcategory) ── */}
         {isExpanded && subcategories.map(subcategory => {
-          const subcatProducts = filteredProducts.filter(
-            p => p.categoryId === category.id && p.subcategory === subcategory
+          const subgroups = getSubgroups(category.id, subcategory);
+          // products that belong here but have no subgroup — render directly
+          const productsWithoutSubgroup = filteredProducts.filter(
+            p => p.categoryId === category.id && p.subcategory === subcategory && !p.subgroup
           );
 
           return (
             <div key={subcategory} className="subcategory-section">
               <div className="subcategory-header-row">
                 <div className="subcategory-name-cell">
+                  <i className="fas fa-folder subcategory-icon" style={{ marginRight: '6px', fontSize: '0.75rem', color: '#6B7280' }}></i>
                   <span className="subcategory-name">{highlightMatch(subcategory, searchTerm)}</span>
                 </div>
               </div>
 
-              {subcatProducts.map(product => {
-                const canEdit = isEditable(product);
-                const productHasValues = hasAnyCYValue(product);
-                const statusInfo = getStatusInfo(product.status);
+              {/* ── Level 3: Subgroup ── */}
+              {subgroups.map(subgroup => {
+                const subgroupProducts = filteredProducts.filter(
+                  p => p.categoryId === category.id &&
+                       p.subcategory === subcategory &&
+                       p.subgroup === subgroup &&
+                       p.employeeCode === (filteredProducts[0]?.employeeCode || p.employeeCode)
+                );
+
+                if (subgroupProducts.length === 0) return null;
 
                 return (
-                  <div 
-                    key={product.id} 
-                    className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'} ${!productHasValues ? 'no-values-entered' : ''}`}
-                  >
-                    {/* CY Row */}
-                    <div className="product-row cy-row">
-                      <div className="product-name-cell">
-                        <span className="product-name" title={product.name}>
-                          {highlightMatch(product.name, searchTerm)}
-                        </span>
-                        <span className="product-code">{product.code}</span>
-                        <span className="year-label">CY</span>
-
-                        {/* Status indicator */}
-                        <span 
-                          className="product-status-indicator"
-                          title={statusInfo.label}
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '2px 8px',
-                            borderRadius: '12px',
-                            fontSize: '0.625rem',
-                            fontWeight: 700,
-                            background: statusInfo.bg,
-                            color: statusInfo.color,
-                            marginLeft: '6px',
-                            whiteSpace: 'nowrap',
-                            letterSpacing: '0.02em'
-                          }}
-                        >
-                          <i className={`fas ${statusInfo.icon}`} style={{ fontSize: '0.5625rem' }}></i>
-                          {product.status === 'approved' ? 'Locked' : 
-                           product.status === 'submitted' ? 'Pending' : 'Draft'}
-                        </span>
-                      </div>
-
-                      {MONTHS.map(month => {
-                        const monthData = product.monthlyTargets?.[month] || {};
-                        const isActive = activeCell?.productId === product.id && activeCell?.month === month;
-                        
-                        return (
-                          <div 
-                            key={month} 
-                            className={`month-cell ${canEdit ? 'editable' : 'locked'} ${isActive ? 'active-cell' : ''}`}
-                            onClick={() => handleCellClick(product, month, monthData.cyQty)}
-                            title={!canEdit ? `${statusInfo.label} — values are locked` : 'Click to edit'}
-                          >
-                            {isActive ? (
-                              <input
-                                ref={inputRef}
-                                type="text"
-                                className="cell-input"
-                                value={editValue}
-                                onChange={handleCellChange}
-                                onBlur={handleCellBlur}
-                                onKeyDown={handleCellKeyDown}
-                              />
-                            ) : (
-                              <span className={`cell-value ${canEdit ? 'editable' : ''}`}>
-                                {Utils.formatNumber(monthData.cyQty || 0)}
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      <div className="total-cell cy-total">
-                        {Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}
-                      </div>
-
-                      {/* Growth % Cell */}
-                      <div className="growth-cell">
-                        {(() => {
-                          const growth = calculateGrowth(product.id);
-                          return (
-                            <span className={`growth-value small ${growth >= 0 ? 'positive' : 'negative'}`}>
-                              {Utils.formatGrowth(growth)}
-                            </span>
-                          );
-                        })()}
+                  <div key={subgroup} className="subgroup-section">
+                    <div className="subgroup-header-row">
+                      <div className="subgroup-name-cell">
+                        <i className="fas fa-layer-group subgroup-icon" style={{ marginRight: '6px', fontSize: '0.6875rem', color: '#9CA3AF' }}></i>
+                        <span className="subgroup-name">{highlightMatch(subgroup, searchTerm)}</span>
                       </div>
                     </div>
-
-                    {/* LY Row */}
-                    <div className="product-row ly-row">
-                      <div className="product-name-cell">
-                        <span className="year-label ly">LY</span>
-                      </div>
-                      {MONTHS.map(month => {
-                        const monthData = product.monthlyTargets?.[month] || {};
-                        return (
-                          <div key={month} className="month-cell ly-value">
-                            {Utils.formatNumber(monthData.lyQty || 0)}
-                          </div>
-                        );
-                      })}
-                      <div className="total-cell ly-value">
-                        {Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}
-                      </div>
-                      <div className="growth-cell"></div>
-                    </div>
-
-                    {/* AOP Row — Read Only (Annual Operating Plan) */}
-                    <div className="product-row aop-row">
-                      <div className="product-name-cell">
-                        <span className="year-label aop">AOP</span>
-                      </div>
-                      {MONTHS.map(month => {
-                        const monthData = product.monthlyTargets?.[month] || {};
-                        return (
-                          <div key={month} className="month-cell aop-value">
-                            {Utils.formatNumber(monthData.aopQty || 0)}
-                          </div>
-                        );
-                      })}
-                      <div className="total-cell aop-value">
-                        {Utils.formatNumber(
-                          MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0)
-                        )}
-                      </div>
-                      <div className="growth-cell">
-                        {(() => {
-                          const aopTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
-                          const lyTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty || 0), 0);
-                          if (lyTotal === 0 && aopTotal === 0) return <span className="growth-value neutral">—</span>;
-                          const growth = Utils.calcGrowth(lyTotal, aopTotal);
-                          return (
-                            <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>
-                              {Utils.formatGrowth(growth)}
-                            </span>
-                          );
-                        })()}
-                      </div>
-                    </div>
+                    {subgroupProducts.map(product => renderProductRows(product))}
                   </div>
                 );
               })}
+
+              {/* Products with no subgroup rendered directly under family */}
+              {productsWithoutSubgroup.map(product => renderProductRows(product))}
             </div>
           );
         })}

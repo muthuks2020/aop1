@@ -32,6 +32,7 @@ export const normalizeProduct = (p) => {
     name:          p.name          || p.productName    || p.product_name   || '',
     code:          p.code          || p.productCode    || p.product_code   || '',
     subcategory:   p.subcategory   || p.productFamily  || p.product_family || '',
+    subgroup:      p.subgroup      || p.productSubgroup || p.product_subgroup || '',
     listPrice:     p.listPrice     ?? p.unitCost       ?? p.unit_cost      ?? 0,
     categoryId:    p.categoryId    || p.category_id    || p.productCategory || '',
     unit:          p.unit          || '',

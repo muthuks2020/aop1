@@ -1,115 +1,43 @@
 /**
- * Login.js — v5 Live Backend Auth + SSO Ready
- * Restored original two-panel layout from v4.
+ * Login.js — Email + Password login
  *
- * CHANGES from v4:
- * - login() now calls live API via AuthContext (no more mock)
- * - Added "Sign in with Microsoft" SSO button (hidden when disabled)
- * - Added specialist + admin demo credentials
- * - ★ v5.1: Added initializeMsal() before ssoLoginPopup() to fix
- *   uninitialized_public_client_application error
- * - ★ v5.2: Fixed SSO redirect-to-login bug — removed exchangeTokenWithBackend
- *   double-call, now goes directly to AuthContext.ssoLogin (single backend call)
- *
- * @version 5.2.0
+ * @version 6.0.0 - Email-based login, forgot password link, no SSO
  */
 
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import '../styles/login.css';
 
-const SSO_ENABLED = process.env.REACT_APP_SSO_ENABLED === 'true';
-
 function Login() {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [error, setError]               = useState('');
+  const [loading, setLoading]           = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  const { login, ssoLogin } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const from = location.state?.from?.pathname || '/dashboard';
+  const { login }  = useAuth();
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const from       = location.state?.from?.pathname || '/dashboard';
 
-  // ─── Local Login ────────────────────────────────────────────────────
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
-    if (!username || !password) {
-      setError('Please enter both username and password');
+    if (!email || !password) {
+      setError('Please enter both email and password');
       setLoading(false);
       return;
     }
     try {
-      const result = await login(username, password);
+      const result = await login(email, password);
       if (result.success) { navigate(from, { replace: true }); }
-      else { setError(result.error || 'Login failed'); }
-    } catch (err) { setError('An error occurred. Please try again.'); }
+      else { setError(result.error || 'Login failed. Please check your credentials.'); }
+    } catch { setError('An error occurred. Please try again.'); }
     finally { setLoading(false); }
   };
 
-  // ─── SSO Login ──────────────────────────────────────────────────────
-  // ★ v5.2: Single backend call via AuthContext.ssoLogin (fixed double-call bug)
-  //
-  // OLD (broken) flow:
-  //   ssoLoginPopup → exchangeTokenWithBackend (call #1) → ssoLogin (call #2)
-  //   exchangeTokenWithBackend was in mock mode (USE_MOCK defaulted true),
-  //   so call #1 returned fake success, call #2 hit real backend and failed.
-  //
-  // NEW (fixed) flow:
-  //   ssoLoginPopup → AuthContext.ssoLogin (single call → setUser → navigate)
-  //
-  const handleSSOLogin = async () => {
-    setError('');
-    setLoading(true);
-    try {
-      const { initializeMsal, ssoLoginPopup } =
-        await import('../services/ssoAuth');
-
-      // ★ Initialize MSAL before any other call
-      await initializeMsal();
-
-      const result = await ssoLoginPopup();
-      if (!result.success) {
-        setError(result.error || 'SSO login cancelled');
-        setLoading(false);
-        return;
-      }
-
-      // ★ Go directly to AuthContext.ssoLogin — it handles:
-      //   1. POST /auth/sso-login to backend
-      //   2. Stores token + user in localStorage
-      //   3. Calls setUser() so ProtectedRoute sees the user
-      const loginResult = await ssoLogin(result.idToken, result.userData);
-      if (loginResult.success) {
-        navigate(from, { replace: true });
-      } else {
-        setError(loginResult.error || 'SSO authentication failed');
-      }
-    } catch (err) {
-      console.error('[SSO] Login error:', err);
-      setError('SSO login failed. Please try again.');
-    } finally { setLoading(false); }
-  };
-
-  // ─── Demo Credentials ──────────────────────────────────────────────
-  const demoCredentials = [
-    { username: 'salesrep', role: 'Sales Representative', name: 'Vasanthakumar C' },
-    { username: 'tbm', role: 'Territory Business Manager', name: 'Rajesh Kumar' },
-    { username: 'abm', role: 'Area Business Manager', name: 'Priya Sharma' },
-    { username: 'zbm', role: 'Zonal Business Manager', name: 'Amit Singh' },
-    { username: 'saleshead', role: 'Sales Head', name: 'Dr. Srinivasan' },
-    { username: 'specialist', role: 'Specialist', name: 'Dr. Ananya Rao' },
-    { username: 'admin', role: 'System Administrator', name: 'System Admin' },
-  ];
-
-  const handleDemoLogin = (demoUsername) => {
-    setUsername(demoUsername);
-    setPassword('demo123');
-  };
 
   return (
     <div className="login-page">
@@ -171,17 +99,18 @@ function Login() {
 
             <form onSubmit={handleSubmit} className="login-form">
               <div className="form-group">
-                <label htmlFor="username">Username</label>
+                <label htmlFor="email">Email Address</label>
                 <div className="input-wrapper">
-                  <i className="fas fa-user"></i>
+                  <i className="fas fa-envelope"></i>
                   <input
-                    type="text"
-                    id="username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    placeholder="Enter your username"
+                    type="email"
+                    id="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="Enter your email address"
                     disabled={loading}
-                    autoComplete="username"
+                    autoComplete="email"
+                    autoFocus
                   />
                 </div>
               </div>
@@ -209,6 +138,11 @@ function Login() {
                 </div>
               </div>
 
+              {/* Forgot Password link */}
+              <div className="forgot-password-link">
+                <Link to="/forgot-password">Forgot Password?</Link>
+              </div>
+
               <button type="submit" className="login-btn" disabled={loading}>
                 {loading ? (
                   <><span className="btn-spinner"></span>Signing in...</>
@@ -216,62 +150,8 @@ function Login() {
                   <><span>Sign In</span><i className="fas fa-arrow-right"></i></>
                 )}
               </button>
-
-              {/* SSO Button — shown only when enabled */}
-              {SSO_ENABLED && (
-                <>
-                  <div className="login-divider">
-                    <span></span>
-                    <span className="login-divider-text">or</span>
-                    <span></span>
-                  </div>
-                  <button
-                    type="button"
-                    className="login-btn sso-btn"
-                    onClick={handleSSOLogin}
-                    disabled={loading}
-                  >
-                    <svg width="18" height="18" viewBox="0 0 21 21" xmlns="http://www.w3.org/2000/svg">
-                      <rect x="1" y="1" width="9" height="9" fill="#f25022" />
-                      <rect x="11" y="1" width="9" height="9" fill="#7fba00" />
-                      <rect x="1" y="11" width="9" height="9" fill="#00a4ef" />
-                      <rect x="11" y="11" width="9" height="9" fill="#ffb900" />
-                    </svg>
-                    Sign in with Microsoft
-                  </button>
-                </>
-              )}
             </form>
 
-            {/* Demo Credentials */}
-            <div className="demo-section">
-              <div className="demo-header">
-                <span className="demo-divider"></span>
-                <span className="demo-text">Demo Accounts</span>
-                <span className="demo-divider"></span>
-              </div>
-              <div className="demo-credentials">
-                {demoCredentials.map((cred) => (
-                  <button
-                    key={cred.username}
-                    type="button"
-                    className="demo-btn"
-                    onClick={() => handleDemoLogin(cred.username)}
-                    disabled={loading}
-                  >
-                    <i className="fas fa-user-circle"></i>
-                    <div className="demo-info">
-                      <span className="demo-role">{cred.role}</span>
-                      <span className="demo-username">{cred.name}</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
-              <p className="demo-note">
-                <i className="fas fa-info-circle"></i>
-                Password for all demo accounts: <code>demo123</code>
-              </p>
-            </div>
           </div>
         </div>
       </div>

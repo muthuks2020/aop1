@@ -1,30 +1,13 @@
 /**
- * AuthContext — v5 Configurable Auth (Mock + Live API + SSO)
+ * AuthContext.js — Email + Password Auth
  *
- * MODE SWITCH (in .env):
- *   REACT_APP_USE_MOCK=true   → Mock login with DUMMY_USERS
- *   REACT_APP_USE_MOCK=false  → Live backend API at REACT_APP_API_URL (DEFAULT)
- *   REACT_APP_SSO_ENABLED=true → Show SSO button on login page
- *
- * ★ v5.2.0 CHANGES:
- *   - USE_MOCK = false (backend is live)
- *   - API_URL aligned with apiClient.js default (localhost:5000)
- *   - DUMMY_USERS retained for mock testing but inactive by default
- *   - Added role debug logging during session restore
- *
- * @version 5.2.0
+ * @version 6.0.0 - Removed mock mode, SSO, and refresh token logic
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { getRoleByEmail, ROLE_LABELS as SSO_ROLE_LABELS } from '../config/ssoRoleMap';
 
 const AuthContext = createContext(null);
 
-// ★ SET TO false — backend is live at port 5000
-// Toggle via env: REACT_APP_USE_MOCK=true to re-enable mock mode
-const USE_MOCK = process.env.REACT_APP_USE_MOCK === 'true';
-
-// ★ Aligned with apiClient.js — both default to localhost:5000
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -64,21 +47,7 @@ export const ROLE_LABELS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MOCK USERS — used ONLY when USE_MOCK = true (REACT_APP_USE_MOCK=true)
-// ═══════════════════════════════════════════════════════════════════════════
-
-const DUMMY_USERS = [
-  { id: 1, username: 'salesrep',   password: 'demo123', name: 'Vasanthakumar C',  role: 'sales_rep',   territory: 'Central Delhi',    employeeCode: 'SR-001',  zoneCode: 'Z-NORTH', zoneName: 'North Zone',  areaCode: 'A-DEL', areaName: 'Delhi NCR',    territoryCode: 'T-CDEL', territoryName: 'Central Delhi',  reportsTo: 'TBM-001' },
-  { id: 2, username: 'tbm',        password: 'demo123', name: 'Rajesh Kumar',     role: 'tbm',         territory: 'North Zone',       employeeCode: 'TBM-001', zoneCode: 'Z-NORTH', zoneName: 'North Zone',  areaCode: 'A-DEL', areaName: 'Delhi NCR',    territoryCode: 'T-NZ',   territoryName: 'North Zone',     reportsTo: 'ABM-001' },
-  { id: 3, username: 'abm',        password: 'demo123', name: 'Priya Sharma',     role: 'abm',         territory: 'Delhi NCR',        employeeCode: 'ABM-001', zoneCode: 'Z-NORTH', zoneName: 'North Zone',  areaCode: 'A-DEL', areaName: 'Delhi NCR',    territoryCode: null,     territoryName: null,             reportsTo: 'ZBM-001' },
-  { id: 4, username: 'zbm',        password: 'demo123', name: 'Amit Singh',       role: 'zbm',         territory: 'Northern Region',  employeeCode: 'ZBM-001', zoneCode: 'Z-NORTH', zoneName: 'North Zone',  areaCode: null,    areaName: null,           territoryCode: null,     territoryName: null,             reportsTo: 'SH-001'  },
-  { id: 5, username: 'saleshead',  password: 'demo123', name: 'Dr. Srinivasan',   role: 'sales_head',  territory: 'All India',        employeeCode: 'SH-001',  zoneCode: null,      zoneName: null,          areaCode: null,    areaName: null,           territoryCode: null,     territoryName: null,             reportsTo: null       },
-  { id: 6, username: 'admin',      password: 'demo123', name: 'System Admin',     role: 'admin',       territory: 'System',           employeeCode: 'ADM-001', zoneCode: null,      zoneName: null,          areaCode: null,    areaName: null,           territoryCode: null,     territoryName: null,             reportsTo: null       },
-  { id: 7, username: 'specialist', password: 'demo123', name: 'Dr. Ananya Rao',   role: 'specialist',  territory: 'Delhi NCR',        employeeCode: 'SP-001',  zoneCode: 'Z-NORTH', zoneName: 'North Zone',  areaCode: 'A-DEL', areaName: 'Delhi NCR',    territoryCode: 'T-CDEL', territoryName: 'Central Delhi',  reportsTo: 'ABM-001' },
-];
-
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER: Map backend user shape → frontend user with backward compat
+// HELPER: Map backend user → frontend shape
 // ═══════════════════════════════════════════════════════════════════════════
 
 const mapUserFromBackend = (backendUser) => {
@@ -117,41 +86,19 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ─── Refresh Session (live only) ────────────────────────────────────
-  const refreshSession = useCallback(async () => {
-    if (USE_MOCK) return false;
-    const refreshToken = localStorage.getItem('appasamy_refresh_token');
-    if (!refreshToken) return false;
-    try {
-      const response = await fetch(`${API_URL}/auth/refresh`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ refresh_token: refreshToken }),
-      });
-      if (!response.ok) return false;
-      const data = await response.json();
-      localStorage.setItem('appasamy_token', data.token);
-      if (data.refresh_token) localStorage.setItem('appasamy_refresh_token', data.refresh_token);
-      return true;
-    } catch { return false; }
-  }, []);
-
   // ─── Logout ─────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
-    if (!USE_MOCK) {
-      const token = localStorage.getItem('appasamy_token');
-      try {
-        await fetch(`${API_URL}/auth/logout`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token && { Authorization: `Bearer ${token}` }),
-          },
-        });
-      } catch { /* ignore */ }
-    }
+    const token = localStorage.getItem('appasamy_token');
+    try {
+      await fetch(`${API_URL}/auth/logout`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token && { Authorization: `Bearer ${token}` }),
+        },
+      });
+    } catch { /* ignore */ }
     localStorage.removeItem('appasamy_token');
-    localStorage.removeItem('appasamy_refresh_token');
     localStorage.removeItem('appasamy_user');
     setUser(null);
   }, []);
@@ -159,44 +106,23 @@ export function AuthProvider({ children }) {
   // ─── Session Restore on Mount ───────────────────────────────────────
   useEffect(() => {
     const restoreSession = async () => {
+      const token     = localStorage.getItem('appasamy_token');
       const savedUser = localStorage.getItem('appasamy_user');
 
-      if (USE_MOCK) {
-        // Mock mode: just restore from localStorage
-        if (savedUser) {
-          try { setUser(JSON.parse(savedUser)); } catch { localStorage.removeItem('appasamy_user'); }
-        }
-        setLoading(false);
-        return;
-      }
-
-      // Live mode: verify token with backend
-      const token = localStorage.getItem('appasamy_token');
       if (token && savedUser) {
         try {
           const response = await fetch(`${API_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.ok) {
-            const data = await response.json();
+            const data       = await response.json();
             const mappedUser = mapUserFromBackend(data.user || data);
             console.log('[Auth] Session restored — role:', mappedUser?.role);
             setUser(mappedUser);
             localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
           } else {
-            const refreshed = await refreshSession();
-            if (refreshed) {
-              const retryResp = await fetch(`${API_URL}/auth/me`, {
-                headers: { Authorization: `Bearer ${localStorage.getItem('appasamy_token')}` },
-              });
-              if (retryResp.ok) {
-                const retryData = await retryResp.json();
-                const mappedUser = mapUserFromBackend(retryData.user || retryData);
-                console.log('[Auth] Session refreshed — role:', mappedUser?.role);
-                setUser(mappedUser);
-                localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
-              } else { logout(); }
-            } else { logout(); }
+            // Token invalid or expired — force re-login
+            logout();
           }
         } catch {
           // Network error — use cached user for offline support
@@ -210,119 +136,37 @@ export function AuthProvider({ children }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ─── Login ──────────────────────────────────────────────────────────
-  const login = async (username, password) => {
-    // ── MOCK MODE ──
-    if (USE_MOCK) {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      const foundUser = DUMMY_USERS.find(
-        (u) => u.username === username && u.password === password
-      );
-      if (foundUser) {
-        const userData = {
-          id: foundUser.id,
-          employeeCode: foundUser.employeeCode,
-          username: foundUser.username,
-          name: foundUser.name,
-          fullName: foundUser.name,
-          role: foundUser.role,
-          roleLabel: ROLE_LABELS[foundUser.role],
-          territory: foundUser.territory,
-          territoryName: foundUser.territory,
-          territoryCode: foundUser.territoryCode,
-          zoneCode: foundUser.zoneCode,
-          zoneName: foundUser.zoneName,
-          areaCode: foundUser.areaCode,
-          areaName: foundUser.areaName,
-          reportsTo: foundUser.reportsTo,
-          authProvider: 'local',
-          isActive: true,
-        };
-        setUser(userData);
-        localStorage.setItem('appasamy_user', JSON.stringify(userData));
-        localStorage.setItem('appasamy_token', `mock-jwt-${Date.now()}`);
-        return { success: true, user: userData };
-      }
-      return { success: false, error: 'Invalid username or password' };
-    }
 
-    // ── LIVE MODE ──
+  // ─── Login (email + password) ────────────────────────────────────────
+  const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       });
       if (!response.ok) {
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || 'Login failed');
       }
-      const data = await response.json();
-      localStorage.setItem('appasamy_token', data.token);
-      if (data.refresh_token) localStorage.setItem('appasamy_refresh_token', data.refresh_token);
+      const data       = await response.json();
       const mappedUser = mapUserFromBackend(data.user);
-      console.log('[Auth] Login success — role:', mappedUser?.role);
+      localStorage.setItem('appasamy_token', data.token);
+      localStorage.setItem('appasamy_user',  JSON.stringify(mappedUser));
       setUser(mappedUser);
-      localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
+      console.log('[Auth] Login success — role:', mappedUser?.role);
       return { success: true, user: mappedUser };
     } catch (error) {
       return { success: false, error: error.message };
     }
   };
 
-  // ─── SSO Login — email-based role mapping (no backend call needed) ──────
-  const ssoLogin = async (_azureIdToken, userData = {}) => {
-    const email = (userData.email || '').trim().toLowerCase();
-
-    if (!email) {
-      return { success: false, error: 'No email returned from Microsoft login.' };
-    }
-
-    // Look up role from email map in ssoRoleMap.js
-    const roleInfo = getRoleByEmail(email);
-
-    if (!roleInfo) {
-      return {
-        success: false,
-        error: `Access denied. Your account (${email}) has not been set up in the system. Please contact your administrator.`,
-      };
-    }
-
-    const ssoUser = {
-      id: Date.now(),
-      employeeCode: `SSO-${email.split('@')[0].toUpperCase()}`,
-      username: email.split('@')[0],
-      name: userData.name || email.split('@')[0],
-      fullName: userData.name || email.split('@')[0],
-      email,
-      role: roleInfo.role,
-      roleLabel: SSO_ROLE_LABELS[roleInfo.role] || roleInfo.role,
-      territory: 'Assigned',
-      authProvider: 'azure_ad',
-      isActive: true,
-    };
-
-    console.log('[SSO] Login success — email:', email, '| role:', ssoUser.role);
-
-    setUser(ssoUser);
-    localStorage.setItem('appasamy_user', JSON.stringify(ssoUser));
-    localStorage.setItem('appasamy_token', `sso-session-${email}`);
-
-    return { success: true, user: ssoUser };
-  };
-
   // ─── Context Value ──────────────────────────────────────────────────
-  const value = {
-    user,
-    login,
-    ssoLogin,
-    logout,
-    refreshSession,
-    loading,
-    isAuthenticated: !!user,
-  };
-
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
