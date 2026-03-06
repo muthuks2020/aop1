@@ -18,7 +18,7 @@
  * - Growth percentage (YoY %) shown per product row
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 4.1.0 - No reject flow, status locking, visibility clarity, growth %
+ * @version 4.2.0 - LY data filter toggle + dim products with no LY history
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -55,6 +55,7 @@ function TargetEntryGrid({
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
   const [showOnlyEntered, setShowOnlyEntered] = useState(false);
+  const [showOnlyLYData, setShowOnlyLYData] = useState(false);
   
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -73,6 +74,15 @@ function TargetEntryGrid({
     return MONTHS.some(month => {
       const monthData = product.monthlyTargets[month];
       return monthData && (monthData.cyQty > 0 || monthData.cyRev > 0);
+    });
+  }, []);
+
+  // ==================== HELPER: Check if product has any LY data ====================
+  const hasAnyLYValue = useCallback((product) => {
+    if (!product.monthlyTargets) return false;
+    return MONTHS.some(month => {
+      const monthData = product.monthlyTargets[month];
+      return monthData && (monthData.lyQty > 0 || monthData.lyRev > 0);
     });
   }, []);
 
@@ -114,6 +124,10 @@ function TargetEntryGrid({
       result = result.filter(p => hasAnyCYValue(p));
     }
 
+    if (showOnlyLYData) {
+      result = result.filter(p => hasAnyLYValue(p));
+    }
+
     // Deduplicate — keep first occurrence of each name within same category+subcategory
     const seen = new Set();
     result = result.filter(p => {
@@ -124,7 +138,7 @@ function TargetEntryGrid({
     });
 
     return result;
-  }, [products, searchTerm, showOnlyEntered, hasAnyCYValue]);
+  }, [products, searchTerm, showOnlyEntered, showOnlyLYData, hasAnyCYValue, hasAnyLYValue]);
 
   const getSubcategories = useCallback((categoryId) => {
     const subs = new Set();
@@ -411,12 +425,13 @@ function TargetEntryGrid({
   const renderProductRows = (product) => {
     const canEdit = isEditable(product);
     const productHasValues = hasAnyCYValue(product);
+    const productHasLYData = hasAnyLYValue(product);
     const statusInfo = getStatusInfo(product.status);
 
     return (
       <div
         key={product.id}
-        className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'} ${!productHasValues ? 'no-values-entered' : ''}`}
+        className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'} ${!productHasValues ? 'no-values-entered' : ''} ${!productHasLYData ? 'no-ly-data' : ''}`}
       >
         {/* CY Row */}
         <div className="product-row cy-row">
@@ -424,6 +439,16 @@ function TargetEntryGrid({
             <span className="product-name" title={product.name}>
               {highlightMatch(product.name, searchTerm)}
             </span>
+            {productHasLYData && (
+              <span
+                title="Last year data available"
+                style={{
+                  width: 7, height: 7, borderRadius: '50%',
+                  background: '#00A19B', display: 'inline-block',
+                  marginLeft: 5, flexShrink: 0, verticalAlign: 'middle'
+                }}
+              />
+            )}
             <span className="year-label">CY</span>
             <span
               className="product-status-indicator"
@@ -573,9 +598,28 @@ function TargetEntryGrid({
                   <i className="fas fa-folder subcategory-icon"
                     style={{ marginRight: '6px', fontSize: '0.75rem', color: '#6B7280' }}></i>
                   <span className="subcategory-name">{highlightMatch(subcategory, searchTerm)}</span>
-                  <span style={{
-                    marginLeft: '8px', fontSize: '0.625rem', color: '#9CA3AF', fontWeight: 500
-                  }}>({subcatProducts.length} products)</span>
+                  {(() => {
+                    const lyCount = subcatProducts.filter(p => hasAnyLYValue(p)).length;
+                    return (
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', marginLeft: '6px' }}>
+                        <span style={{ fontSize: '0.6rem', color: '#9CA3AF', fontWeight: 500 }}>
+                          {subcatProducts.length} products
+                        </span>
+                        {lyCount > 0 && (
+                          <span style={{
+                            fontSize: '0.575rem', fontWeight: 600,
+                            background: '#E6FAF9', color: '#00A19B',
+                            border: '1px solid #b2e8e6', borderRadius: '10px',
+                            padding: '1px 6px', whiteSpace: 'nowrap',
+                            display: 'inline-flex', alignItems: 'center', gap: '3px'
+                          }}>
+                            <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#00A19B', display: 'inline-block' }}></span>
+                            {lyCount} LY
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })()}
                 </div>
                 {MONTHS.map(m => (
                   <div key={m} className="month-cell" style={{ fontSize: '0.6875rem', color: '#6B7280' }}>
@@ -689,8 +733,13 @@ function TargetEntryGrid({
       </div>
 
       {/* Search & Filter Bar */}
-      <div className="grid-search-bar">
-        <div className="search-input-wrapper">
+      <div className="grid-search-bar" style={{
+        display: 'flex', flexWrap: 'wrap', gap: '8px',
+        padding: '0.625rem 1rem', borderBottom: '1px solid #E5E7EB',
+        background: '#FAFAFA', alignItems: 'center'
+      }}>
+        {/* Search input — full width on mobile */}
+        <div className="search-input-wrapper" style={{ flex: '1 1 180px', minWidth: 0 }}>
           <i className="fas fa-search search-icon"></i>
           <input
             ref={searchInputRef}
@@ -708,44 +757,71 @@ function TargetEntryGrid({
           )}
         </div>
 
-        {/* Toggle: show only entered products */}
-        <label className="filter-toggle" style={{
-          display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer',
-          fontSize: '0.8125rem', color: '#4B5563', fontWeight: 500,
-          padding: '0.375rem 0.75rem', borderRadius: '8px',
-          background: showOnlyEntered ? '#E6FAF9' : '#F3F4F6',
-          border: showOnlyEntered ? '1px solid #00A19B' : '1px solid #E5E7EB',
-          transition: 'all 0.2s ease'
-        }}>
-          <input 
-            type="checkbox" 
-            checked={showOnlyEntered} 
-            onChange={(e) => setShowOnlyEntered(e.target.checked)}
-            style={{ accentColor: '#00A19B' }}
-          />
-          <i className={`fas ${showOnlyEntered ? 'fa-eye' : 'fa-eye-slash'}`} style={{ fontSize: '0.75rem', color: showOnlyEntered ? '#00A19B' : '#9CA3AF' }}></i>
-          Show only entered products
-        </label>
+        {/* Filter toggles row */}
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+          {/* Toggle: show only entered products */}
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+            fontSize: '0.75rem', color: showOnlyEntered ? '#00A19B' : '#6B7280', fontWeight: 500,
+            padding: '0.3rem 0.6rem', borderRadius: '20px',
+            background: showOnlyEntered ? '#E6FAF9' : '#F3F4F6',
+            border: `1px solid ${showOnlyEntered ? '#00A19B' : '#E5E7EB'}`,
+            transition: 'all 0.2s ease', userSelect: 'none'
+          }}>
+            <input
+              type="checkbox"
+              checked={showOnlyEntered}
+              onChange={(e) => setShowOnlyEntered(e.target.checked)}
+              style={{ accentColor: '#00A19B', width: 13, height: 13 }}
+            />
+            <i className={`fas ${showOnlyEntered ? 'fa-eye' : 'fa-eye-slash'}`} style={{ fontSize: '0.7rem' }}></i>
+            Entered only
+          </label>
 
-        {/* Legend */}
+          {/* Toggle: show only products with LY data */}
+          <label style={{
+            display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+            fontSize: '0.75rem', color: showOnlyLYData ? '#00A19B' : '#6B7280', fontWeight: 500,
+            padding: '0.3rem 0.6rem', borderRadius: '20px',
+            background: showOnlyLYData ? '#E6FAF9' : '#F3F4F6',
+            border: `1px solid ${showOnlyLYData ? '#00A19B' : '#E5E7EB'}`,
+            transition: 'all 0.2s ease', userSelect: 'none'
+          }}>
+            <input
+              type="checkbox"
+              checked={showOnlyLYData}
+              onChange={(e) => setShowOnlyLYData(e.target.checked)}
+              style={{ accentColor: '#00A19B', width: 13, height: 13 }}
+            />
+            <span style={{
+              width: 7, height: 7, borderRadius: '50%',
+              background: showOnlyLYData ? '#00A19B' : '#D1D5DB',
+              display: 'inline-block', flexShrink: 0
+            }}></span>
+            LY data only
+          </label>
+        </div>
+
+        {/* Legend — hidden on small screens via CSS */}
         <div className="grid-legend" style={{
-          display: 'flex', gap: '12px', alignItems: 'center', fontSize: '0.6875rem', color: '#6B7280', marginLeft: 'auto'
+          display: 'flex', gap: '10px', alignItems: 'center',
+          fontSize: '0.625rem', color: '#9CA3AF', marginLeft: 'auto', flexWrap: 'wrap'
         }}>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, border: '2px solid #00A19B', background: 'rgba(0,161,155,0.06)', display: 'inline-block' }}></span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, border: '2px solid #00A19B', background: 'rgba(0,161,155,0.06)', display: 'inline-block' }}></span>
             Editable
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#D1FAE5', border: '1px solid #059669', display: 'inline-block' }}></span>
-            Approved (Locked)
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#D1FAE5', border: '1px solid #059669', display: 'inline-block' }}></span>
+            Approved
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: '#FEF3C7', border: '1px solid #D97706', display: 'inline-block' }}></span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#FEF3C7', border: '1px solid #D97706', display: 'inline-block' }}></span>
             Pending
           </span>
-          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <span style={{ width: 10, height: 10, borderRadius: 2, background: 'rgba(0,0,0,0.04)', border: '1px dashed #CBD5E1', display: 'inline-block' }}></span>
-            Not Entered
+          <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            <span style={{ width: 7, height: 7, borderRadius: '50%', background: '#00A19B', display: 'inline-block' }}></span>
+            Has LY
           </span>
         </div>
       </div>
@@ -779,6 +855,27 @@ function TargetEntryGrid({
           </div>
         )}
       </div>
+
+      {/* CSS for no-ly-data dimming + PWA responsive */}
+      <style>{`
+        .product-rows.no-ly-data {
+          opacity: 0.42;
+          filter: grayscale(25%);
+          transition: opacity 0.2s ease, filter 0.2s ease;
+        }
+        .product-rows.no-ly-data:hover {
+          opacity: 0.88;
+          filter: none;
+        }
+        @media (max-width: 600px) {
+          .grid-legend { display: none !important; }
+          .grid-search-bar { padding: 0.5rem !important; }
+        }
+        @media (max-width: 400px) {
+          .grid-header { flex-direction: column; gap: 8px; }
+          .grid-actions { width: 100%; justify-content: flex-end; }
+        }
+      `}</style>
 
       {/* Footer Info */}
       <div className="grid-footer-info" style={{
