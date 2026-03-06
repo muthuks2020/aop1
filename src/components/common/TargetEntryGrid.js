@@ -50,6 +50,7 @@ function TargetEntryGrid({
   const [activeCell, setActiveCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
+  const [expandedSubcategories, setExpandedSubcategories] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
@@ -112,6 +113,15 @@ function TargetEntryGrid({
     if (showOnlyEntered) {
       result = result.filter(p => hasAnyCYValue(p));
     }
+
+    // Deduplicate — keep first occurrence of each name within same category+subcategory
+    const seen = new Set();
+    result = result.filter(p => {
+      const key = `${p.categoryId}__${p.subcategory}__${p.name.trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 
     return result;
   }, [products, searchTerm, showOnlyEntered, hasAnyCYValue]);
@@ -200,6 +210,14 @@ function TargetEntryGrid({
     setExpandedCategories(prev => {
       const next = new Set(prev);
       next.has(categoryId) ? next.delete(categoryId) : next.add(categoryId);
+      return next;
+    });
+  };
+
+  const toggleSubcategory = (key) => {
+    setExpandedSubcategories(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
@@ -406,7 +424,6 @@ function TargetEntryGrid({
             <span className="product-name" title={product.name}>
               {highlightMatch(product.name, searchTerm)}
             </span>
-            <span className="product-code">{product.code}</span>
             <span className="year-label">CY</span>
             <span
               className="product-status-indicator"
@@ -529,46 +546,58 @@ function TargetEntryGrid({
         {/* ── Level 2: Family (subcategory) ── */}
         {isExpanded && subcategories.map(subcategory => {
           const subgroups = getSubgroups(category.id, subcategory);
-          // products that belong here but have no subgroup — render directly
-          const productsWithoutSubgroup = filteredProducts.filter(
-            p => p.categoryId === category.id && p.subcategory === subcategory && !p.subgroup
+          const subcatKey = `${category.id}__${subcategory}`;
+          const isSubExpanded = expandedSubcategories.has(subcatKey);
+          const subcatProducts = filteredProducts.filter(
+            p => p.categoryId === category.id && p.subcategory === subcategory
           );
+          const productsWithoutSubgroup = subcatProducts.filter(p => !p.subgroup);
+
+          // Calculate subcategory totals for header
+          const subcatCYTotal = MONTHS.reduce((sum, m) =>
+            sum + subcatProducts.reduce((s, p) => s + (p.monthlyTargets?.[m]?.cyQty || 0), 0), 0);
+          const subcatLYTotal = MONTHS.reduce((sum, m) =>
+            sum + subcatProducts.reduce((s, p) => s + (p.monthlyTargets?.[m]?.lyQty || 0), 0), 0);
+          const subcatGrowth = Utils.calcGrowth(subcatLYTotal, subcatCYTotal);
 
           return (
             <div key={subcategory} className="subcategory-section">
-              <div className="subcategory-header-row">
+              <div
+                className="subcategory-header-row"
+                onClick={() => toggleSubcategory(subcatKey)}
+                style={{ cursor: 'pointer' }}
+              >
                 <div className="subcategory-name-cell">
-                  <i className="fas fa-folder subcategory-icon" style={{ marginRight: '6px', fontSize: '0.75rem', color: '#6B7280' }}></i>
+                  <i className={`fas fa-chevron-${isSubExpanded ? 'down' : 'right'}`}
+                    style={{ marginRight: '6px', fontSize: '0.625rem', color: '#6B7280', width: '10px' }}></i>
+                  <i className="fas fa-folder subcategory-icon"
+                    style={{ marginRight: '6px', fontSize: '0.75rem', color: '#6B7280' }}></i>
                   <span className="subcategory-name">{highlightMatch(subcategory, searchTerm)}</span>
+                  <span style={{
+                    marginLeft: '8px', fontSize: '0.625rem', color: '#9CA3AF', fontWeight: 500
+                  }}>({subcatProducts.length} products)</span>
+                </div>
+                {MONTHS.map(m => (
+                  <div key={m} className="month-cell" style={{ fontSize: '0.6875rem', color: '#6B7280' }}>
+                    {Utils.formatNumber(subcatProducts.reduce((s, p) => s + (p.monthlyTargets?.[m]?.cyQty || 0), 0))}
+                  </div>
+                ))}
+                <div className="total-cell" style={{ fontSize: '0.6875rem', color: '#6B7280' }}>
+                  {Utils.formatNumber(subcatCYTotal)}
+                </div>
+                <div className="growth-cell">
+                  <span className={`growth-value small ${subcatGrowth >= 0 ? 'positive' : 'negative'}`}>
+                    {Utils.formatGrowth(subcatGrowth)}
+                  </span>
                 </div>
               </div>
 
-              {/* ── Level 3: Subgroup ── */}
-              {subgroups.map(subgroup => {
-                const subgroupProducts = filteredProducts.filter(
-                  p => p.categoryId === category.id &&
-                       p.subcategory === subcategory &&
-                       p.subgroup === subgroup &&
-                       p.employeeCode === (filteredProducts[0]?.employeeCode || p.employeeCode)
-                );
-
-                if (subgroupProducts.length === 0) return null;
-
-                return (
-                  <div key={subgroup} className="subgroup-section">
-                    <div className="subgroup-header-row">
-                      <div className="subgroup-name-cell">
-                        <i className="fas fa-layer-group subgroup-icon" style={{ marginRight: '6px', fontSize: '0.6875rem', color: '#9CA3AF' }}></i>
-                        <span className="subgroup-name">{highlightMatch(subgroup, searchTerm)}</span>
-                      </div>
-                    </div>
-                    {subgroupProducts.map(product => renderProductRows(product))}
-                  </div>
-                );
-              })}
-
-              {/* Products with no subgroup rendered directly under family */}
-              {productsWithoutSubgroup.map(product => renderProductRows(product))}
+              {isSubExpanded && (
+                <>
+                  {/* Products rendered directly under family */}
+                  {subcatProducts.map(product => renderProductRows(product))}
+                </>
+              )}
             </div>
           );
         })}
