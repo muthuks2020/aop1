@@ -12,7 +12,8 @@
  *       Level 4: Sales Rep cards under each TBM (with product target grid)
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ * PART 3 — Item 8: Added LY Ahv, CY Ahv to drilldown cards
+ * @version 2.0.0 — Part 3 Item 8
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -110,21 +111,24 @@ function SalesHeadDrilldown({ showToast }) {
   // Totals helpers
   const getZBMTotals = (zbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
+    let totalLyAchRev = 0, totalCyAchRev = 0; // PART 3 — Item 8
     zbm.abms.forEach(abm => {
       abm.tbms.forEach(tbm => {
         tbm.salesReps.forEach(rep => {
           rep.products?.forEach(p => {
             MONTHS.forEach(m => {
-              totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
-              totalLyRev += p.monthlyTargets?.[m]?.lyRev || 0;
-              totalCyQty += p.monthlyTargets?.[m]?.cyQty || 0;
-              totalLyQty += p.monthlyTargets?.[m]?.lyQty || 0;
+              totalCyRev    += p.monthlyTargets?.[m]?.cyRev    || 0;
+              totalLyRev    += p.monthlyTargets?.[m]?.lyRev    || 0;
+              totalCyQty    += p.monthlyTargets?.[m]?.cyQty    || 0;
+              totalLyQty    += p.monthlyTargets?.[m]?.lyQty    || 0;
+              totalLyAchRev += p.monthlyTargets?.[m]?.lyAchRev || 0;
+              totalCyAchRev += p.monthlyTargets?.[m]?.cyAchRev || 0;
             });
           });
         });
       });
     });
-    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
+    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, totalLyAchRev, totalCyAchRev, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
   const getABMTotals = (abm) => {
@@ -233,7 +237,9 @@ function SalesHeadDrilldown({ showToast }) {
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">ABMs</span><span className="sh-dd-mini-value">{zbm.abms.length}</span></div>
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">TBMs</span><span className="sh-dd-mini-value">{zbm.abms.reduce((s, a) => s + a.tbms.length, 0)}</span></div>
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">Reps</span><span className="sh-dd-mini-value">{zbm.abms.reduce((s, a) => s + a.tbms.reduce((ss, t) => ss + t.salesReps.length, 0), 0)}</span></div>
-                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Rev</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(zbmTotals.totalCyRev)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Target</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(zbmTotals.totalCyRev)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">LY Ahv</span><span className="sh-dd-mini-value">{(zbmTotals.totalLyAchRev > 0) ? `₹${Utils.formatCompact(zbmTotals.totalLyAchRev)}` : '—'}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Ahv</span><span className="sh-dd-mini-value">{(zbmTotals.totalCyAchRev > 0) ? `₹${Utils.formatCompact(zbmTotals.totalCyAchRev)}` : '—'}</span></div>
                   <div className="sh-dd-mini-stat">
                     <span className="sh-dd-mini-label">Growth</span>
                     <span className={`sh-dd-mini-value ${zbmTotals.growth >= 0 ? 'positive' : 'negative'}`}>
@@ -263,7 +269,9 @@ function SalesHeadDrilldown({ showToast }) {
                           </div>
                           <div className="sh-dd-abm-stats">
                             <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">TBMs</span><span className="sh-dd-mini-value">{abm.tbms.length}</span></div>
-                            <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Rev</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(abmTotals.totalCyRev)}</span></div>
+                            <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Target</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(abmTotals.totalCyRev)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">LY Ahv</span><span className="sh-dd-mini-value">{(abmTotals.totalLyAchRev > 0) ? `₹${Utils.formatCompact(abmTotals.totalLyAchRev)}` : '—'}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Ahv</span><span className="sh-dd-mini-value">{(abmTotals.totalCyAchRev > 0) ? `₹${Utils.formatCompact(abmTotals.totalCyAchRev)}` : '—'}</span></div>
                             <div className="sh-dd-mini-stat">
                               <span className="sh-dd-mini-label">Growth</span>
                               <span className={`sh-dd-mini-value ${abmTotals.growth >= 0 ? 'positive' : 'negative'}`}>
@@ -293,7 +301,9 @@ function SalesHeadDrilldown({ showToast }) {
                                     </div>
                                     <div className="sh-dd-tbm-stats">
                                       <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">Reps</span><span className="sh-dd-mini-value">{tbm.salesReps.length}</span></div>
-                                      <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Rev</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(tbmTotals.totalCyRev)}</span></div>
+                                      <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Target</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(tbmTotals.totalCyRev)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">LY Ahv</span><span className="sh-dd-mini-value">{(tbmTotals.totalLyAchRev > 0) ? `₹${Utils.formatCompact(tbmTotals.totalLyAchRev)}` : '—'}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Ahv</span><span className="sh-dd-mini-value">{(tbmTotals.totalCyAchRev > 0) ? `₹${Utils.formatCompact(tbmTotals.totalCyAchRev)}` : '—'}</span></div>
                                       <div className="sh-dd-mini-stat">
                                         <span className="sh-dd-mini-label">Growth</span>
                                         <span className={`sh-dd-mini-value ${tbmTotals.growth >= 0 ? 'positive' : 'negative'}`}>
@@ -322,7 +332,9 @@ function SalesHeadDrilldown({ showToast }) {
                                                 </div>
                                               </div>
                                               <div className="sh-dd-rep-stats">
-                                                <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Rev</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(repTotals.totalCyRev)}</span></div>
+                                                <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Target</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(repTotals.totalCyRev)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">LY Ahv</span><span className="sh-dd-mini-value">{(repTotals.totalLyAchRev > 0) ? `₹${Utils.formatCompact(repTotals.totalLyAchRev)}` : '—'}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Ahv</span><span className="sh-dd-mini-value">{(repTotals.totalCyAchRev > 0) ? `₹${Utils.formatCompact(repTotals.totalCyAchRev)}` : '—'}</span></div>
                                                 <div className="sh-dd-mini-stat">
                                                   <span className="sh-dd-mini-label">Growth</span>
                                                   <span className={`sh-dd-mini-value ${repTotals.growth >= 0 ? 'positive' : 'negative'}`}>

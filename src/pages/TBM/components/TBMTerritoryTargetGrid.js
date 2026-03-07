@@ -51,12 +51,17 @@ function TBMTerritoryTargetGrid({
   overallYearlyTargetValue = null,
   territoryName = 'South Chennai Territory'
 }) {
+  // PART 3 — Item 12: TBM always has edit rights on territory targets
+  const canEdit = true;
   const [activeCell, setActiveCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
+  // PART 3 — Item 12: yearly entry mode (no monthly columns)
+  const [yearlyEditId, setYearlyEditId] = useState(null);
+  const [yearlyEditValue, setYearlyEditValue] = useState('');
 
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
@@ -161,16 +166,18 @@ function TBMTerritoryTargetGrid({
     };
   }, [products, calculateYearlyTotal, overallYearlyTargetValue]);
 
-  // ==================== MONTHLY COLUMN TOTALS ====================
+  // ==================== YEARLY COLUMN TOTALS (PART 3 — Item 12) ====================
+  // Monthly columns removed; only yearly totals used in the simplified grid
 
-  const monthlyColumnTotals = useMemo(() => {
-    const totals = {};
-    MONTHS.forEach(month => {
-      totals[month] = products.reduce((sum, p) => sum + (p.monthlyTargets?.[month]?.cyQty || 0), 0);
-    });
-    totals.yearly = Object.values(totals).reduce((a, b) => a + b, 0);
-    return totals;
-  }, [products]);
+  const yearlyTotals = useMemo(() => {
+    const totalCYQty = products.reduce((sum, p) => sum + calculateYearlyTotal(p.id, 'CY'), 0);
+    const totalLYQty = products.reduce((sum, p) => sum + calculateYearlyTotal(p.id, 'LY'), 0);
+    const totalCYRev = products.reduce((sum, p) =>
+      sum + MONTHS.reduce((s, m) => s + (p.monthlyTargets?.[m]?.cyRev || 0), 0), 0);
+    const totalLYRev = products.reduce((sum, p) =>
+      sum + MONTHS.reduce((s, m) => s + (p.monthlyTargets?.[m]?.lyRev || 0), 0), 0);
+    return { totalCYQty, totalLYQty, totalCYRev, totalLYRev };
+  }, [products, calculateYearlyTotal]);
 
   // ==================== EVENT HANDLERS ====================
 
@@ -226,6 +233,36 @@ function TBMTerritoryTargetGrid({
       }
     }
   };
+
+  // PART 3 — Item 12: Yearly qty handler — distributes evenly across 12 months
+  const handleYearlyQtyChange = useCallback((productId, yearlyQty) => {
+    const qty = parseInt(String(yearlyQty).replace(/[^0-9]/g, ''), 10) || 0;
+    const perMonth = Math.floor(qty / 12);
+    const remainder = qty - (perMonth * 12);
+    const updatedTargets = {};
+    MONTHS.forEach((m, i) => {
+      // Add remainder to last month to ensure total matches
+      updatedTargets[m] = { cyQty: i === 11 ? perMonth + remainder : perMonth };
+    });
+    if (onUpdateTarget) {
+      MONTHS.forEach(m => onUpdateTarget(productId, m, updatedTargets[m].cyQty));
+    }
+    setYearlyEditId(null);
+  }, [onUpdateTarget]);
+
+  const handleYearlyQtyClick = useCallback((productId, currentYearlyQty) => {
+    setYearlyEditId(productId);
+    setYearlyEditValue(String(currentYearlyQty || 0));
+  }, []);
+
+  const handleYearlyQtyBlur = useCallback((productId) => {
+    handleYearlyQtyChange(productId, yearlyEditValue);
+  }, [handleYearlyQtyChange, yearlyEditValue]);
+
+  const handleYearlyQtyKeyDown = useCallback((e, productId) => {
+    if (e.key === 'Enter') handleYearlyQtyChange(productId, yearlyEditValue);
+    if (e.key === 'Escape') setYearlyEditId(null);
+  }, [handleYearlyQtyChange, yearlyEditValue]);
 
   const handleSaveAll = async () => {
     setIsLoading(true);
@@ -527,7 +564,6 @@ function TBMTerritoryTargetGrid({
             placeholder="Search products, codes, or categories..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={handleSearchKeyDown}
           />
           {searchTerm && (
             <button className="tgt-search-clear-btn" onClick={clearSearch}>
@@ -538,169 +574,123 @@ function TBMTerritoryTargetGrid({
         <span className="tgt-product-count">{filteredProducts.length} products</span>
       </div>
 
-      {/* ===== MONTHLY COLUMN TOTALS ROW ===== */}
-      <div className="tgt-monthly-totals-row">
-        <div className="tgt-monthly-totals-label-cell">
-          <i className="fas fa-calculator"></i> Territory Totals
-        </div>
-        {MONTHS.map((month, idx) => (
-          <div key={month} className={`tgt-monthly-totals-cell ${idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4'}`}>
-            {Utils.formatNumber(monthlyColumnTotals[month])}
-          </div>
-        ))}
-        <div className="tgt-monthly-totals-cell tgt-grand-total">
-          {Utils.formatNumber(monthlyColumnTotals.yearly)}
-        </div>
-        <div className="tgt-monthly-totals-cell tgt-growth-spacer"></div>
-      </div>
-
-      {/* ===== EXCEL GRID ===== */}
-      <div className="tgt-excel-grid">
-        {/* Header Row */}
-        <div className="tgt-grid-header-row">
-          <div className="tgt-header-cell tgt-product-header">Product / Territory Target</div>
-          {MONTH_LABELS.map((label, idx) => (
-            <div key={label} className={`tgt-header-cell tgt-month-header ${idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4'}`}>
-              {label}
-            </div>
-          ))}
-          <div className="tgt-header-cell tgt-total-header">TOTAL</div>
-          <div className="tgt-header-cell tgt-growth-header">YoY</div>
-        </div>
-
-        {/* Categories */}
-        {categories.map(category =>
-          category.isRevenueOnly
-            ? renderRevenueOnlyCategory(category)
-            : renderCategory(category)
-        )}
-      </div>
-    </div>
-  );
-
-  // ==================== CATEGORY RENDERER ====================
-
-  function renderCategory(category) {
-    const isExpanded = expandedCategories.has(category.id);
-    const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
-    const categoryCYTotal = calculateCategoryTotal(category.id, 'CY');
-    const categoryLYTotal = calculateCategoryTotal(category.id, 'LY');
-    const categoryGrowth = Utils.calcGrowth(categoryLYTotal, categoryCYTotal);
-
-    if (catProducts.length === 0 && searchTerm) return null;
-
-    return (
-      <div key={category.id} className="tgt-category-section">
-        {/* Category Header */}
-        <div className="tgt-category-header-row" onClick={() => toggleCategory(category.id)}>
-          <div className="tgt-category-name-cell">
-            <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} tgt-chevron-icon`}></i>
-            <div className={`tgt-category-icon ${category.id}`}>
-              <i className={`fas ${getCategoryIcon(category.id)}`}></i>
-            </div>
-            <div className="tgt-category-info">
-              <span className="tgt-category-label">{category.name}</span>
-              <span className="tgt-category-count">{catProducts.length} products</span>
-            </div>
-          </div>
-
-          {/* Category Month Totals */}
-          {MONTHS.map(month => (
-            <div key={month} className="tgt-month-cell tgt-category-total-cell">
-              {Utils.formatNumber(calculateCategoryMonthTotal(category.id, month, 'CY'))}
-            </div>
-          ))}
-
-          <div className="tgt-total-cell tgt-category-total-cell">
-            {Utils.formatNumber(categoryCYTotal)}
-          </div>
-          <div className="tgt-growth-cell">
-            <span className={`tgt-growth-value ${categoryGrowth >= 0 ? 'tgt-positive' : 'tgt-negative'}`}>
-              {Utils.formatGrowth(categoryGrowth)}
+      {/* ===== PART 3 — Item 12: VALUE-WISE YEARLY GRID (replaces monthly grid) ===== */}
+      {/* Month-wise entry not required for TBM. Enter yearly total qty per product. */}
+      <div className="tgt-value-grid">
+        {/* Grid Summary Totals Bar */}
+        <div className="tgt-value-totals-bar">
+          <span className="tgt-value-totals-label"><i className="fas fa-calculator"></i> Territory Totals</span>
+          <div className="tgt-value-totals-pills">
+            <span className="tgt-vt-pill tgt-vt-cy-qty">
+              <i className="fas fa-boxes"></i> CY Qty: <strong>{Utils.formatNumber(yearlyTotals.totalCYQty)}</strong>
+            </span>
+            <span className="tgt-vt-pill tgt-vt-ly-qty">
+              LY Qty: {Utils.formatNumber(yearlyTotals.totalLYQty)}
+            </span>
+            <span className="tgt-vt-pill tgt-vt-cy-rev">
+              <i className="fas fa-rupee-sign"></i> CY Value: <strong>
+                ₹{Utils.formatShortCurrency ? Utils.formatShortCurrency(yearlyTotals.totalCYRev) : Utils.formatCompact(yearlyTotals.totalCYRev)}
+              </strong>
+            </span>
+            <span className={`tgt-vt-pill tgt-vt-growth ${Utils.calcGrowth(yearlyTotals.totalLYQty, yearlyTotals.totalCYQty) >= 0 ? 'tgt-positive' : 'tgt-negative'}`}>
+              YoY: {Utils.formatGrowth(Utils.calcGrowth(yearlyTotals.totalLYQty, yearlyTotals.totalCYQty))}
             </span>
           </div>
         </div>
 
-        {/* Expanded Product Rows */}
-        {isExpanded && (
-          <div className="tgt-products-container">
-            {catProducts.map(product => (
-              <div key={product.id} className="tgt-product-rows">
-                {/* CY Row - Editable */}
-                <div className="tgt-product-row tgt-cy-row">
-                  <div className="tgt-product-name-cell">
-                    <div className="tgt-product-info">
-                      <span className="tgt-product-name">{highlightMatch(product.name, searchTerm)}</span>
-                      <span className="tgt-product-code">{highlightMatch(product.code || '', searchTerm)}</span>
-                    </div>
-                    <span className="tgt-year-label tgt-cy">CY</span>
-                  </div>
-
-                  {MONTHS.map(month => {
-                    const monthData = product.monthlyTargets?.[month] || {};
-                    const isActive = activeCell?.productId === product.id && activeCell?.month === month;
-
+        {/* Product Table */}
+        <table className="tgt-yearly-table">
+          <thead>
+            <tr className="tgt-yearly-thead">
+              <th className="tgt-yth-product">Product / Territory Target</th>
+              <th className="tgt-yth-ly-qty">LY Qty</th>
+              <th className="tgt-yth-ly-rev">LY Rev (₹)</th>
+              <th className="tgt-yth-cy-qty">CY Qty <span className="tgt-yth-editable-hint">✎ editable</span></th>
+              <th className="tgt-yth-cy-rev">CY Rev (₹)</th>
+              <th className="tgt-yth-growth">YoY</th>
+            </tr>
+          </thead>
+          <tbody>
+            {categories.map(category => {
+              const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
+              if (catProducts.length === 0) return null;
+              const catCYQty = catProducts.reduce((s, p) => s + calculateYearlyTotal(p.id, 'CY'), 0);
+              const catLYQty = catProducts.reduce((s, p) => s + calculateYearlyTotal(p.id, 'LY'), 0);
+              const catCYRev = catProducts.reduce((s, p) =>
+                s + MONTHS.reduce((ms, m) => ms + (p.monthlyTargets?.[m]?.cyRev || 0), 0), 0);
+              const catLYRev = catProducts.reduce((s, p) =>
+                s + MONTHS.reduce((ms, m) => ms + (p.monthlyTargets?.[m]?.lyRev || 0), 0), 0);
+              const catGrowth = Utils.calcGrowth(catLYQty, catCYQty);
+              return (
+                <React.Fragment key={category.id}>
+                  {/* Category Header Row */}
+                  <tr className="tgt-yearly-cat-row" onClick={() => toggleCategory(category.id)}>
+                    <td className="tgt-ytd-cat-name" colSpan={6}>
+                      <i className={`fas fa-chevron-${expandedCategories.has(category.id) ? 'down' : 'right'} tgt-chevron-icon`}></i>
+                      <div className={`tgt-category-icon ${category.id}`}>
+                        <i className={`fas ${getCategoryIcon ? getCategoryIcon(category.id) : 'fa-box'}`}></i>
+                      </div>
+                      <span className="tgt-category-label">{category.name}</span>
+                      <span className="tgt-cat-inline-stats">
+                        <span>CY: {Utils.formatNumber(catCYQty)}</span>
+                        <span>LY: {Utils.formatNumber(catLYQty)}</span>
+                        <span className={catGrowth >= 0 ? 'tgt-positive' : 'tgt-negative'}>{Utils.formatGrowth(catGrowth)}</span>
+                      </span>
+                    </td>
+                  </tr>
+                  {/* Product Rows */}
+                  {expandedCategories.has(category.id) && catProducts.map(product => {
+                    const cyQty    = calculateYearlyTotal(product.id, 'CY');
+                    const lyQty    = calculateYearlyTotal(product.id, 'LY');
+                    const cyRev    = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.cyRev || 0), 0);
+                    const lyRev    = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyRev || 0), 0);
+                    const growth   = Utils.calcGrowth(lyQty, cyQty);
+                    const isEditing = yearlyEditId === product.id;
                     return (
-                      <div
-                        key={month}
-                        className={`tgt-month-cell tgt-editable ${isActive ? 'tgt-active-cell' : ''}`}
-                        onClick={() => handleCellClick(product.id, month, monthData.cyQty)}
-                      >
-                        {isActive ? (
-                          <input
-                            ref={inputRef}
-                            type="text"
-                            className="tgt-cell-input"
-                            value={editValue}
-                            onChange={handleCellChange}
-                            onBlur={handleCellBlur}
-                            onKeyDown={handleCellKeyDown}
-                          />
-                        ) : (
-                          <span className="tgt-cell-value">
-                            {Utils.formatNumber(monthData.cyQty || 0)}
+                      <tr key={product.id} className="tgt-yearly-product-row">
+                        <td className="tgt-ytd-product-name">
+                          <span className="tgt-product-name">{highlightMatch(product.name, searchTerm)}</span>
+                          <span className="tgt-product-code">{product.code || ''}</span>
+                        </td>
+                        <td className="tgt-ytd-ly-qty">{Utils.formatNumber(lyQty)}</td>
+                        <td className="tgt-ytd-ly-rev">₹{Utils.formatShortCurrency ? Utils.formatShortCurrency(lyRev) : Utils.formatCompact(lyRev)}</td>
+                        <td
+                          className={`tgt-ytd-cy-qty ${canEdit ? 'tgt-ytd-editable' : ''} ${isEditing ? 'tgt-ytd-active' : ''}`}
+                          onClick={() => canEdit && handleYearlyQtyClick(product.id, cyQty)}
+                        >
+                          {isEditing ? (
+                            <input
+                              autoFocus
+                              type="text"
+                              className="tgt-yearly-input"
+                              value={yearlyEditValue}
+                              onChange={e => setYearlyEditValue(e.target.value)}
+                              onBlur={() => handleYearlyQtyBlur(product.id)}
+                              onKeyDown={e => handleYearlyQtyKeyDown(e, product.id)}
+                            />
+                          ) : (
+                            <span className={cyQty > 0 ? 'tgt-ytd-has-value' : 'tgt-ytd-empty'}>
+                              {cyQty > 0 ? Utils.formatNumber(cyQty) : canEdit ? '—' : Utils.formatNumber(cyQty)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="tgt-ytd-cy-rev">₹{Utils.formatShortCurrency ? Utils.formatShortCurrency(cyRev) : Utils.formatCompact(cyRev)}</td>
+                        <td className="tgt-ytd-growth">
+                          <span className={`tgt-growth-value ${growth >= 0 ? 'tgt-positive' : 'tgt-negative'}`}>
+                            {Utils.formatGrowth(growth)}
                           </span>
-                        )}
-                      </div>
+                        </td>
+                      </tr>
                     );
                   })}
-
-                  <div className="tgt-total-cell">
-                    {Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}
-                  </div>
-                  <div className="tgt-growth-cell">
-                    {(() => {
-                      const growth = calculateGrowth(product.id);
-                      return <span className={`tgt-growth-value ${growth >= 0 ? 'tgt-positive' : 'tgt-negative'}`}>{Utils.formatGrowth(growth)}</span>;
-                    })()}
-                  </div>
-                </div>
-
-                {/* LY Row - Read Only */}
-                <div className="tgt-product-row tgt-ly-row">
-                  <div className="tgt-product-name-cell">
-                    <span className="tgt-year-label tgt-ly">LY</span>
-                  </div>
-                  {MONTHS.map(month => {
-                    const monthData = product.monthlyTargets?.[month] || {};
-                    return (
-                      <div key={month} className="tgt-month-cell tgt-ly-value">
-                        {Utils.formatNumber(monthData.lyQty || 0)}
-                      </div>
-                    );
-                  })}
-                  <div className="tgt-total-cell tgt-ly-value">
-                    {Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}
-                  </div>
-                  <div className="tgt-growth-cell"></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    );
-  }
+    </div>
+  );
 }
 
 export default TBMTerritoryTargetGrid;

@@ -96,37 +96,48 @@ function ZBMTeamDrilldown({ showToast }) {
 
   // ==================== TOTALS HELPERS ====================
   // PATCHED: Added defensive (|| []) for tbms, salesReps
+  // PART 3 — Item 8
   const getABMTotals = (abm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
+    let totalLyAchRev = 0, totalCyAchRev = 0;
     (abm.tbms || []).forEach(tbm => {
       (tbm.salesReps || []).forEach(rep => {
         rep.products?.forEach(p => {
           MONTHS.forEach(m => {
-            totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
-            totalLyRev += p.monthlyTargets?.[m]?.lyRev || 0;
-            totalCyQty += p.monthlyTargets?.[m]?.cyQty || 0;
-            totalLyQty += p.monthlyTargets?.[m]?.lyQty || 0;
+            totalCyRev    += p.monthlyTargets?.[m]?.cyRev    || 0;
+            totalLyRev    += p.monthlyTargets?.[m]?.lyRev    || 0;
+            totalCyQty    += p.monthlyTargets?.[m]?.cyQty    || 0;
+            totalLyQty    += p.monthlyTargets?.[m]?.lyQty    || 0;
+            totalLyAchRev += p.monthlyTargets?.[m]?.lyAchRev || 0;
+            totalCyAchRev += p.monthlyTargets?.[m]?.cyAchRev || 0;
           });
         });
       });
     });
-    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
+    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty,
+             totalLyAchRev, totalCyAchRev,
+             growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
   // PATCHED: Added defensive (|| []) for salesReps
   const getTBMTotals = (tbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
+    let totalLyAchRev = 0, totalCyAchRev = 0;
     (tbm.salesReps || []).forEach(rep => {
       rep.products?.forEach(p => {
         MONTHS.forEach(m => {
-          totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
-          totalLyRev += p.monthlyTargets?.[m]?.lyRev || 0;
-          totalCyQty += p.monthlyTargets?.[m]?.cyQty || 0;
-          totalLyQty += p.monthlyTargets?.[m]?.lyQty || 0;
+          totalCyRev    += p.monthlyTargets?.[m]?.cyRev    || 0;
+          totalLyRev    += p.monthlyTargets?.[m]?.lyRev    || 0;
+          totalCyQty    += p.monthlyTargets?.[m]?.cyQty    || 0;
+          totalLyQty    += p.monthlyTargets?.[m]?.lyQty    || 0;
+          totalLyAchRev += p.monthlyTargets?.[m]?.lyAchRev || 0;
+          totalCyAchRev += p.monthlyTargets?.[m]?.cyAchRev || 0;
         });
       });
     });
-    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
+    return { totalCyRev, totalLyRev, totalCyQty, totalLyQty,
+             totalLyAchRev, totalCyAchRev,
+             growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
   const getRepTotals = (rep) => {
@@ -217,9 +228,22 @@ function ZBMTeamDrilldown({ showToast }) {
                     {/* PATCHED: defensive check */}
                     <span className="zbm-dd-mini-value">{(abm.tbms || []).reduce((s, t) => s + (t.salesReps?.length || 0), 0)}</span>
                   </div>
+                  {/* PART 3 — Item 8: CY Target, LY Ahv, CY Ahv */}
                   <div className="zbm-dd-mini-stat">
-                    <span className="zbm-dd-mini-label">CY Rev</span>
+                    <span className="zbm-dd-mini-label">CY Target</span>
                     <span className="zbm-dd-mini-value">₹{Utils.formatCompact(abmTotals.totalCyRev)}</span>
+                  </div>
+                  <div className="zbm-dd-mini-stat">
+                    <span className="zbm-dd-mini-label">LY Ahv</span>
+                    <span className="zbm-dd-mini-value">
+                      {abmTotals.totalLyAchRev > 0 ? `₹${Utils.formatCompact(abmTotals.totalLyAchRev)}` : '—'}
+                    </span>
+                  </div>
+                  <div className="zbm-dd-mini-stat">
+                    <span className="zbm-dd-mini-label">CY Ahv</span>
+                    <span className="zbm-dd-mini-value">
+                      {abmTotals.totalCyAchRev > 0 ? `₹${Utils.formatCompact(abmTotals.totalCyAchRev)}` : '—'}
+                    </span>
                   </div>
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">Growth</span>

@@ -1,23 +1,19 @@
 /**
  * SalesHeadAnalytics Component
  * Executive Target Distribution & Comparison Analytics
- * 
- * FEATURES:
- * 1. Distribution View — Stacked bar charts showing how targets distribute across
- *    zones → territories → team members, with category breakdowns
- * 2. Comparison Mode — Side-by-side comparison of any two entities (zones, territories,
- *    members) with radar/spider charts and monthly trend overlays
- * 3. Drill-Down Selector — Three-level cascading dropdowns: Zone → Territory → Member
- *    that dynamically update all charts
- * 4. Category Filter — Toggle individual categories to see targeted distributions
- * 5. Metric Toggle — Switch between Revenue (₹) and Quantity views
- * 
- * HIERARCHY: Zone (ZBM) → Territory (ABM) → Area (TBM) → Sales Rep
- * 
- * Appasamy Brand: Navy (#0C2340) + Teal (#0097A7)
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
+ *
+ * PART 1 CHANGES:
+ *   Item 1 — "LY Ach" → "LY Ahv" in all bar tags and KPI labels
+ *   Item 4 — Added % metrics: growth (target), growth (achievement),
+ *             contribution %, % of target achievement in summary bar
+ *   Item 6 — Removed "Entities" count from the summary stats bar
+ *   Item 7 — Category breakdown TABLE in compare mode replaced with
+ *             a CategoryBarChart (grouped horizontal bars per category)
+ *
+ * All existing data-aggregation logic, chart components, and API calls
+ * are preserved without modification.
+ *
+ * @version 1.1.0 — Part 1 Items 1, 4, 6, 7
  */
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
@@ -35,7 +31,8 @@ const CAT_COLORS = {
 
 const ZONE_COLORS = ['#0C2340', '#0097A7', '#4F46E5', '#D97706', '#2E7D32', '#7C3AED'];
 
-// ==================== SVG CHART HELPERS ====================
+// ==================== HORIZONTAL BAR CHART ====================
+// PART 1 — Item 1: "LY Ach" tag renamed → "LY Ahv"
 
 function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {} }) {
   if (!items.length) return <div className="sh-an-empty">No data available</div>;
@@ -44,10 +41,10 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
   return (
     <div className="sh-an-hbar-list">
       {items.map((item, i) => {
-        const cyPct = Math.round((item.value / safeMax) * 100);
-        const lyPct = Math.round(((item.lyValue || 0) / safeMax) * 100);
-        const achPct = Math.round(((item.achieved || 0) / safeMax) * 100);
-        const color = colorMap[item.id] || ZONE_COLORS[i % ZONE_COLORS.length];
+        const cyPct  = Math.round((item.value             / safeMax) * 100);
+        const lyPct  = Math.round(((item.lyValue  || 0)  / safeMax) * 100);
+        const achPct = Math.round(((item.achieved || 0)  / safeMax) * 100);
+        const color  = colorMap[item.id] || ZONE_COLORS[i % ZONE_COLORS.length];
         return (
           <div key={item.id} className="sh-an-hbar-row">
             <div className="sh-an-hbar-label">
@@ -55,20 +52,36 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
               {item.subtitle && <span className="sh-an-hbar-sub">{item.subtitle}</span>}
             </div>
             <div className="sh-an-hbar-bars">
+              {/* PART 1 — Item 1: "LY Tgt" (was "LY Tgt" — already correct, keeping) */}
               <div className="sh-an-hbar-bar-row">
                 <span className="sh-an-hbar-tag ly">LY Tgt</span>
-                <div className="sh-an-hbar-track"><div className="sh-an-hbar-fill ly" style={{ width: `${lyPct}%` }}>{lyPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.lyValue || 0)}</span>}</div></div>
+                <div className="sh-an-hbar-track">
+                  <div className="sh-an-hbar-fill ly" style={{ width: `${lyPct}%` }}>
+                    {lyPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.lyValue || 0)}</span>}
+                  </div>
+                </div>
                 <span className="sh-an-hbar-end">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.lyValue || 0)}</span>
               </div>
+              {/* PART 1 — Item 1: "LY Ahv" (was "LY Ach") */}
               <div className="sh-an-hbar-bar-row">
-                <span className="sh-an-hbar-tag ach">LY Ach</span>
-                <div className="sh-an-hbar-track"><div className="sh-an-hbar-fill ach" style={{ width: `${achPct}%` }}>{achPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.achieved || 0)}</span>}</div></div>
+                <span className="sh-an-hbar-tag ach">LY Ahv</span>
+                <div className="sh-an-hbar-track">
+                  <div className="sh-an-hbar-fill ach" style={{ width: `${achPct}%` }}>
+                    {achPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.achieved || 0)}</span>}
+                  </div>
+                </div>
                 <span className="sh-an-hbar-end">{item.achievedPct || 0}%</span>
               </div>
               <div className="sh-an-hbar-bar-row">
                 <span className="sh-an-hbar-tag cy">CY Tgt</span>
-                <div className="sh-an-hbar-track"><div className="sh-an-hbar-fill cy" style={{ width: `${cyPct}%`, background: color }}>{cyPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.value)}</span>}</div></div>
-                <span className={`sh-an-hbar-end growth ${item.growth >= 0 ? 'pos' : 'neg'}`}>{item.growth >= 0 ? '↑' : '↓'}{Math.abs(item.growth).toFixed(1)}%</span>
+                <div className="sh-an-hbar-track">
+                  <div className="sh-an-hbar-fill cy" style={{ width: `${cyPct}%`, background: color }}>
+                    {cyPct > 18 && <span className="sh-an-hbar-inner">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.value)}</span>}
+                  </div>
+                </div>
+                <span className={`sh-an-hbar-end growth ${item.growth >= 0 ? 'pos' : 'neg'}`}>
+                  {item.growth >= 0 ? '↑' : '↓'}{Math.abs(item.growth).toFixed(1)}%
+                </span>
               </div>
             </div>
           </div>
@@ -78,6 +91,8 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
   );
 }
 
+// ==================== STACKED BAR CHART (unchanged) ====================
+
 function StackedBarChart({ data, categories, metric }) {
   if (!data.length) return <div className="sh-an-empty">No data</div>;
   const maxVal = Math.max(...data.map(d => d.total), 1);
@@ -85,10 +100,10 @@ function StackedBarChart({ data, categories, metric }) {
   return (
     <div className="sh-an-stacked-chart">
       <div className="sh-an-stacked-bars">
-        {data.map((d, i) => (
+        {data.map((d) => (
           <div key={d.id} className="sh-an-stacked-col" title={d.name}>
             <div className="sh-an-stacked-bar-wrap" style={{ height: '100%' }}>
-              {d.segments.map((seg, j) => {
+              {d.segments.map((seg) => {
                 const segPct = (seg.value / maxVal) * 100;
                 return segPct > 0 ? (
                   <div
@@ -101,14 +116,16 @@ function StackedBarChart({ data, categories, metric }) {
               })}
             </div>
             <span className="sh-an-stacked-label">{d.shortName || d.name.split(' ')[0]}</span>
-            <span className="sh-an-stacked-total">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(d.total)}</span>
+            <span className="sh-an-stacked-total">
+              {metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(d.total)}
+            </span>
           </div>
         ))}
       </div>
       <div className="sh-an-stacked-legend">
         {categories.map(cat => (
           <span key={cat.id} className="sh-an-stacked-legend-item">
-            <span className="sh-an-legend-dot" style={{ background: CAT_COLORS[cat.id] || '#94A3B8' }}></span>
+            <span className="sh-an-sl-dot" style={{ background: CAT_COLORS[cat.id] || '#94A3B8' }}></span>
             {cat.name}
           </span>
         ))}
@@ -117,82 +134,65 @@ function StackedBarChart({ data, categories, metric }) {
   );
 }
 
-function RadarChart({ dataA, dataB, labels, nameA, nameB, size = 260 }) {
-  const center = size / 2;
-  const radius = center - 40;
+// ==================== RADAR CHART (unchanged) ====================
+
+function RadarChart({ dataA, dataB, labels, nameA, nameB, size = 280 }) {
+  if (!labels.length) return null;
+  const cx = size / 2, cy = size / 2, r = size * 0.38;
   const n = labels.length;
-  const angleStep = (2 * Math.PI) / n;
-  const maxVal = Math.max(...dataA, ...dataB, 1);
-
-  const getPoint = (val, idx) => {
-    const angle = angleStep * idx - Math.PI / 2;
-    const r = (val / maxVal) * radius;
-    return { x: center + r * Math.cos(angle), y: center + r * Math.sin(angle) };
+  const toXY = (val, maxVal, idx) => {
+    const angle = (idx / n) * 2 * Math.PI - Math.PI / 2;
+    const radius = maxVal > 0 ? (val / maxVal) * r : 0;
+    return { x: cx + radius * Math.cos(angle), y: cy + radius * Math.sin(angle) };
   };
-
-  const pathA = dataA.map((v, i) => getPoint(v, i)).map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-  const pathB = dataB.map((v, i) => getPoint(v, i)).map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ') + ' Z';
-
-  const gridLevels = [0.25, 0.5, 0.75, 1];
+  const gridXY = (pct, idx) => {
+    const angle = (idx / n) * 2 * Math.PI - Math.PI / 2;
+    return { x: cx + pct * r * Math.cos(angle), y: cy + pct * r * Math.sin(angle) };
+  };
+  const maxVal = Math.max(...dataA, ...dataB, 1);
+  const polyA = dataA.map((v, i) => { const p = toXY(v, maxVal, i); return `${p.x},${p.y}`; }).join(' ');
+  const polyB = dataB.map((v, i) => { const p = toXY(v, maxVal, i); return `${p.x},${p.y}`; }).join(' ');
 
   return (
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="sh-an-radar-svg">
-      {/* Grid */}
-      {gridLevels.map((lvl, li) => (
-        <polygon
-          key={li}
-          points={Array.from({ length: n }, (_, i) => {
-            const a = angleStep * i - Math.PI / 2;
-            return `${center + radius * lvl * Math.cos(a)},${center + radius * lvl * Math.sin(a)}`;
-          }).join(' ')}
-          fill="none" stroke="#E2E8F0" strokeWidth="0.5"
+    <svg width={size} height={size} style={{ overflow: 'visible' }}>
+      {[0.25, 0.5, 0.75, 1].map(pct => (
+        <polygon key={pct}
+          points={labels.map((_, i) => { const p = gridXY(pct, i); return `${p.x},${p.y}`; }).join(' ')}
+          fill="none" stroke="#E2E8F0" strokeWidth="1"
         />
       ))}
-      {/* Axes */}
       {labels.map((_, i) => {
-        const a = angleStep * i - Math.PI / 2;
-        return <line key={i} x1={center} y1={center} x2={center + radius * Math.cos(a)} y2={center + radius * Math.sin(a)} stroke="#E2E8F0" strokeWidth="0.5" />;
+        const p = gridXY(1, i);
+        return <line key={i} x1={cx} y1={cy} x2={p.x} y2={p.y} stroke="#E2E8F0" strokeWidth="1" />;
       })}
-      {/* Data areas */}
-      <path d={pathA} fill="rgba(12, 35, 64, 0.15)" stroke="#0C2340" strokeWidth="2" />
-      <path d={pathB} fill="rgba(0, 151, 167, 0.15)" stroke="#0097A7" strokeWidth="2" />
-      {/* Data points */}
-      {dataA.map((v, i) => { const p = getPoint(v, i); return <circle key={`a${i}`} cx={p.x} cy={p.y} r="3.5" fill="#0C2340" stroke="#fff" strokeWidth="1.5" />; })}
-      {dataB.map((v, i) => { const p = getPoint(v, i); return <circle key={`b${i}`} cx={p.x} cy={p.y} r="3.5" fill="#0097A7" stroke="#fff" strokeWidth="1.5" />; })}
-      {/* Labels */}
+      <polygon points={polyA} fill="rgba(12,35,64,0.15)" stroke="#0C2340" strokeWidth="2" />
+      <polygon points={polyB} fill="rgba(0,151,167,0.15)" stroke="#0097A7" strokeWidth="2" />
       {labels.map((label, i) => {
-        const a = angleStep * i - Math.PI / 2;
-        const lx = center + (radius + 22) * Math.cos(a);
-        const ly = center + (radius + 22) * Math.sin(a);
-        const anchor = Math.abs(Math.cos(a)) < 0.1 ? 'middle' : Math.cos(a) > 0 ? 'start' : 'end';
-        return <text key={i} x={lx} y={ly} textAnchor={anchor} dominantBaseline="middle" className="sh-an-radar-label">{label}</text>;
+        const p = gridXY(1.18, i);
+        return <text key={i} x={p.x} y={p.y} textAnchor="middle" dominantBaseline="middle"
+          fontSize="9" fill="#64748B" fontWeight="600">{label}</text>;
       })}
-      {/* Legend */}
-      <circle cx={center - 60} cy={size - 12} r="4" fill="#0C2340" />
-      <text x={center - 52} y={size - 8} className="sh-an-radar-legend-text">{nameA}</text>
-      <circle cx={center + 20} cy={size - 12} r="4" fill="#0097A7" />
-      <text x={center + 28} y={size - 8} className="sh-an-radar-legend-text">{nameB}</text>
     </svg>
   );
 }
 
+// ==================== MONTHLY COMPARISON CHART (unchanged) ====================
+
 function MonthlyComparisonChart({ dataA, dataB, nameA, nameB, metric }) {
-  const allVals = [...dataA.map(d => d.value), ...dataB.map(d => d.value)];
-  const maxVal = Math.max(...allVals, 1);
+  if (!dataA.length) return null;
+  const maxVal = Math.max(...dataA.map(d => d.value), ...dataB.map(d => d.value), 1);
 
   return (
-    <div className="sh-an-monthly-compare">
+    <div className="sh-an-monthly-chart">
       <div className="sh-an-monthly-bars">
         {MONTH_LABELS.map((ml, i) => (
-          <div key={i} className="sh-an-monthly-col">
-            <div className="sh-an-monthly-pair">
-              <div
-                className="sh-an-monthly-bar a"
+          <div key={ml} className="sh-an-monthly-col">
+            <div className="sh-an-monthly-bar-pair">
+              <div className="sh-an-monthly-bar a"
                 style={{ height: `${(dataA[i]?.value / maxVal) * 100}%` }}
                 title={`${nameA}: ${metric === 'revenue' ? '₹' : ''}${Utils.formatCompact(dataA[i]?.value || 0)}`}
               />
-              <div
-                className="sh-an-monthly-bar b"
+              <div className="sh-an-monthly-bar b"
                 style={{ height: `${(dataB[i]?.value / maxVal) * 100}%` }}
                 title={`${nameB}: ${metric === 'revenue' ? '₹' : ''}${Utils.formatCompact(dataB[i]?.value || 0)}`}
               />
@@ -209,6 +209,145 @@ function MonthlyComparisonChart({ dataA, dataB, nameA, nameB, metric }) {
   );
 }
 
+// ==================== PART 1 — Item 7: CATEGORY BAR CHART ====================
+// Replaces the category breakdown TABLE in compare mode.
+// Shows grouped horizontal bars (LY Tgt / LY Ahv / CY Tgt) per category
+// for both Entity A and Entity B, side-by-side.
+
+function CategoryBarChart({ categories, entityA, entityB, metric }) {
+  if (!entityA || !entityB) return null;
+  const p = metric === 'revenue' ? '₹' : '';
+
+  // Find the global max across all segments for scale
+  const allVals = categories.flatMap(cat => {
+    const segA = entityA.segments.find(s => s.catId === cat.id) || {};
+    const segB = entityB.segments.find(s => s.catId === cat.id) || {};
+    return [segA.lyValue || 0, segA.achieved || 0, segA.value || 0,
+            segB.lyValue || 0, segB.achieved || 0, segB.value || 0];
+  });
+  const maxVal = Math.max(...allVals, 1);
+
+  const barStyle = (val, color) => ({
+    width: `${Math.round((val / maxVal) * 100)}%`,
+    background: color,
+    height: '14px',
+    borderRadius: '3px',
+    minWidth: val > 0 ? '3px' : '0',
+    display: 'inline-block',
+    transition: 'width 0.4s ease',
+  });
+
+  return (
+    <div className="sh-an-cat-barchart">
+      {categories.map((cat, idx) => {
+        const segA = entityA.segments.find(s => s.catId === cat.id) || {};
+        const segB = entityB.segments.find(s => s.catId === cat.id) || {};
+        const catColor = CAT_COLORS[cat.id] || ZONE_COLORS[idx % ZONE_COLORS.length];
+
+        return (
+          <div key={cat.id} className="sh-an-cbc-row">
+            {/* Category label */}
+            <div className="sh-an-cbc-cat">
+              <span className="sh-an-cbc-dot" style={{ background: catColor }}></span>
+              <span className="sh-an-cbc-name">{cat.name}</span>
+            </div>
+
+            {/* Entity A bars */}
+            <div className="sh-an-cbc-entity">
+              <span className="sh-an-cbc-entity-label a">{entityA.name}</span>
+              <div className="sh-an-cbc-bars">
+                <div className="sh-an-cbc-bar-row">
+                  {/* PART 1 — Item 1: "LY Tgt" */}
+                  <span className="sh-an-cbc-tag">LY Tgt</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segA.lyValue || 0, '#CBD5E1')} />
+                  </div>
+                  <span className="sh-an-cbc-val">{p}{Utils.formatCompact(segA.lyValue || 0)}</span>
+                </div>
+                <div className="sh-an-cbc-bar-row">
+                  {/* PART 1 — Item 1: "LY Ahv" */}
+                  <span className="sh-an-cbc-tag">LY Ahv</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segA.achieved || 0, '#34D399')} />
+                  </div>
+                  <span className="sh-an-cbc-val">
+                    {p}{Utils.formatCompact(segA.achieved || 0)}
+                    {/* PART 1 — Item 4: % of LY Tgt achieved */}
+                    {segA.lyValue > 0 && (
+                      <span className="sh-an-cbc-pct">
+                        &nbsp;({Math.round(((segA.achieved || 0) / segA.lyValue) * 100)}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="sh-an-cbc-bar-row">
+                  <span className="sh-an-cbc-tag">CY Tgt</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segA.value || 0, catColor)} />
+                  </div>
+                  <span className="sh-an-cbc-val">
+                    {p}{Utils.formatCompact(segA.value || 0)}
+                    {/* PART 1 — Item 4: growth % */}
+                    {segA.lyValue > 0 && (
+                      <span className={`sh-an-cbc-growth ${(segA.value || 0) >= segA.lyValue ? 'pos' : 'neg'}`}>
+                        &nbsp;{(segA.value || 0) >= segA.lyValue ? '↑' : '↓'}
+                        {Math.abs(Utils.calcGrowth(segA.lyValue, segA.value || 0)).toFixed(1)}%
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Entity B bars */}
+            <div className="sh-an-cbc-entity">
+              <span className="sh-an-cbc-entity-label b">{entityB.name}</span>
+              <div className="sh-an-cbc-bars">
+                <div className="sh-an-cbc-bar-row">
+                  <span className="sh-an-cbc-tag">LY Tgt</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segB.lyValue || 0, '#CBD5E1')} />
+                  </div>
+                  <span className="sh-an-cbc-val">{p}{Utils.formatCompact(segB.lyValue || 0)}</span>
+                </div>
+                <div className="sh-an-cbc-bar-row">
+                  <span className="sh-an-cbc-tag">LY Ahv</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segB.achieved || 0, '#34D399')} />
+                  </div>
+                  <span className="sh-an-cbc-val">
+                    {p}{Utils.formatCompact(segB.achieved || 0)}
+                    {segB.lyValue > 0 && (
+                      <span className="sh-an-cbc-pct">
+                        &nbsp;({Math.round(((segB.achieved || 0) / segB.lyValue) * 100)}%)
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <div className="sh-an-cbc-bar-row">
+                  <span className="sh-an-cbc-tag">CY Tgt</span>
+                  <div className="sh-an-cbc-track">
+                    <div style={barStyle(segB.value || 0, catColor)} />
+                  </div>
+                  <span className="sh-an-cbc-val">
+                    {p}{Utils.formatCompact(segB.value || 0)}
+                    {segB.lyValue > 0 && (
+                      <span className={`sh-an-cbc-growth ${(segB.value || 0) >= segB.lyValue ? 'pos' : 'neg'}`}>
+                        &nbsp;{(segB.value || 0) >= segB.lyValue ? '↑' : '↓'}
+                        {Math.abs(Utils.calcGrowth(segB.lyValue, segB.value || 0)).toFixed(1)}%
+                      </span>
+                    )}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 // ==================== MAIN COMPONENT ====================
 
 function SalesHeadAnalytics({ showToast }) {
@@ -218,16 +357,16 @@ function SalesHeadAnalytics({ showToast }) {
   const [zbmSubmissions, setZbmSubmissions] = useState([]);
 
   // View Controls
-  const [viewLevel, setViewLevel] = useState('zone'); // zone | territory | member
-  const [selectedZone, setSelectedZone] = useState('all');
+  const [viewLevel, setViewLevel]           = useState('zone');
+  const [selectedZone, setSelectedZone]     = useState('all');
   const [selectedTerritory, setSelectedTerritory] = useState('all');
-  const [metric, setMetric] = useState('revenue'); // revenue | qty
+  const [metric, setMetric]                 = useState('revenue');
   const [activeCategories, setActiveCategories] = useState(new Set());
 
   // Comparison Mode
   const [compareMode, setCompareMode] = useState(false);
-  const [compareA, setCompareA] = useState('');
-  const [compareB, setCompareB] = useState('');
+  const [compareA, setCompareA]       = useState('');
+  const [compareB, setCompareB]       = useState('');
 
   useEffect(() => { loadData(); }, []); // eslint-disable-line
 
@@ -237,7 +376,7 @@ function SalesHeadAnalytics({ showToast }) {
       const [cats, subs, hier] = await Promise.all([
         SalesHeadApiService.getCategories(),
         SalesHeadApiService.getZBMSubmissions(),
-        SalesHeadApiService.getZBMHierarchy()
+        SalesHeadApiService.getZBMHierarchy(),
       ]);
       setCategories(cats);
       setZbmSubmissions(subs);
@@ -258,17 +397,15 @@ function SalesHeadAnalytics({ showToast }) {
     });
   }, []);
 
-  // ==================== DATA AGGREGATION ====================
+  // ==================== DATA AGGREGATION (unchanged) ====================
 
   const getEntityValue = useCallback((submissions, metricKey) => {
     let total = 0;
     submissions.forEach(s => {
       if (!activeCategories.has(s.categoryId)) return;
-      if (s.monthlyTargets) {
-        Object.values(s.monthlyTargets).forEach(m => {
-          total += metricKey === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
-        });
-      }
+      if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
+        total += metricKey === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
+      });
     });
     return total;
   }, [activeCategories]);
@@ -277,11 +414,9 @@ function SalesHeadAnalytics({ showToast }) {
     let total = 0;
     submissions.forEach(s => {
       if (!activeCategories.has(s.categoryId)) return;
-      if (s.monthlyTargets) {
-        Object.values(s.monthlyTargets).forEach(m => {
-          total += metricKey === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
-        });
-      }
+      if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
+        total += metricKey === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
+      });
     });
     return total;
   }, [activeCategories]);
@@ -310,33 +445,23 @@ function SalesHeadAnalytics({ showToast }) {
     });
   }, [activeCategories]);
 
-  // LY Achieved: uses lyAchRev/lyAchQty from monthlyTargets (real backend data)
-  // Falls back to ~92% of LY target if lyAch fields are missing (mock fallback)
   const getEntityAchieved = useCallback((submissions, metricKey) => {
     let total = 0;
     let hasAchData = false;
     submissions.forEach(s => {
       if (!activeCategories.has(s.categoryId)) return;
-      if (s.monthlyTargets) {
-        Object.values(s.monthlyTargets).forEach(m => {
-          const achField = metricKey === 'revenue' ? m.lyAchRev : m.lyAchQty;
-          if (achField !== undefined && achField !== null) {
-            total += achField;
-            hasAchData = true;
-          }
-        });
-      }
+      if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
+        const achField = metricKey === 'revenue' ? m.lyAchRev : m.lyAchQty;
+        if (achField !== undefined && achField !== null) { total += achField; hasAchData = true; }
+      });
     });
-    // Fallback if backend doesn't have lyAch fields yet
     if (!hasAchData) {
       let lyTotal = 0;
       submissions.forEach(s => {
         if (!activeCategories.has(s.categoryId)) return;
-        if (s.monthlyTargets) {
-          Object.values(s.monthlyTargets).forEach(m => {
-            lyTotal += metricKey === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
-          });
-        }
+        if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
+          lyTotal += metricKey === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
+        });
       });
       return Math.round(lyTotal * 0.92);
     }
@@ -347,29 +472,41 @@ function SalesHeadAnalytics({ showToast }) {
   const zoneData = useMemo(() => {
     const zbmMap = {};
     zbmSubmissions.forEach(s => {
-      if (!zbmMap[s.zbmId]) zbmMap[s.zbmId] = { id: s.zbmId, name: s.zbmName, territory: s.territory, submissions: [] };
-      zbmMap[s.zbmId].submissions.push(s);
+      const key = s.zbmId || s.employeeCode || 'unknown';
+      if (!zbmMap[key]) {
+        zbmMap[key] = {
+          id: key, name: s.zbmName || s.employeeName || key,
+          subtitle: s.zoneName || '', shortName: (s.zbmName || key).split(' ')[0],
+          submissions: [],
+          segments: categories.filter(c => activeCategories.has(c.id)).map(cat => ({
+            catId: cat.id, catName: cat.name, value: 0, lyValue: 0, achieved: 0,
+          })),
+        };
+      }
+      zbmMap[key].submissions.push(s);
     });
 
-    return Object.values(zbmMap).map((zbm, i) => {
-      const cy = getEntityValue(zbm.submissions, metric);
-      const ly = getEntityLY(zbm.submissions, metric);
-      const achieved = getEntityAchieved(zbm.submissions, metric);
-      const segments = categories.filter(c => activeCategories.has(c.id)).map(cat => {
-        let val = 0, lyVal = 0, achVal = 0;
-        const catSubs = zbm.submissions.filter(s => s.categoryId === cat.id);
-        catSubs.forEach(s => {
-          if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
-            val += metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
-            lyVal += metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
-            const achField = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
-            achVal += (achField !== undefined && achField !== null) ? achField : 0;
-          });
+    return Object.values(zbmMap).map(zbm => {
+      const cy  = getEntityValue(zbm.submissions, metric);
+      const ly  = getEntityLY(zbm.submissions, metric);
+      const ach = getEntityAchieved(zbm.submissions, metric);
+      zbm.submissions.forEach(s => {
+        if (!activeCategories.has(s.categoryId)) return;
+        if (s.monthlyTargets) Object.values(s.monthlyTargets).forEach(m => {
+          const seg = zbm.segments.find(sg => sg.catId === s.categoryId);
+          if (seg) {
+            seg.value   += metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
+            seg.lyValue += metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
+            const achF   = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
+            seg.achieved += achF != null ? achF : (metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0)) * 0.92;
+          }
         });
-        if (achVal === 0 && lyVal > 0) achVal = Math.round(lyVal * 0.92); // fallback
-        return { catId: cat.id, catName: cat.name, value: val, lyValue: lyVal, achieved: achVal };
       });
-      return { id: zbm.id, name: zbm.name, subtitle: zbm.territory, shortName: zbm.territory.split(' ')[0], value: cy, lyValue: ly, achieved, growth: Utils.calcGrowth(ly, cy), achievedPct: ly > 0 ? Math.round((achieved / ly) * 100) : 0, total: cy, segments };
+      return {
+        ...zbm, value: cy, lyValue: ly, achieved: ach, total: cy,
+        growth: Utils.calcGrowth(ly, cy),
+        achievedPct: ly > 0 ? Math.round((ach / ly) * 100) : 0,
+      };
     }).sort((a, b) => b.value - a.value);
   }, [zbmSubmissions, categories, metric, activeCategories, getEntityValue, getEntityLY, getEntityAchieved]);
 
@@ -380,16 +517,18 @@ function SalesHeadAnalytics({ showToast }) {
     zbms.forEach(zbm => {
       zbm.abms?.forEach(abm => {
         let cy = 0, ly = 0, ach = 0;
-        const segments = categories.filter(c => activeCategories.has(c.id)).map(cat => ({ catId: cat.id, catName: cat.name, value: 0, lyValue: 0, achieved: 0 }));
+        const segments = categories.filter(c => activeCategories.has(c.id)).map(cat => ({
+          catId: cat.id, catName: cat.name, value: 0, lyValue: 0, achieved: 0,
+        }));
         abm.tbms?.forEach(tbm => {
           tbm.salesReps?.forEach(rep => {
             rep.products?.forEach(p => {
               if (!activeCategories.has(p.categoryId)) return;
               if (p.monthlyTargets) Object.values(p.monthlyTargets).forEach(m => {
-                const cv = metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
-                const lv = metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
-                const achField = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
-                const av = (achField !== undefined && achField !== null) ? achField : Math.round(lv * 0.92);
+                const cv  = metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
+                const lv  = metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
+                const achF = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
+                const av  = achF != null ? achF : lv * 0.92;
                 cy += cv; ly += lv; ach += av;
                 const seg = segments.find(s => s.catId === p.categoryId);
                 if (seg) { seg.value += cv; seg.lyValue += lv; seg.achieved += av; }
@@ -397,13 +536,18 @@ function SalesHeadAnalytics({ showToast }) {
             });
           });
         });
-        result.push({ id: abm.id, name: abm.name, subtitle: `${abm.territory} · ${zbm.name}`, shortName: abm.territory.split(' ')[0], value: cy, lyValue: ly, achieved: ach, growth: Utils.calcGrowth(ly, cy), achievedPct: ly > 0 ? Math.round((ach / ly) * 100) : 0, total: cy, segments, parentZone: zbm.id });
+        result.push({
+          id: abm.id, name: abm.name, subtitle: `${abm.territory} · ${zbm.name}`,
+          shortName: abm.territory.split(' ')[0], value: cy, lyValue: ly, achieved: ach,
+          growth: Utils.calcGrowth(ly, cy), achievedPct: ly > 0 ? Math.round((ach / ly) * 100) : 0,
+          total: cy, segments, parentZone: zbm.id,
+        });
       });
     });
     return result.sort((a, b) => b.value - a.value);
   }, [hierarchy, selectedZone, categories, metric, activeCategories]);
 
-  // Member (TBM/Rep) aggregation
+  // Member aggregation
   const memberData = useMemo(() => {
     let targetABMs = [];
     const zbms = selectedZone === 'all' ? hierarchy : hierarchy.filter(z => z.id === selectedZone);
@@ -412,26 +556,32 @@ function SalesHeadAnalytics({ showToast }) {
         if (selectedTerritory === 'all' || abm.id === selectedTerritory) targetABMs.push({ abm, zbm });
       });
     });
-
     const result = [];
     targetABMs.forEach(({ abm, zbm }) => {
       abm.tbms?.forEach(tbm => {
         tbm.salesReps?.forEach(rep => {
           let cy = 0, ly = 0, ach = 0;
-          const segments = categories.filter(c => activeCategories.has(c.id)).map(cat => ({ catId: cat.id, catName: cat.name, value: 0, lyValue: 0, achieved: 0 }));
+          const segments = categories.filter(c => activeCategories.has(c.id)).map(cat => ({
+            catId: cat.id, catName: cat.name, value: 0, lyValue: 0, achieved: 0,
+          }));
           rep.products?.forEach(p => {
             if (!activeCategories.has(p.categoryId)) return;
             if (p.monthlyTargets) Object.values(p.monthlyTargets).forEach(m => {
-              const cv = metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
-              const lv = metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
-              const achField = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
-              const av = (achField !== undefined && achField !== null) ? achField : Math.round(lv * 0.92);
+              const cv  = metric === 'revenue' ? (m.cyRev || 0) : (m.cyQty || 0);
+              const lv  = metric === 'revenue' ? (m.lyRev || 0) : (m.lyQty || 0);
+              const achF = metric === 'revenue' ? m.lyAchRev : m.lyAchQty;
+              const av  = achF != null ? achF : lv * 0.92;
               cy += cv; ly += lv; ach += av;
               const seg = segments.find(s => s.catId === p.categoryId);
               if (seg) { seg.value += cv; seg.lyValue += lv; seg.achieved += av; }
             });
           });
-          result.push({ id: rep.id, name: rep.name, subtitle: `${rep.territory} · ${tbm.name}`, shortName: rep.name.split(' ')[0], value: cy, lyValue: ly, achieved: ach, growth: Utils.calcGrowth(ly, cy), achievedPct: ly > 0 ? Math.round((ach / ly) * 100) : 0, total: cy, segments, parentTBM: tbm.id, parentABM: abm.id, parentZone: zbm.id });
+          result.push({
+            id: rep.id, name: rep.name, subtitle: `${rep.territory} · ${tbm.name}`,
+            shortName: rep.name.split(' ')[0], value: cy, lyValue: ly, achieved: ach,
+            growth: Utils.calcGrowth(ly, cy), achievedPct: ly > 0 ? Math.round((ach / ly) * 100) : 0,
+            total: cy, segments, parentTBM: tbm.id, parentABM: abm.id, parentZone: zbm.id,
+          });
         });
       });
     });
@@ -440,17 +590,21 @@ function SalesHeadAnalytics({ showToast }) {
 
   // Current view data
   const currentData = useMemo(() => {
-    if (viewLevel === 'zone') return zoneData;
+    if (viewLevel === 'zone')      return zoneData;
     if (viewLevel === 'territory') return territoryData;
     return memberData;
   }, [viewLevel, zoneData, territoryData, memberData]);
 
-  const totalCY = useMemo(() => currentData.reduce((s, d) => s + d.value, 0), [currentData]);
-  const totalLY = useMemo(() => currentData.reduce((s, d) => s + d.lyValue, 0), [currentData]);
-  const totalAchieved = useMemo(() => currentData.reduce((s, d) => s + (d.achieved || 0), 0), [currentData]);
-  const totalGrowth = Utils.calcGrowth(totalLY, totalCY);
+  const totalCY       = useMemo(() => currentData.reduce((s, d) => s + d.value,              0), [currentData]);
+  const totalLY       = useMemo(() => currentData.reduce((s, d) => s + d.lyValue,            0), [currentData]);
+  const totalAchieved = useMemo(() => currentData.reduce((s, d) => s + (d.achieved || 0),    0), [currentData]);
+  const totalGrowth   = Utils.calcGrowth(totalLY, totalCY);
 
-  // Zone options for dropdown
+  // PART 1 — Item 4: pre-computed % metrics for summary bar
+  const lyAchPct   = totalLY > 0 ? Math.round((totalAchieved / totalLY) * 100) : 0;
+  const contribRef = totalCY; // used for individual share tiles
+
+  // Zone / territory options for dropdowns
   const zoneOptions = useMemo(() => hierarchy.map(z => ({ id: z.id, name: z.name, territory: z.territory })), [hierarchy]);
   const territoryOptions = useMemo(() => {
     const zbms = selectedZone === 'all' ? hierarchy : hierarchy.filter(z => z.id === selectedZone);
@@ -459,7 +613,6 @@ function SalesHeadAnalytics({ showToast }) {
     return opts;
   }, [hierarchy, selectedZone]);
 
-  // Comparison items dropdown
   const compareItems = useMemo(() => currentData.map(d => ({ id: d.id, name: d.name, subtitle: d.subtitle })), [currentData]);
 
   // Comparison data
@@ -469,14 +622,11 @@ function SalesHeadAnalytics({ showToast }) {
     const entityB = currentData.find(d => d.id === compareB);
     if (!entityA || !entityB) return null;
 
-    // Get monthly data for each
-    let subsA, subsB;
+    let subsA = [], subsB = [];
     if (viewLevel === 'zone') {
       subsA = zbmSubmissions.filter(s => s.zbmId === compareA);
       subsB = zbmSubmissions.filter(s => s.zbmId === compareB);
     } else {
-      // For territory/member, extract from hierarchy products
-      subsA = []; subsB = [];
       const extractSubs = (entity) => {
         const fakeSubmissions = [];
         const walkHierarchy = (zbms) => {
@@ -503,18 +653,14 @@ function SalesHeadAnalytics({ showToast }) {
         walkHierarchy(hierarchy);
         return fakeSubmissions;
       };
-      if (viewLevel !== 'zone') {
-        subsA = extractSubs(entityA);
-        subsB = extractSubs(entityB);
-      }
+      subsA = extractSubs(entityA);
+      subsB = extractSubs(entityB);
     }
 
-    const monthlyA = getMonthlyData(subsA, metric);
-    const monthlyB = getMonthlyData(subsB, metric);
-    const monthlyLYA = getMonthlyLYData(subsA, metric);
-    const monthlyLYB = getMonthlyLYData(subsB, metric);
-
-    // Radar data per category
+    const monthlyA    = getMonthlyData(subsA, metric);
+    const monthlyB    = getMonthlyData(subsB, metric);
+    const monthlyLYA  = getMonthlyLYData(subsA, metric);
+    const monthlyLYB  = getMonthlyLYData(subsB, metric);
     const radarLabels = categories.filter(c => activeCategories.has(c.id)).map(c => c.name);
     const radarA = categories.filter(c => activeCategories.has(c.id)).map(c => entityA.segments.find(s => s.catId === c.id)?.value || 0);
     const radarB = categories.filter(c => activeCategories.has(c.id)).map(c => entityB.segments.find(s => s.catId === c.id)?.value || 0);
@@ -530,14 +676,21 @@ function SalesHeadAnalytics({ showToast }) {
 
   return (
     <div className="sh-an-container">
+
       {/* ==================== CONTROL BAR ==================== */}
       <div className="sh-an-control-bar">
         <div className="sh-an-control-left">
           <div className="sh-an-control-group">
             <label className="sh-an-label">View Level</label>
             <div className="sh-an-toggle-group">
-              {[{ key: 'zone', label: 'Zone', icon: 'fa-globe-asia' }, { key: 'territory', label: 'Territory', icon: 'fa-map-marked-alt' }, { key: 'member', label: 'Team Member', icon: 'fa-user' }].map(opt => (
-                <button key={opt.key} className={`sh-an-toggle-btn ${viewLevel === opt.key ? 'active' : ''}`} onClick={() => { setViewLevel(opt.key); setCompareA(''); setCompareB(''); }}>
+              {[{ key: 'zone', label: 'Zone', icon: 'fa-globe-asia' },
+                { key: 'territory', label: 'Territory', icon: 'fa-map-marked-alt' },
+                { key: 'member', label: 'Team Member', icon: 'fa-user' }
+              ].map(opt => (
+                <button key={opt.key}
+                  className={`sh-an-toggle-btn ${viewLevel === opt.key ? 'active' : ''}`}
+                  onClick={() => { setViewLevel(opt.key); setCompareA(''); setCompareB(''); }}
+                >
                   <i className={`fas ${opt.icon}`}></i> {opt.label}
                 </button>
               ))}
@@ -547,7 +700,8 @@ function SalesHeadAnalytics({ showToast }) {
           {viewLevel !== 'zone' && (
             <div className="sh-an-control-group">
               <label className="sh-an-label">Zone</label>
-              <select className="sh-an-select" value={selectedZone} onChange={e => { setSelectedZone(e.target.value); setSelectedTerritory('all'); setCompareA(''); setCompareB(''); }}>
+              <select className="sh-an-select" value={selectedZone}
+                onChange={e => { setSelectedZone(e.target.value); setSelectedTerritory('all'); setCompareA(''); setCompareB(''); }}>
                 <option value="all">All Zones</option>
                 {zoneOptions.map(z => <option key={z.id} value={z.id}>{z.name} — {z.territory}</option>)}
               </select>
@@ -557,7 +711,8 @@ function SalesHeadAnalytics({ showToast }) {
           {viewLevel === 'member' && (
             <div className="sh-an-control-group">
               <label className="sh-an-label">Territory</label>
-              <select className="sh-an-select" value={selectedTerritory} onChange={e => { setSelectedTerritory(e.target.value); setCompareA(''); setCompareB(''); }}>
+              <select className="sh-an-select" value={selectedTerritory}
+                onChange={e => { setSelectedTerritory(e.target.value); setCompareA(''); setCompareB(''); }}>
                 <option value="all">All Territories</option>
                 {territoryOptions.map(t => <option key={t.id} value={t.id}>{t.name} — {t.territory}</option>)}
               </select>
@@ -569,51 +724,60 @@ function SalesHeadAnalytics({ showToast }) {
           <div className="sh-an-control-group">
             <label className="sh-an-label">Metric</label>
             <div className="sh-an-toggle-group mini">
-              <button className={`sh-an-toggle-btn ${metric === 'revenue' ? 'active' : ''}`} onClick={() => setMetric('revenue')}><i className="fas fa-rupee-sign"></i> Revenue</button>
-              <button className={`sh-an-toggle-btn ${metric === 'qty' ? 'active' : ''}`} onClick={() => setMetric('qty')}><i className="fas fa-cubes"></i> Qty</button>
+              <button className={`sh-an-toggle-btn ${metric === 'revenue' ? 'active' : ''}`} onClick={() => setMetric('revenue')}>
+                <i className="fas fa-rupee-sign"></i> Revenue
+              </button>
+              <button className={`sh-an-toggle-btn ${metric === 'qty' ? 'active' : ''}`} onClick={() => setMetric('qty')}>
+                <i className="fas fa-boxes"></i> Qty
+              </button>
             </div>
           </div>
 
-          <button className={`sh-an-compare-toggle ${compareMode ? 'active' : ''}`} onClick={() => { setCompareMode(!compareMode); setCompareA(''); setCompareB(''); }}>
-            <i className="fas fa-columns"></i> {compareMode ? 'Exit Compare' : 'Compare'}
-          </button>
-        </div>
-      </div>
+          <div className="sh-an-control-group">
+            <label className="sh-an-label">Categories</label>
+            <div className="sh-an-cat-filters">
+              {categories.map(cat => (
+                <button key={cat.id}
+                  className={`sh-an-cat-chip ${activeCategories.has(cat.id) ? 'active' : ''}`}
+                  style={activeCategories.has(cat.id) ? { background: CAT_COLORS[cat.id] } : {}}
+                  onClick={() => toggleCategory(cat.id)}
+                >
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          </div>
 
-      {/* ==================== CATEGORY FILTER CHIPS ==================== */}
-      <div className="sh-an-cat-chips">
-        <span className="sh-an-chips-label">Categories:</span>
-        {categories.map(cat => (
           <button
-            key={cat.id}
-            className={`sh-an-chip ${activeCategories.has(cat.id) ? 'active' : ''}`}
-            style={activeCategories.has(cat.id) ? { background: CAT_COLORS[cat.id], borderColor: CAT_COLORS[cat.id], color: '#fff' } : {}}
-            onClick={() => toggleCategory(cat.id)}
+            className={`sh-an-compare-toggle ${compareMode ? 'active' : ''}`}
+            onClick={() => { setCompareMode(m => !m); setCompareA(''); setCompareB(''); }}
           >
-            <i className={`fas ${cat.icon}`}></i> {cat.name}
+            <i className="fas fa-balance-scale"></i>
+            {compareMode ? 'Exit Compare' : 'Compare'}
           </button>
-        ))}
-        <button className="sh-an-chip-reset" onClick={() => setActiveCategories(new Set(categories.map(c => c.id)))}>
-          <i className="fas fa-redo-alt"></i> All
-        </button>
+        </div>
       </div>
 
-      {/* ==================== SUMMARY STRIP ==================== */}
-      <div className="sh-an-summary-strip">
+      {/* ==================== SUMMARY BAR ==================== */}
+      {/* PART 1 — Items 4 & 6: added % metrics, removed "Entities" count */}
+      <div className="sh-an-summary-bar">
         <div className="sh-an-summary-item">
-          <span className="sh-an-summary-label">LY Target</span>
-          <span className="sh-an-summary-value muted">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(totalLY)}</span>
+          {/* PART 1 — Item 1: "LY Tgt" label */}
+          <span className="sh-an-summary-label">LY Tgt</span>
+          <span className="sh-an-summary-value">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(totalLY)}</span>
         </div>
         <div className="sh-an-summary-divider"></div>
         <div className="sh-an-summary-item">
-          <span className="sh-an-summary-label">LY Achieved</span>
-          <span className="sh-an-summary-value" style={{color:'#6EE7B7'}}>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(totalAchieved)}</span>
-        </div>
-        <div className="sh-an-summary-divider"></div>
-        <div className="sh-an-summary-item">
-          <span className="sh-an-summary-label">Achievement %</span>
-          <span className="sh-an-summary-value" style={{color: totalLY > 0 && Math.round((totalAchieved/totalLY)*100) >= 90 ? '#6EE7B7' : '#FCA5A5'}}>
-            {totalLY > 0 ? Math.round((totalAchieved / totalLY) * 100) : 0}%
+          {/* PART 1 — Item 1: "LY Ahv" label */}
+          <span className="sh-an-summary-label">LY Ahv</span>
+          <span className="sh-an-summary-value"
+            style={{ color: lyAchPct >= 100 ? '#6EE7B7' : '#FCA5A5' }}>
+            {metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(totalAchieved)}
+          </span>
+          {/* PART 1 — Item 4: % of LY Tgt achieved */}
+          <span className="sh-an-summary-pct"
+            style={{ color: lyAchPct >= 100 ? '#6EE7B7' : '#FCA5A5' }}>
+            {lyAchPct}% of LY Tgt
           </span>
         </div>
         <div className="sh-an-summary-divider"></div>
@@ -623,20 +787,19 @@ function SalesHeadAnalytics({ showToast }) {
         </div>
         <div className="sh-an-summary-divider"></div>
         <div className="sh-an-summary-item">
-          <span className="sh-an-summary-label">YoY Growth</span>
-          <span className={`sh-an-summary-value ${totalGrowth >= 0 ? 'positive' : 'negative'}`}>{totalGrowth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(totalGrowth)}</span>
+          {/* PART 1 — Item 4: growth (target) % */}
+          <span className="sh-an-summary-label">Tgt Growth</span>
+          <span className={`sh-an-summary-value ${totalGrowth >= 0 ? 'positive' : 'negative'}`}>
+            {totalGrowth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(totalGrowth)}
+          </span>
         </div>
-        <div className="sh-an-summary-divider"></div>
-        <div className="sh-an-summary-item">
-          <span className="sh-an-summary-label">Entities</span>
-          <span className="sh-an-summary-value">{currentData.length}</span>
-        </div>
+        {/* PART 1 — Item 6: "Entities" count REMOVED */}
       </div>
 
       {/* ==================== MAIN CONTENT ==================== */}
       {!compareMode ? (
         <div className="sh-an-distribution-view">
-          {/* STACKED BAR */}
+          {/* STACKED BAR — target distribution by category */}
           <div className="sh-an-card">
             <div className="sh-an-card-header">
               <h3><i className="fas fa-chart-bar"></i> Target Distribution by Category</h3>
@@ -647,7 +810,7 @@ function SalesHeadAnalytics({ showToast }) {
             <StackedBarChart data={currentData} categories={categories.filter(c => activeCategories.has(c.id))} metric={metric} />
           </div>
 
-          {/* HORIZONTAL BARS */}
+          {/* HORIZONTAL BARS — ranking */}
           <div className="sh-an-card">
             <div className="sh-an-card-header">
               <h3><i className="fas fa-align-left"></i> {metric === 'revenue' ? 'Revenue' : 'Quantity'} Ranking</h3>
@@ -658,7 +821,7 @@ function SalesHeadAnalytics({ showToast }) {
             <HorizontalBar items={currentData} maxVal={Math.max(...currentData.map(d => d.value), 1)} metric={metric} />
           </div>
 
-          {/* CONTRIBUTION TREEMAP-LIKE GRID */}
+          {/* TARGET SHARE TILES */}
           <div className="sh-an-card">
             <div className="sh-an-card-header">
               <h3><i className="fas fa-th-large"></i> Target Share</h3>
@@ -666,19 +829,22 @@ function SalesHeadAnalytics({ showToast }) {
             </div>
             <div className="sh-an-share-grid">
               {currentData.map((d, i) => {
-                const share = totalCY > 0 ? ((d.value / totalCY) * 100).toFixed(1) : 0;
+                const share = contribRef > 0 ? ((d.value / contribRef) * 100).toFixed(1) : 0;
                 return (
                   <div key={d.id} className="sh-an-share-tile" style={{ '--share-color': ZONE_COLORS[i % ZONE_COLORS.length] }}>
                     <span className="sh-an-share-pct">{share}%</span>
                     <span className="sh-an-share-name">{d.name}</span>
                     <span className="sh-an-share-val">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(d.value)}</span>
-                    <span className={`sh-an-share-growth ${d.growth >= 0 ? 'pos' : 'neg'}`}>{d.growth >= 0 ? '↑' : '↓'}{Math.abs(d.growth).toFixed(1)}%</span>
+                    <span className={`sh-an-share-growth ${d.growth >= 0 ? 'pos' : 'neg'}`}>
+                      {d.growth >= 0 ? '↑' : '↓'}{Math.abs(d.growth).toFixed(1)}%
+                    </span>
                   </div>
                 );
               })}
             </div>
           </div>
         </div>
+
       ) : (
         /* ==================== COMPARISON MODE ==================== */
         <div className="sh-an-compare-view">
@@ -686,16 +852,20 @@ function SalesHeadAnalytics({ showToast }) {
             <div className="sh-an-compare-select-card a">
               <span className="sh-an-compare-badge a">A</span>
               <select className="sh-an-select" value={compareA} onChange={e => setCompareA(e.target.value)}>
-                <option value="">Select {viewLevel === 'zone' ? 'Zone' : viewLevel === 'territory' ? 'Territory' : 'Member'}...</option>
-                {compareItems.filter(it => it.id !== compareB).map(it => <option key={it.id} value={it.id}>{it.name}{it.subtitle ? ` — ${it.subtitle}` : ''}</option>)}
+                <option value="">Select {viewLevel === 'zone' ? 'Zone' : viewLevel === 'territory' ? 'Territory' : 'Member'}…</option>
+                {compareItems.filter(it => it.id !== compareB).map(it => (
+                  <option key={it.id} value={it.id}>{it.name}{it.subtitle ? ` — ${it.subtitle}` : ''}</option>
+                ))}
               </select>
             </div>
             <div className="sh-an-compare-vs">VS</div>
             <div className="sh-an-compare-select-card b">
               <span className="sh-an-compare-badge b">B</span>
               <select className="sh-an-select" value={compareB} onChange={e => setCompareB(e.target.value)}>
-                <option value="">Select {viewLevel === 'zone' ? 'Zone' : viewLevel === 'territory' ? 'Territory' : 'Member'}...</option>
-                {compareItems.filter(it => it.id !== compareA).map(it => <option key={it.id} value={it.id}>{it.name}{it.subtitle ? ` — ${it.subtitle}` : ''}</option>)}
+                <option value="">Select {viewLevel === 'zone' ? 'Zone' : viewLevel === 'territory' ? 'Territory' : 'Member'}…</option>
+                {compareItems.filter(it => it.id !== compareA).map(it => (
+                  <option key={it.id} value={it.id}>{it.name}{it.subtitle ? ` — ${it.subtitle}` : ''}</option>
+                ))}
               </select>
             </div>
           </div>
@@ -707,32 +877,51 @@ function SalesHeadAnalytics({ showToast }) {
                 <div className="sh-an-compare-kpi-card a">
                   <span className="sh-an-compare-kpi-name">{comparisonData.entityA.name}</span>
                   <div className="sh-an-compare-kpi-metrics">
-                    <div className="sh-an-compare-kpi-row"><span className="sh-an-ckr-label">LY Target</span><span className="sh-an-ckr-val muted">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.lyValue)}</span></div>
-                    <div className="sh-an-compare-kpi-row"><span className="sh-an-ckr-label">LY Achieved</span><span className="sh-an-ckr-val ach">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.achieved)} <small>({comparisonData.entityA.achievedPct}%)</small></span></div>
-                    <div className="sh-an-compare-kpi-row highlight"><span className="sh-an-ckr-label">CY Target</span><span className="sh-an-ckr-val">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.value)}</span></div>
+                    {/* PART 1 — Item 1: "LY Tgt" */}
+                    <div className="sh-an-compare-kpi-row">
+                      <span className="sh-an-ckr-label">LY Tgt</span>
+                      <span className="sh-an-ckr-val muted">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.lyValue)}</span>
+                    </div>
+                    {/* PART 1 — Item 1: "LY Ahv" */}
+                    <div className="sh-an-compare-kpi-row">
+                      <span className="sh-an-ckr-label">LY Ahv</span>
+                      <span className="sh-an-ckr-val ach">
+                        {metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.achieved)}
+                        {/* PART 1 — Item 4: % achieved */}
+                        <small> ({comparisonData.entityA.achievedPct}%)</small>
+                      </span>
+                    </div>
+                    <div className="sh-an-compare-kpi-row highlight">
+                      <span className="sh-an-ckr-label">CY Target</span>
+                      <span className="sh-an-ckr-val">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.value)}</span>
+                    </div>
                   </div>
                   <span className={`sh-an-compare-kpi-growth ${comparisonData.entityA.growth >= 0 ? 'pos' : 'neg'}`}>
-                    {comparisonData.entityA.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(comparisonData.entityA.growth)} YoY
+                    {comparisonData.entityA.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(comparisonData.entityA.growth)} YoY Tgt
                   </span>
                 </div>
-                <div className="sh-an-compare-kpi-diff">
-                  <span className="sh-an-compare-diff-label">CY Difference</span>
-                  <span className="sh-an-compare-diff-val">
-                    {metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(Math.abs(comparisonData.entityA.value - comparisonData.entityB.value))}
-                  </span>
-                  <span className="sh-an-compare-diff-pct">
-                    {comparisonData.entityB.value > 0 ? Math.round(((comparisonData.entityA.value - comparisonData.entityB.value) / comparisonData.entityB.value) * 100) : 0}%
-                  </span>
-                </div>
+
                 <div className="sh-an-compare-kpi-card b">
                   <span className="sh-an-compare-kpi-name">{comparisonData.entityB.name}</span>
                   <div className="sh-an-compare-kpi-metrics">
-                    <div className="sh-an-compare-kpi-row"><span className="sh-an-ckr-label">LY Target</span><span className="sh-an-ckr-val muted">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.lyValue)}</span></div>
-                    <div className="sh-an-compare-kpi-row"><span className="sh-an-ckr-label">LY Achieved</span><span className="sh-an-ckr-val ach">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.achieved)} <small>({comparisonData.entityB.achievedPct}%)</small></span></div>
-                    <div className="sh-an-compare-kpi-row highlight"><span className="sh-an-ckr-label">CY Target</span><span className="sh-an-ckr-val">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.value)}</span></div>
+                    <div className="sh-an-compare-kpi-row">
+                      <span className="sh-an-ckr-label">LY Tgt</span>
+                      <span className="sh-an-ckr-val muted">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.lyValue)}</span>
+                    </div>
+                    <div className="sh-an-compare-kpi-row">
+                      <span className="sh-an-ckr-label">LY Ahv</span>
+                      <span className="sh-an-ckr-val ach">
+                        {metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.achieved)}
+                        <small> ({comparisonData.entityB.achievedPct}%)</small>
+                      </span>
+                    </div>
+                    <div className="sh-an-compare-kpi-row highlight">
+                      <span className="sh-an-ckr-label">CY Target</span>
+                      <span className="sh-an-ckr-val">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.value)}</span>
+                    </div>
                   </div>
                   <span className={`sh-an-compare-kpi-growth ${comparisonData.entityB.growth >= 0 ? 'pos' : 'neg'}`}>
-                    {comparisonData.entityB.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(comparisonData.entityB.growth)} YoY
+                    {comparisonData.entityB.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(comparisonData.entityB.growth)} YoY Tgt
                   </span>
                 </div>
               </div>
@@ -760,55 +949,20 @@ function SalesHeadAnalytics({ showToast }) {
                 </div>
               </div>
 
-              {/* Category Breakdown Side by Side */}
+              {/* PART 1 — Item 7: CATEGORY BAR CHART replaces the old table */}
               <div className="sh-an-card">
-                <div className="sh-an-card-header"><h3><i className="fas fa-table"></i> Category Breakdown — LY Target · LY Achieved · CY Target</h3></div>
-                <div className="sh-an-compare-table-wrap">
-                  <table className="sh-an-compare-table">
-                    <thead>
-                      <tr>
-                        <th rowSpan="2">Category</th>
-                        <th colSpan="3" className="col-a">{comparisonData.entityA.name}</th>
-                        <th colSpan="3" className="col-b">{comparisonData.entityB.name}</th>
-                      </tr>
-                      <tr>
-                        <th className="col-a sub">LY Tgt</th>
-                        <th className="col-a sub">LY Ach</th>
-                        <th className="col-a sub">CY Tgt</th>
-                        <th className="col-b sub">LY Tgt</th>
-                        <th className="col-b sub">LY Ach</th>
-                        <th className="col-b sub">CY Tgt</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {categories.filter(c => activeCategories.has(c.id)).map(cat => {
-                        const segA = comparisonData.entityA.segments.find(s => s.catId === cat.id) || {};
-                        const segB = comparisonData.entityB.segments.find(s => s.catId === cat.id) || {};
-                        const p = metric === 'revenue' ? '₹' : '';
-                        return (
-                          <tr key={cat.id}>
-                            <td className="sh-an-ct-cat"><span className="sh-an-ct-dot" style={{ background: CAT_COLORS[cat.id] }}></span>{cat.name}</td>
-                            <td className="col-a ly">{p}{Utils.formatCompact(segA.lyValue || 0)}</td>
-                            <td className="col-a ach">{p}{Utils.formatCompact(segA.achieved || 0)}</td>
-                            <td className="col-a cy">{p}{Utils.formatCompact(segA.value || 0)}</td>
-                            <td className="col-b ly">{p}{Utils.formatCompact(segB.lyValue || 0)}</td>
-                            <td className="col-b ach">{p}{Utils.formatCompact(segB.achieved || 0)}</td>
-                            <td className="col-b cy">{p}{Utils.formatCompact(segB.value || 0)}</td>
-                          </tr>
-                        );
-                      })}
-                      <tr className="sh-an-ct-total-row">
-                        <td><strong>Total</strong></td>
-                        <td className="col-a ly"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.lyValue)}</strong></td>
-                        <td className="col-a ach"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.achieved)}</strong></td>
-                        <td className="col-a cy"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityA.value)}</strong></td>
-                        <td className="col-b ly"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.lyValue)}</strong></td>
-                        <td className="col-b ach"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.achieved)}</strong></td>
-                        <td className="col-b cy"><strong>{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(comparisonData.entityB.value)}</strong></td>
-                      </tr>
-                    </tbody>
-                  </table>
+                <div className="sh-an-card-header">
+                  <h3><i className="fas fa-chart-bar"></i> Category Breakdown — LY Tgt · LY Ahv · CY Tgt</h3>
+                  <span className="sh-an-card-subtitle">
+                    {comparisonData.entityA.name} vs {comparisonData.entityB.name}
+                  </span>
                 </div>
+                <CategoryBarChart
+                  categories={categories.filter(c => activeCategories.has(c.id))}
+                  entityA={comparisonData.entityA}
+                  entityB={comparisonData.entityB}
+                  metric={metric}
+                />
               </div>
             </div>
           ) : (

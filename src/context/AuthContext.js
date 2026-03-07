@@ -1,7 +1,9 @@
 /**
  * AuthContext.js — Email + Password Auth
  *
- * @version 6.0.0 - Removed mock mode, SSO, and refresh token logic
+ * @version 6.1.0 - Added frontend role normalizer in mapUserFromBackend
+ *                  Fixes raw DB designations like "Sales Head (Surgical)"
+ *                  not being recognized by App.js router
  */
 
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
@@ -47,11 +49,133 @@ export const ROLE_LABELS = {
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FRONTEND ROLE NORMALIZER
+// Mirrors authenticate.js ROLE_MAP exactly.
+// Needed because /me endpoint returns the raw DB designation string,
+// not the middleware-normalized value. Without this, App.js routing breaks
+// for users with designations like "Sales Head (Surgical)".
+// ═══════════════════════════════════════════════════════════════════════════
+
+const FRONTEND_ROLE_MAP = {
+  // sales_rep
+  'sales_rep'                         : 'sales_rep',
+  'sales rep'                         : 'sales_rep',
+  'salesrep'                          : 'sales_rep',
+  'sales representative'              : 'sales_rep',
+  'sales_representative'              : 'sales_rep',
+  'salesrepresentative'               : 'sales_rep',
+  'sr'                                : 'sales_rep',
+
+  // tbm
+  'tbm'                               : 'tbm',
+  'territory business manager'        : 'tbm',
+  'territory_business_manager'        : 'tbm',
+  'territorybusinessmanager'          : 'tbm',
+  'territory manager'                 : 'tbm',
+  'territory_manager'                 : 'tbm',
+
+  // abm
+  'abm'                               : 'abm',
+  'area business manager'             : 'abm',
+  'area_business_manager'             : 'abm',
+  'areabusinessmanager'               : 'abm',
+  'area manager'                      : 'abm',
+  'area_manager'                      : 'abm',
+
+  // zbm
+  'zbm'                               : 'zbm',
+  'zonal business manager'            : 'zbm',
+  'zonal_business_manager'            : 'zbm',
+  'zonalbusinessmanager'              : 'zbm',
+  'zonal manager'                     : 'zbm',
+  'zonal_manager'                     : 'zbm',
+
+  // sales_head — all DB designation variants bucketed here
+  'sales_head'                        : 'sales_head',
+  'sales head'                        : 'sales_head',
+  'saleshead'                         : 'sales_head',
+  'head of sales'                     : 'sales_head',
+  'head_of_sales'                     : 'sales_head',
+  'national sales head'               : 'sales_head',
+  'sh'                                : 'sales_head',
+  'sales head (surgical)'             : 'sales_head',
+  'sales head (diagnostic)'           : 'sales_head',
+  'sales head surgical'               : 'sales_head',
+  'sales head diagnostic'             : 'sales_head',
+  'sales_head_surgical'               : 'sales_head',
+  'sales_head_diagnostic'             : 'sales_head',
+
+  // at_iol_specialist
+  'at_iol_specialist'                 : 'at_iol_specialist',
+  'at iol specialist'                 : 'at_iol_specialist',
+  'iol specialist'                    : 'at_iol_specialist',
+  'iol_specialist'                    : 'at_iol_specialist',
+  'at/iol specialist'                 : 'at_iol_specialist',
+
+  // eq_spec_diagnostic
+  'eq_spec_diagnostic'                : 'eq_spec_diagnostic',
+  'eq spec diagnostic'                : 'eq_spec_diagnostic',
+  'equipment specialist diagnostic'   : 'eq_spec_diagnostic',
+  'equipment_specialist_diagnostic'   : 'eq_spec_diagnostic',
+  'equipment specialist (diagnostic)' : 'eq_spec_diagnostic',
+
+  // eq_spec_surgical
+  'eq_spec_surgical'                  : 'eq_spec_surgical',
+  'eq spec surgical'                  : 'eq_spec_surgical',
+  'equipment specialist surgical'     : 'eq_spec_surgical',
+  'equipment_specialist_surgical'     : 'eq_spec_surgical',
+  'equipment specialist (surgical)'   : 'eq_spec_surgical',
+
+  // at_iol_manager
+  'at_iol_manager'                    : 'at_iol_manager',
+  'at iol manager'                    : 'at_iol_manager',
+  'iol manager'                       : 'at_iol_manager',
+  'iol_manager'                       : 'at_iol_manager',
+  'at/iol manager'                    : 'at_iol_manager',
+
+  // eq_mgr_diagnostic
+  'eq_mgr_diagnostic'                 : 'eq_mgr_diagnostic',
+  'eq mgr diagnostic'                 : 'eq_mgr_diagnostic',
+  'equipment manager diagnostic'      : 'eq_mgr_diagnostic',
+  'equipment_manager_diagnostic'      : 'eq_mgr_diagnostic',
+  'equipment manager (diagnostic)'    : 'eq_mgr_diagnostic',
+
+  // eq_mgr_surgical
+  'eq_mgr_surgical'                   : 'eq_mgr_surgical',
+  'eq mgr surgical'                   : 'eq_mgr_surgical',
+  'equipment manager surgical'        : 'eq_mgr_surgical',
+  'equipment_manager_surgical'        : 'eq_mgr_surgical',
+  'equipment manager (surgical)'      : 'eq_mgr_surgical',
+
+  // admin
+  'admin'                             : 'admin',
+  'administrator'                     : 'admin',
+  'system administrator'              : 'admin',
+  'system_administrator'              : 'admin',
+  'sysadmin'                          : 'admin',
+};
+
+function normalizeRole(rawRole) {
+  if (!rawRole) return rawRole;
+  // Already a clean known code — pass through immediately
+  if (FRONTEND_ROLE_MAP[rawRole]) return FRONTEND_ROLE_MAP[rawRole];
+  // Case-insensitive lookup for raw DB strings like "Sales Head (Surgical)"
+  const key = rawRole.trim().toLowerCase();
+  const mapped = FRONTEND_ROLE_MAP[key];
+  if (!mapped) {
+    console.warn(`[AuthContext] Unrecognized role from backend: "${rawRole}" — routing may fail`);
+  }
+  return mapped || rawRole;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // HELPER: Map backend user → frontend shape
 // ═══════════════════════════════════════════════════════════════════════════
 
 const mapUserFromBackend = (backendUser) => {
   if (!backendUser) return null;
+  // Normalize raw DB role → clean application role code before storing
+  const normalizedRole = normalizeRole(backendUser.role);
   return {
     id: backendUser.id,
     employeeCode: backendUser.employeeCode || backendUser.employee_code,
@@ -59,8 +183,8 @@ const mapUserFromBackend = (backendUser) => {
     name: backendUser.fullName || backendUser.full_name || backendUser.name,
     fullName: backendUser.fullName || backendUser.full_name || backendUser.name,
     email: backendUser.email,
-    role: backendUser.role,
-    roleLabel: ROLE_LABELS[backendUser.role] || backendUser.roleLabel || backendUser.role,
+    role: normalizedRole,
+    roleLabel: ROLE_LABELS[normalizedRole] || backendUser.roleLabel || backendUser.role,
     designation: backendUser.designation,
     territory: backendUser.territoryName || backendUser.territory_name || backendUser.territory || 'Not Assigned',
     territoryName: backendUser.territoryName || backendUser.territory_name || backendUser.territory,

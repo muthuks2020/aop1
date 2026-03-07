@@ -7,8 +7,7 @@
  * @version 1.1.0 - Month-wise breakdown
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { ProductPricingService } from '../../services/productPricing';
+import React, { useState, useMemo } from 'react';
 import '../../styles/quarterlySummary.css';
 
 // Constants
@@ -44,25 +43,9 @@ const formatCurrency = (amount) => {
 const formatNumber = (num) => num.toLocaleString('en-IN');
 
 function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-27' }) {
-  const [pricingMap, setPricingMap] = useState({});
-  const [isLoading, setIsLoading] = useState(true);
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
   const [selectedQuarter, setSelectedQuarter] = useState(null);
   const [viewMode, setViewMode] = useState('qty');
-
-  useEffect(() => {
-    const loadPricing = async () => {
-      try {
-        const map = await ProductPricingService.getPricingMap();
-        setPricingMap(map);
-      } catch (error) {
-        console.error('Failed to load pricing:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    loadPricing();
-  }, []);
 
   // Calculate quarterly + monthly data for each product
   const quarterlySummaryData = useMemo(() => {
@@ -74,7 +57,8 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
       const isRevenueOnly = cat.isRevenueOnly;
 
       const productSummaries = catProducts.map(product => {
-        const pricing = pricingMap[product.id] || { unitCost: 0, isRevenueOnly: false };
+        // Use unitCost already on the product from the backend JOIN
+        const unitCost = product.unitCost || product.listPrice || 0;
         const quarterData = {};
         const monthData = {};
         let fyTotalQty = 0, fyTotalValue = 0, lyFyTotalQty = 0, lyFyTotalValue = 0;
@@ -97,14 +81,16 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
             aopQtyTotal += aopQty;
 
             let monthValue, lyMonthValue, aopMonthValue;
-            if (isRevenueOnly || pricing.isRevenueOnly) {
+            if (isRevenueOnly) {
+              // Revenue-only: always use stored rev values
               monthValue = cyRev;
               lyMonthValue = lyRev;
               aopMonthValue = aopRev;
             } else {
-              monthValue = cyQty * pricing.unitCost;
-              lyMonthValue = lyQty * pricing.unitCost;
-              aopMonthValue = aopQty * pricing.unitCost;
+              // Use stored rev first (most accurate); fall back to qty × price
+              monthValue    = cyRev  || (cyQty  * unitCost);
+              lyMonthValue  = lyRev  || (lyQty  * unitCost);
+              aopMonthValue = aopRev || (aopQty * unitCost);
             }
             valueTotal += monthValue;
             lyValueTotal += lyMonthValue;
@@ -131,8 +117,8 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         return {
           id: product.id, name: product.name, code: product.code,
           subcategory: product.subcategory, status: product.status,
-          unitCost: pricing.unitCost,
-          isRevenueOnly: isRevenueOnly || pricing.isRevenueOnly,
+          unitCost: unitCost,
+          isRevenueOnly: isRevenueOnly,
           months: monthData, quarters: quarterData,
           fyTotal: { qty: fyTotalQty, value: fyTotalValue },
           lyFyTotal: { qty: lyFyTotalQty, value: lyFyTotalValue },
@@ -179,7 +165,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
       data[cat.id] = { category: cat, products: productSummaries, totals: categoryTotals };
     });
     return data;
-  }, [products, categories, pricingMap]);
+  }, [products, categories]);
 
   // Grand totals
   const grandTotals = useMemo(() => {
@@ -254,15 +240,6 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
     if (viewMode === 'qty' && !isRevOnly) return formatNumber(val);
     return formatCurrency(val);
   };
-
-  if (isLoading) {
-    return (
-      <div className="qs-loading">
-        <div className="qs-loading-spinner"></div>
-        <p>Loading quarterly summary...</p>
-      </div>
-    );
-  }
 
   const displayQuarters = selectedQuarter ? QUARTERS.filter(q => q.id === selectedQuarter) : QUARTERS;
 
@@ -407,8 +384,8 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                       </tr>
                     </thead>
                     <tbody>
-                      {catData.products.map(product => (
-                        <tr key={product.id} className="qs-product-row">
+                      {catData.products.map((product, idx) => (
+                        <tr key={`${catId}-${product.id}-${idx}`} className="qs-product-row">
                           <td className="qs-td-product">
                             <div className="qs-product-info">
                               {getStatusDot(product.status)}

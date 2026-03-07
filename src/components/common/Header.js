@@ -1,16 +1,16 @@
 /**
- * Header Component — v5
+ * Header Component — v5.1
  *
  * Works with both old (user.name, user.territory) and new
  * (user.fullName, user.territoryName) fields thanks to backward compat
  * mapping in AuthContext.mapUserFromBackend().
  *
- * CHANGES:
- * - Uses user.fullName with user.name fallback
- * - Shows geography breadcrumb if available
- * - Shows email in user menu if available
+ * PART 1 — Item 5:
+ * For ZBM role, the subtitle now prominently shows:
+ *   Zone Name · Zone Code · Employee Name
+ * instead of the generic territory badge.
  *
- * @version 5.0.0
+ * @version 5.1.0 — Part 1 Item 5: ZBM zone info in header
  */
 
 import React, { useState } from 'react';
@@ -36,6 +36,14 @@ function Header({ user: userProp, onRefresh }) {
   // Display territory: territoryName > territory > 'Territory'
   const displayTerritory = user?.territoryName || user?.territory || 'Territory';
 
+  // ─── PART 1 — Item 5: ZBM-specific zone identity ───────────────
+  const isZBM = user?.role === 'zbm';
+  const zoneName = user?.zoneName || user?.zone_name || '';
+  const zoneCode = user?.zoneCode || user?.zone_code || '';
+  // Build the ZBM subtitle: "Zone Name · Zone Code"
+  const zbmZoneLabel = [zoneName, zoneCode].filter(Boolean).join(' · ');
+  // ────────────────────────────────────────────────────────────────
+
   return (
     <header className="header">
       <div className="header-inner">
@@ -54,9 +62,18 @@ function Header({ user: userProp, onRefresh }) {
               <span className="fiscal-badge">
                 <i className="fas fa-calendar-alt"></i> FY 2026-27
               </span>
-              <span className="territory-badge">
-                <i className="fas fa-map-marker-alt"></i> {displayTerritory}
-              </span>
+
+              {/* PART 1 — Item 5: ZBM gets zone badge; others keep territory badge */}
+              {isZBM ? (
+                <span className="territory-badge zbm-zone-badge" title={`Zone: ${zbmZoneLabel}`}>
+                  <i className="fas fa-globe-asia"></i>
+                  {zbmZoneLabel || 'Zone'}
+                </span>
+              ) : (
+                <span className="territory-badge">
+                  <i className="fas fa-map-marker-alt"></i> {displayTerritory}
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -78,9 +95,7 @@ function Header({ user: userProp, onRefresh }) {
                 <span className="user-name">{displayName}</span>
                 <span className="user-role">{user?.roleLabel}</span>
               </div>
-              <i
-                className={`fas fa-chevron-${showUserMenu ? 'up' : 'down'}`}
-              ></i>
+              <i className={`fas fa-chevron-${showUserMenu ? 'up' : 'down'}`}></i>
             </div>
 
             {showUserMenu && (
@@ -101,6 +116,7 @@ function Header({ user: userProp, onRefresh }) {
                 }}
               >
                 <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
+                  {/* PART 1 — Item 5: ZBM menu shows Employee Name + Zone Name + Zone Code */}
                   <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>
                     {displayName}
                   </div>
@@ -113,12 +129,44 @@ function Header({ user: userProp, onRefresh }) {
                     {user?.roleLabel}
                     {user?.employeeCode && ` · ${user.employeeCode}`}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
-                    <i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>
-                    {user?.zoneName || user?.areaName
-                      ? Utils.formatGeography(user)
-                      : displayTerritory}
-                  </div>
+
+                  {/* ZBM: show Zone Name + Zone Code explicitly */}
+                  {isZBM && zbmZoneLabel && (
+                    <div style={{
+                      marginTop: '0.375rem',
+                      padding: '0.375rem 0.5rem',
+                      background: 'rgba(124, 58, 237, 0.08)',
+                      borderRadius: '6px',
+                      fontSize: '0.75rem',
+                      color: '#7C3AED',
+                      fontWeight: 600,
+                    }}>
+                      <i className="fas fa-globe-asia" style={{ marginRight: '0.375rem' }}></i>
+                      {zoneName && <span style={{ marginRight: '0.25rem' }}>{zoneName}</span>}
+                      {zoneCode && (
+                        <span style={{
+                          background: '#7C3AED',
+                          color: '#fff',
+                          padding: '0 5px',
+                          borderRadius: '4px',
+                          fontSize: '0.6875rem',
+                          fontWeight: 700,
+                        }}>
+                          {zoneCode}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Non-ZBM: show geography as before */}
+                  {!isZBM && (
+                    <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
+                      <i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>
+                      {user?.zoneName || user?.areaName
+                        ? Utils.formatGeography(user)
+                        : displayTerritory}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={handleLogout}

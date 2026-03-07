@@ -272,3 +272,187 @@
   .sh-an-compare-kpis { flex-direction: column; }
   .sh-an-compare-kpi-diff { flex: 0 0 auto; }
 }
+
+/* ==========================================================================
+   PART 1 ADDITIONS — Items 1, 4, 6, 7
+   Appended to existing shAnalytics.css without modifying original rules.
+   ========================================================================== */
+
+/* ==================== SUMMARY BAR (alias for summary-strip) ====================
+   Item 4 & 6: sh-an-summary-bar is used in the updated SalesHeadAnalytics.js.
+   Mirrors existing .sh-an-summary-strip styles so both class names work. */
+
+.sh-an-summary-bar {
+  display: flex; align-items: center; gap: 1.5rem; padding: 0.875rem 1.5rem;
+  background: linear-gradient(135deg, #0C2340, #1B2A4A);
+  border-radius: 10px; margin-bottom: 1.25rem; flex-wrap: wrap;
+}
+
+/* ==================== ITEM 4: Summary % sub-label ==================== */
+
+.sh-an-summary-pct {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  margin-top: 0.125rem;
+  display: block;
+  opacity: 0.85;
+}
+
+/* ==================== CATEGORY FILTER CHIPS (in control bar) ====================
+   .sh-an-cat-filters / .sh-an-cat-chip used in updated JS (replaces old chip panel) */
+
+.sh-an-cat-filters {
+  display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;
+}
+
+.sh-an-cat-chip {
+  display: inline-flex; align-items: center; padding: 0.3rem 0.625rem;
+  border: 1.5px solid #CBD5E1; border-radius: 20px; background: #F8FAFC;
+  color: #475569; font-size: 0.6875rem; font-weight: 600; cursor: pointer;
+  transition: all 0.15s;
+}
+.sh-an-cat-chip:hover { border-color: #94A3B8; background: #F1F5F9; }
+.sh-an-cat-chip.active { color: #fff; border-color: transparent; }
+
+/* ==================== ITEM 7: CategoryBarChart ====================
+   Replaces the old .sh-an-compare-table in compare mode.
+   Shows grouped horizontal bars (LY Tgt / LY Ahv / CY Tgt) per category
+   for Entity A and Entity B side-by-side. */
+
+.sh-an-cat-barchart {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* One row per category */
+.sh-an-cbc-row {
+  display: grid;
+  grid-template-columns: 110px 1fr 1fr;
+  gap: 1rem;
+  align-items: flex-start;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #F1F5F9;
+}
+.sh-an-cbc-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+/* Category label column */
+.sh-an-cbc-cat {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding-top: 0.25rem;
+}
+.sh-an-cbc-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+.sh-an-cbc-name {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #1E293B;
+  line-height: 1.3;
+}
+
+/* Entity column (A or B) */
+.sh-an-cbc-entity {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sh-an-cbc-entity-label {
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 4px;
+  width: fit-content;
+}
+.sh-an-cbc-entity-label.a { background: rgba(12,35,64,0.1); color: #0C2340; }
+.sh-an-cbc-entity-label.b { background: rgba(0,151,167,0.1); color: #0097A7; }
+
+/* Bar rows within each entity column */
+.sh-an-cbc-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.sh-an-cbc-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Item 1: label tags ("LY Tgt", "LY Ahv", "CY Tgt") */
+.sh-an-cbc-tag {
+  width: 38px;
+  flex-shrink: 0;
+  font-size: 0.5625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #94A3B8;
+  text-align: right;
+}
+
+.sh-an-cbc-track {
+  flex: 1;
+  height: 14px;
+  background: #F1F5F9;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+/* Value label at end of bar */
+.sh-an-cbc-val {
+  width: 90px;
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: #475569;
+  text-align: right;
+}
+
+/* Item 4: % of LY Tgt achieved (small inline label) */
+.sh-an-cbc-pct {
+  font-size: 0.625rem;
+  color: #94A3B8;
+  font-weight: 500;
+}
+
+/* Item 4: growth % next to CY target value */
+.sh-an-cbc-growth {
+  font-size: 0.625rem;
+  font-weight: 700;
+}
+.sh-an-cbc-growth.pos { color: #059669; }
+.sh-an-cbc-growth.neg { color: #DC2626; }
+
+/* ==================== ITEM 7: Responsive ==================== */
+@media (max-width: 900px) {
+  .sh-an-cbc-row {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+  }
+  .sh-an-cbc-cat {
+    grid-column: 1 / -1;
+    border-bottom: 1px solid #E2E8F0;
+    padding-bottom: 0.5rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .sh-an-cbc-row {
+    grid-template-columns: 1fr;
+  }
+  .sh-an-cbc-val {
+    width: 70px;
+  }
+}

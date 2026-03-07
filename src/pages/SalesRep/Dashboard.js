@@ -179,9 +179,11 @@ function SalesRepDashboard() {
         <button className={`main-tab ${activeTab === 'entry' ? 'active' : ''}`} onClick={() => setActiveTab('entry')}>
           <i className="fas fa-table"></i> Target Entry Grid
         </button>
-        <button className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`} onClick={() => setActiveTab('quarterly')}>
-          <i className="fas fa-chart-bar"></i> Quarterly Summary
-        </button>
+        {/* HIDDEN - Quarterly Summary temporarily disabled
+<button className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`} onClick={() => setActiveTab('quarterly')}>
+  <i className="fas fa-chart-bar"></i> Quarterly Summary
+</button>
+*/}
       </div>
       <main className="main excel-main">
         {renderTabContent()}
