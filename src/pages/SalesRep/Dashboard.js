@@ -12,7 +12,8 @@
  * - No status badges shown on products
  *
  * @author Appasamy Associates - Product Commitment PWA
- * @version 3.1.0 - TARGET VALUE now fetched from DB (totalLY from dashboard-summary API)
+ * @version 3.4.1 - handleUpdateTarget now computes cyRev = cyQty × unitCost on every keystroke
+ *                  so TOTAL ENTERED VALUE card updates live as rep types quantities.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -36,7 +37,7 @@ function SalesRepDashboard() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [dashboardSummary, setDashboardSummary] = useState(null); // ← NEW: holds totalLY, totalCY from DB
-  const [activeTab, setActiveTab] = useState('overview');
+  const [activeTab, setActiveTab] = useState('entry');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [toasts, setToasts] = useState([]);
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
@@ -79,7 +80,14 @@ function SalesRepDashboard() {
   const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
-        const updatedMonthlyTargets = { ...p.monthlyTargets, [month]: { ...p.monthlyTargets?.[month], cyQty: value } };
+        // Compute live revenue: qty × unitCost (from product_master.quota_price__c)
+        // This drives TOTAL ENTERED VALUE card in TargetEntryGrid in real-time
+        const unitCost = p.unitCost || 0;
+        const cyRev = value * unitCost;
+        const updatedMonthlyTargets = {
+          ...p.monthlyTargets,
+          [month]: { ...p.monthlyTargets?.[month], cyQty: value, cyRev },
+        };
         return { ...p, monthlyTargets: updatedMonthlyTargets };
       }
       return p;
@@ -143,8 +151,9 @@ function SalesRepDashboard() {
             onSaveAll={handleSaveAll}
             onSubmitAll={handleSubmitAll}
             userRole="salesrep"
-            fiscalYear="2025-26"
-            overallYearlyTargetValue={dashboardSummary?.lyRev ?? 0} // ← CHANGED: from hardcoded to DB value
+            fiscalYear={dashboardSummary?.fiscalYear ?? "2025-26"}
+            overallYearlyTargetValue={dashboardSummary?.lyRev ?? 0}          // TARGET VALUE card  = LY target (₹4.25 Cr from ly_target_value)
+            tbmAssignedTargetValue={dashboardSummary?.targetValue ?? 0}    // TOTAL ENTERED VALUE = TBM's CY target (₹5 Cr from cy_target_value)
           />
         );
       case 'quarterly':
@@ -152,7 +161,7 @@ function SalesRepDashboard() {
           <QuarterlySummary
             products={products}
             categories={categories}
-            fiscalYear="2025-26"
+            fiscalYear={dashboardSummary?.fiscalYear ?? "2025-26"}
           />
         );
       default:
@@ -169,11 +178,11 @@ function SalesRepDashboard() {
       />
 
       <div className="main-tabs">
-        <button className={`main-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
-          <i className="fas fa-chart-pie"></i> Overview & Summary
-        </button>
         <button className={`main-tab ${activeTab === 'entry' ? 'active' : ''}`} onClick={() => setActiveTab('entry')}>
           <i className="fas fa-table"></i> Target Entry Grid
+        </button>
+        <button className={`main-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+          <i className="fas fa-chart-pie"></i> Overview & Summary
         </button>
         {/* HIDDEN - Quarterly Summary temporarily disabled
         <button className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`} onClick={() => setActiveTab('quarterly')}>

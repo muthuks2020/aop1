@@ -21,7 +21,7 @@
  *   - publishYearlyTargets(fiscalYear, memberIds) → { success: boolean }
  * 
  * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0 - Production Ready
+ * @version 1.1.0 - Per-card Save & Publish buttons
  */
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
@@ -85,6 +85,8 @@ function TeamYearlyTargets({
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [savingMemberId, setSavingMemberId] = useState(null);   // per-card save
+  const [publishingMemberId, setPublishingMemberId] = useState(null); // per-card publish
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [expandedMember, setExpandedMember] = useState(null);
   const [editingCell, setEditingCell] = useState(null); // { memberId, field }
@@ -580,6 +582,53 @@ function TeamYearlyTargets({
     showToast?.('Copied', 'Last year targets copied. Adjust as needed.', 'info');
   }, [showToast]);
 
+  // ── Per-card Save ──
+  const handleSaveMember = useCallback(async (memberId) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    setSavingMemberId(memberId);
+    try {
+      if (apiService?.saveYearlyTargets) {
+        await apiService.saveYearlyTargets(fiscalYear, [member]);
+      }
+      setMembers(prev => prev.map(m =>
+        m.id === memberId ? { ...m, status: m.status === 'not_set' ? 'draft' : m.status } : m
+      ));
+      showToast?.('Saved', `Target saved for ${member.name}.`, 'success');
+    } catch (error) {
+      showToast?.('Error', 'Failed to save target.', 'error');
+    } finally {
+      setSavingMemberId(null);
+    }
+  }, [members, fiscalYear, apiService, showToast]);
+
+  // ── Per-card Publish (saves first, then publishes) ──
+  const handlePublishMember = useCallback(async (memberId) => {
+    const member = members.find(m => m.id === memberId);
+    if (!member) return;
+    if (!member.cyTargetValue || member.cyTargetValue <= 0) {
+      showToast?.('Warning', `Please enter a CY target for ${member.name} before publishing.`, 'warning');
+      return;
+    }
+    setPublishingMemberId(memberId);
+    try {
+      if (apiService?.saveYearlyTargets) {
+        await apiService.saveYearlyTargets(fiscalYear, [member]);
+      }
+      if (apiService?.publishYearlyTargets) {
+        await apiService.publishYearlyTargets(fiscalYear, [memberId]);
+      }
+      setMembers(prev => prev.map(m =>
+        m.id === memberId ? { ...m, status: 'published', lastUpdated: new Date().toISOString() } : m
+      ));
+      showToast?.('Published', `Target published to ${member.name}.`, 'success');
+    } catch (error) {
+      showToast?.('Error', 'Failed to publish target.', 'error');
+    } finally {
+      setPublishingMemberId(null);
+    }
+  }, [members, fiscalYear, apiService, showToast]);
+
   const handleApplyGrowth = useCallback((memberId, growthPct) => {
     const factor = 1 + (growthPct / 100);
     setMembers(prev => prev.map(m => {
@@ -804,6 +853,36 @@ function TeamYearlyTargets({
               </div>
             </div>
           </div>
+        </div>
+
+        {/* ── Per-card Action Footer ── */}
+        <div className="tyt-card-footer-actions">
+          <button
+            className="tyt-card-btn tyt-card-save-btn"
+            onClick={(e) => { e.stopPropagation(); handleSaveMember(member.id); }}
+            disabled={savingMemberId === member.id || member.status === 'published'}
+            title={member.status === 'published' ? 'Already published' : 'Save as draft'}
+          >
+            {savingMemberId === member.id
+              ? <><i className="fas fa-spinner fa-spin"></i> Saving…</>
+              : <><i className="fas fa-save"></i> Save</>}
+          </button>
+          <button
+            className="tyt-card-btn tyt-card-publish-btn"
+            onClick={(e) => { e.stopPropagation(); handlePublishMember(member.id); }}
+            disabled={publishingMemberId === member.id || member.status === 'published' || !member.cyTargetValue}
+            title={
+              member.status === 'published' ? 'Already published'
+              : !member.cyTargetValue ? 'Enter a CY target first'
+              : `Publish to ${member.name}`
+            }
+          >
+            {publishingMemberId === member.id
+              ? <><i className="fas fa-spinner fa-spin"></i> Publishing…</>
+              : member.status === 'published'
+              ? <><i className="fas fa-check-circle"></i> Published</>
+              : <><i className="fas fa-paper-plane"></i> Publish</>}
+          </button>
         </div>
 
         {/* Expanded Category Breakdown */}
@@ -1364,6 +1443,63 @@ function generateMockCategoryBreakdown() {
       cyTargetValue: 0,
     },
   ];
+}
+
+// ── Inject per-card button styles (avoids needing CSS file changes) ──
+const perCardStyles = `
+  .tyt-card-footer-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem 0.75rem;
+    border-top: 1px solid #F3F4F6;
+    justify-content: flex-end;
+  }
+  .tyt-card-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.4rem 0.875rem;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: all 0.15s;
+  }
+  .tyt-card-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+  .tyt-card-save-btn {
+    background: #F3F4F6;
+    border-color: #D1D5DB;
+    color: #374151;
+  }
+  .tyt-card-save-btn:not(:disabled):hover {
+    background: #E5E7EB;
+    border-color: #9CA3AF;
+  }
+  .tyt-card-publish-btn {
+    background: #00A19B;
+    border-color: #00A19B;
+    color: #fff;
+  }
+  .tyt-card-publish-btn:not(:disabled):hover {
+    background: #00857F;
+    border-color: #00857F;
+  }
+  .tyt-card-publish-btn:disabled[title="Already published"] {
+    background: #D1FAE5;
+    border-color: #6EE7B7;
+    color: #059669;
+    opacity: 1;
+  }
+`;
+if (typeof document !== 'undefined' && !document.getElementById('tyt-card-actions-style')) {
+  const s = document.createElement('style');
+  s.id = 'tyt-card-actions-style';
+  s.textContent = perCardStyles;
+  document.head.appendChild(s);
 }
 
 export default TeamYearlyTargets;

@@ -23,7 +23,7 @@
  *             per-category monthly cap from targetThresholds.js.
  *
  * @author Appasamy Associates - Product Commitment PWA
- * @version 5.0.0 — Part 2: Items 2, 3, 13
+ * @version 5.1.0 — TOTAL ENTERED VALUE now shows TBM-assigned cy_target_value (tbmAssignedTargetValue prop)
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
@@ -199,6 +199,7 @@ function TargetEntryGrid({
   userRole = 'salesrep',
   fiscalYear = '2025-26',
   overallYearlyTargetValue = null,
+  tbmAssignedTargetValue = 0,   // TBM's cy_target_value → shown in TOTAL ENTERED VALUE card
 }) {
   const [activeCell, setActiveCell]                 = useState(null);
   const [editValue, setEditValue]                   = useState('');
@@ -380,10 +381,13 @@ function TargetEntryGrid({
         });
       }
     });
-    const totalEnteredValue  = totalCYRev;
+    // TOTAL ENTERED VALUE = TBM's assigned cy_target_value (e.g. ₹5 Cr).
+    // Falls back to totalCYRev (qty × unit_cost) once SR has entered monthly quantities.
+    const totalEnteredValue  = tbmAssignedTargetValue > 0 ? tbmAssignedTargetValue : totalCYRev;
     const yearlyTargetValue  = overallYearlyTargetValue || 0;
+    // Completion % always based on SR's actual qty entries (totalCYRev) vs LY target
     const completionPercent  = yearlyTargetValue > 0
-      ? Math.min(100, Math.round((totalEnteredValue / yearlyTargetValue) * 100)) : 0;
+      ? Math.min(100, Math.round((totalCYRev / yearlyTargetValue) * 100)) : 0;
     return {
       totalCYQty, totalLYQty, totalCYRev, totalLYRev,
       enteredCount, approvedCount, submittedCount, draftCount,
@@ -392,7 +396,7 @@ function TargetEntryGrid({
       qtyGrowth: Utils.calcGrowth(totalLYQty, totalCYQty),
       revGrowth: Utils.calcGrowth(totalLYRev, totalCYRev),
     };
-  }, [products, overallYearlyTargetValue, hasAnyCYValue]);
+  }, [products, overallYearlyTargetValue, tbmAssignedTargetValue, hasAnyCYValue]);
 
   // ==================== EVENT HANDLERS ====================
   const toggleCategory    = (categoryId) => {
@@ -935,7 +939,7 @@ function TargetEntryGrid({
           <div className="otb-card otb-yearly-target">
             <div className="otb-card-icon"><i className="fas fa-flag-checkered"></i></div>
             <div className="otb-card-content">
-              <span className="otb-card-label">Target Value (FY {fiscalYear})</span>
+              <span className="otb-card-label">Target Value (FY 2025-26)</span>
               <span className="otb-card-value">
                 {overallTargetSummary.yearlyTargetValue
                   ? `₹${Utils.formatCompact(overallTargetSummary.yearlyTargetValue)}`
@@ -1096,7 +1100,7 @@ function TargetEntryGrid({
             </div>
           ))}
           <div className="header-cell total-header">TOTAL</div>
-          <div className="header-cell growth-header">YoY %</div>
+         
         </div>
 
         {categories.map(category =>
