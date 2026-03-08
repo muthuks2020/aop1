@@ -95,6 +95,9 @@ function TeamYearlyTargets({
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
   const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
+  const [overAllocationAlert, setOverAllocationAlert] = useState(null);
+  const [cyBelowLyAlert, setCyBelowLyAlert] = useState(null);
+  const [unallocatedAlert, setUnallocatedAlert] = useState(null); // { members: [{name, unallocated, cyTargetValue}], onProceed }
   
   const inputRef = useRef(null);
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.TBM;
@@ -284,7 +287,11 @@ function TeamYearlyTargets({
   // ==================== HANDLERS ====================
 
   const handleTargetChange = useCallback((memberId, field, value) => {
-    const numValue = parseInt(value) || 0;
+    // Value fields (cyTargetValue etc.) are entered in Crores → convert to raw rupees for storage
+    const isValueField = field.endsWith('Value') || field.endsWith('Rev');
+    const numValue = isValueField
+      ? Math.round((parseFloat(value) || 0) * 10000000)
+      : (parseInt(value) || 0);
     setMembers(prev => prev.map(m => {
       if (m.id === memberId) {
         return {
@@ -300,7 +307,11 @@ function TeamYearlyTargets({
   }, []);
 
   const handleCategoryTargetChange = useCallback((memberId, categoryId, field, value) => {
-    const numValue = parseInt(value) || 0;
+    // Value fields (cyTargetValue etc.) are entered in Crores → convert to raw rupees for storage
+    const isValueField = field.endsWith('Value') || field.endsWith('Rev');
+    const numValue = isValueField
+      ? Math.round((parseFloat(value) || 0) * 10000000)
+      : (parseInt(value) || 0);
     setMembers(prev => prev.map(m => {
       if (m.id === memberId) {
         const updatedBreakdown = (m.categoryBreakdown || []).map(cat => {
@@ -309,15 +320,12 @@ function TeamYearlyTargets({
           }
           return cat;
         });
-        // Recalculate totals from category breakdown
-        const totalQty = updatedBreakdown.reduce((s, c) => s + (c.cyTarget || 0), 0);
-        const totalValue = updatedBreakdown.reduce((s, c) => s + (c.cyTargetValue || 0), 0);
+        // NOTE: Do NOT recalculate cyTarget/cyTargetValue from the breakdown sum.
+        // The top-level target is set independently by the TBM and must stay locked.
+        // The breakdown is a manual split of that fixed total.
         return {
           ...m,
           categoryBreakdown: updatedBreakdown,
-          cyTarget: totalQty,
-          cyTargetValue: totalValue,
-          status: totalQty > 0 ? 'draft' : 'not_set',
           lastUpdated: new Date().toISOString(),
         };
       }
@@ -334,17 +342,89 @@ function TeamYearlyTargets({
   const handleEditComplete = useCallback(() => {
     if (editingCell) {
       const { memberId, field } = editingCell;
-      // Check if this is a category-level field
       if (field.startsWith('cat_')) {
-        const [, categoryId, catField] = field.split('_');
+        // field format: cat_<categoryId>_<catField>
+        const withoutPrefix = field.slice(4);
+        const lastUnderscore = withoutPrefix.lastIndexOf('_');
+        const categoryId = withoutPrefix.slice(0, lastUnderscore);
+        const catField = withoutPrefix.slice(lastUnderscore + 1);
+
+        if (catField === 'cyTargetValue') {
+          const member = members.find(m => m.id === memberId);
+          const cat = member?.categoryBreakdown?.find(c => c.id === categoryId);
+
+          // ── CY < LY Ahv warning (category level) ──────────────────────────
+          if (member && cat && cat.lyAchievedValue > 0) {
+            const enteredRaw = Math.round((parseFloat(editValue) || 0) * 10000000);
+            if (enteredRaw > 0 && enteredRaw < cat.lyAchievedValue) {
+              setCyBelowLyAlert({
+                memberName: member.name,
+                context: `${cat.name} category`,
+                cyValue: enteredRaw,
+                lyAchievedValue: cat.lyAchievedValue,
+                onProceed: () => {
+                  handleCategoryTargetChange(memberId, categoryId, catField, editValue);
+                  setCyBelowLyAlert(null);
+                },
+              });
+              setEditingCell(null);
+              setEditValue('');
+              return;
+            }
+          }
+
+          // ── Over-allocation guard ──────────────────────────────────────────
+          if (member && member.cyTargetValue > 0) {
+            const enteredRaw = Math.round((parseFloat(editValue) || 0) * 10000000);
+            const otherCatsTotal = (member.categoryBreakdown || [])
+              .filter(c => c.id !== categoryId)
+              .reduce((s, c) => s + (c.cyTargetValue || 0), 0);
+            const newTotal = otherCatsTotal + enteredRaw;
+            if (newTotal > member.cyTargetValue) {
+              const remaining = member.cyTargetValue - otherCatsTotal;
+              setOverAllocationAlert({
+                memberName: member.name,
+                cyTargetValue: member.cyTargetValue,
+                attempted: enteredRaw,
+                remaining: remaining > 0 ? remaining : 0,
+              });
+              setEditingCell(null);
+              setEditValue('');
+              return;
+            }
+          }
+        }
+
         handleCategoryTargetChange(memberId, categoryId, catField, editValue);
       } else {
+        // ── CY < LY Ahv warning (top-level) ─────────────────────────────────
+        if (field === 'cyTargetValue') {
+          const member = members.find(m => m.id === memberId);
+          if (member && member.lyAchievedValue > 0) {
+            const enteredRaw = Math.round((parseFloat(editValue) || 0) * 10000000);
+            if (enteredRaw > 0 && enteredRaw < member.lyAchievedValue) {
+              setCyBelowLyAlert({
+                memberName: member.name,
+                context: 'overall CY Target',
+                cyValue: enteredRaw,
+                lyAchievedValue: member.lyAchievedValue,
+                onProceed: () => {
+                  handleTargetChange(memberId, field, editValue);
+                  setCyBelowLyAlert(null);
+                },
+              });
+              setEditingCell(null);
+              setEditValue('');
+              return;
+            }
+          }
+        }
         handleTargetChange(memberId, field, editValue);
       }
     }
     setEditingCell(null);
     setEditValue('');
-  }, [editingCell, editValue, handleTargetChange, handleCategoryTargetChange]);
+  }, [editingCell, editValue, members, handleTargetChange, handleCategoryTargetChange]);
 
   const handleEditKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
@@ -378,7 +458,46 @@ function TeamYearlyTargets({
     }
   }, [selectedMembers.size, filteredMembers]);
 
+  // ── Helper: find members with unallocated breakdown amounts ──────────────
+  const getUnallocatedMembers = useCallback((memberIds = null) => {
+    const pool = memberIds
+      ? members.filter(m => memberIds.includes(m.id))
+      : members;
+    return pool
+      .filter(m => m.cyTargetValue > 0 && m.categoryBreakdown?.length > 0)
+      .map(m => {
+        const allocated = m.categoryBreakdown.reduce((s, c) => s + (c.cyTargetValue || 0), 0);
+        const unallocated = m.cyTargetValue - allocated;
+        return unallocated > 0 ? { id: m.id, name: m.name, unallocated, cyTargetValue: m.cyTargetValue } : null;
+      })
+      .filter(Boolean);
+  }, [members]);
+
   const handleSave = useCallback(async () => {
+    // Warn if any member has unallocated breakdown amounts
+    const unallocated = getUnallocatedMembers();
+    if (unallocated.length > 0) {
+      setUnallocatedAlert({
+        members: unallocated,
+        context: 'save',
+        onProceed: async () => {
+          setUnallocatedAlert(null);
+          setIsSaving(true);
+          try {
+            if (apiService?.saveYearlyTargets) {
+              await apiService.saveYearlyTargets(fiscalYear, members);
+            }
+            setHasUnsavedChanges(false);
+            showToast?.('Saved', 'Yearly targets saved as draft.', 'success');
+          } catch (error) {
+            showToast?.('Error', 'Failed to save targets.', 'error');
+          } finally {
+            setIsSaving(false);
+          }
+        },
+      });
+      return;
+    }
     setIsSaving(true);
     try {
       if (apiService?.saveYearlyTargets) {
@@ -391,16 +510,28 @@ function TeamYearlyTargets({
     } finally {
       setIsSaving(false);
     }
-  }, [members, fiscalYear, apiService, showToast]);
+  }, [members, fiscalYear, apiService, showToast, getUnallocatedMembers]);
 
   const handlePublish = useCallback(async () => {
     if (selectedMembers.size === 0) {
       showToast?.('Warning', `Please select at least one ${config.memberLabel} to publish.`, 'warning');
       return;
     }
-
+    // Warn if any selected member has unallocated breakdown amounts
+    const unallocated = getUnallocatedMembers(Array.from(selectedMembers));
+    if (unallocated.length > 0) {
+      setUnallocatedAlert({
+        members: unallocated,
+        context: 'publish',
+        onProceed: () => {
+          setUnallocatedAlert(null);
+          setShowPublishConfirm(true);
+        },
+      });
+      return;
+    }
     setShowPublishConfirm(true);
-  }, [selectedMembers.size, config.memberLabel, showToast]);
+  }, [selectedMembers, config.memberLabel, showToast, getUnallocatedMembers]);
 
   const confirmPublish = useCallback(async () => {
     setIsPublishing(true);
@@ -542,7 +673,8 @@ function TeamYearlyTargets({
           onBlur={handleEditComplete}
           onKeyDown={handleEditKeyDown}
           min="0"
-          placeholder="Enter amount"
+          step="0.01"
+          placeholder="Enter in Crores (e.g. 5 = ₹5 Cr)"
         />
       );
     }
@@ -551,8 +683,8 @@ function TeamYearlyTargets({
     return (
       <span
         className={`tyt-editable-value ${value > 0 ? 'tyt-has-value' : 'tyt-empty-target'}`}
-        onClick={() => handleEditStart(memberId, field, value)}
-        title="Click to enter target"
+        onClick={() => handleEditStart(memberId, field, value > 0 ? parseFloat((value / 10000000).toFixed(4)) : '')}
+        title="Click to edit (enter value in Crores)"
       >
         {value > 0 ? Utils.formatShortCurrency(value) : '₹ Enter Target'}
       </span>
@@ -611,24 +743,24 @@ function TeamYearlyTargets({
           </div>
         </div>
 
-        {/* Main Target Row - 3 columns: LY Target | LY Achieved | CY Target */}
+        {/* Main Target Row - 3 columns: LY Tgt | LY Ahv | CY Target */}
         <div className="tyt-target-grid">
-          {/* LY Target */}
+          {/* LY Tgt */}
           <div className="tyt-target-col tyt-ly-target">
             <div className="tyt-col-label">
               <i className="fas fa-bullseye"></i>
-              LY Target
+              LY Tgt
             </div>
             <div className="tyt-col-values">
               <div className="tyt-primary-value">{Utils.formatShortCurrency(member.lyTargetValue)}</div>
             </div>
           </div>
 
-          {/* LY Achieved */}
+          {/* LY Ahv */}
           <div className="tyt-target-col tyt-ly-achieved">
             <div className="tyt-col-label">
               <i className="fas fa-trophy"></i>
-              LY Achieved
+              LY Ahv
             </div>
             <div className="tyt-col-values">
               <div className="tyt-primary-value">{Utils.formatShortCurrency(member.lyAchievedValue)}</div>
@@ -686,9 +818,9 @@ function TeamYearlyTargets({
                 <thead>
                   <tr>
                     <th className="tyt-cat-name-col">Category</th>
-                    <th className="tyt-cat-data-col">LY Target (₹)</th>
-                    <th className="tyt-cat-data-col">LY Achieved (₹)</th>
-                    <th className="tyt-cat-data-col">LY Achieved</th>
+                    <th className="tyt-cat-data-col">LY Tgt (₹)</th>
+                    <th className="tyt-cat-data-col">LY Ahv (₹)</th>
+                    <th className="tyt-cat-data-col">LY Ahv</th>
                     <th className="tyt-cat-data-col">Achieve %</th>
                     <th className="tyt-cat-data-col tyt-editable-col">CY Target (₹)</th>
                     <th className="tyt-cat-data-col">Growth</th>
@@ -727,25 +859,52 @@ function TeamYearlyTargets({
                   })}
                 </tbody>
                 <tfoot>
-                  <tr className="tyt-breakdown-total-row">
-                    <td className="tyt-cat-name"><strong>Total</strong></td>
-                    <td className="tyt-cat-value"><strong>{Utils.formatShortCurrency(member.lyTargetValue)}</strong></td>
-                    <td className="tyt-cat-value"><strong>{Utils.formatShortCurrency(member.lyAchievedValue)}</strong></td>
-                    <td className="tyt-cat-value">
-                      <strong className={`tyt-cat-pct ${lyAchievePct >= 100 ? 'exceeded' : lyAchievePct >= 80 ? 'good' : 'low'}`}>
-                        {lyAchievePct}%
-                      </strong>
-                    </td>
-                    <td className="tyt-cat-value"><strong>{Utils.formatShortCurrency(member.cyTargetValue)}</strong></td>
-                    <td className="tyt-cat-value">
-                      {member.cyTargetValue > 0 ? (
-                        <strong className={`tyt-cat-growth ${getGrowthClass(getGrowthPct(member.lyTargetValue, member.cyTargetValue))}`}>
-                          <i className={`fas fa-arrow-${getGrowthPct(member.lyTargetValue, member.cyTargetValue) >= 0 ? 'up' : 'down'}`}></i>
-                          {Math.abs(getGrowthPct(member.lyTargetValue, member.cyTargetValue)).toFixed(1)}%
-                        </strong>
-                      ) : '—'}
-                    </td>
-                  </tr>
+                  {(() => {
+                    const allocatedValue = member.categoryBreakdown.reduce(
+                      (s, c) => s + (c.cyTargetValue || 0), 0
+                    );
+                    const remaining = (member.cyTargetValue || 0) - allocatedValue;
+                    const isOver = remaining < 0;
+                    const isBalanced = member.cyTargetValue > 0 && remaining === 0;
+                    return (
+                      <tr className="tyt-breakdown-total-row">
+                        <td className="tyt-cat-name"><strong>Total</strong></td>
+                        <td className="tyt-cat-value"><strong>{Utils.formatShortCurrency(member.lyTargetValue)}</strong></td>
+                        <td className="tyt-cat-value"><strong>{Utils.formatShortCurrency(member.lyAchievedValue)}</strong></td>
+                        <td className="tyt-cat-value">
+                          <strong className={`tyt-cat-pct ${lyAchievePct >= 100 ? 'exceeded' : lyAchievePct >= 80 ? 'good' : 'low'}`}>
+                            {lyAchievePct}%
+                          </strong>
+                        </td>
+                        <td className="tyt-cat-value">
+                          <strong>{Utils.formatShortCurrency(member.cyTargetValue)}</strong>
+                          {member.cyTargetValue > 0 && (
+                            <span style={{
+                              display: 'block',
+                              fontSize: '0.7rem',
+                              marginTop: '3px',
+                              fontWeight: 500,
+                              color: isOver ? '#DC2626' : isBalanced ? '#059669' : '#D97706',
+                            }}>
+                              {isOver
+                                ? `⚠ Over by ${Utils.formatShortCurrency(Math.abs(remaining))}`
+                                : isBalanced
+                                ? '✓ Fully allocated'
+                                : `${Utils.formatShortCurrency(remaining)} unallocated`}
+                            </span>
+                          )}
+                        </td>
+                        <td className="tyt-cat-value">
+                          {member.cyTargetValue > 0 ? (
+                            <strong className={`tyt-cat-growth ${getGrowthClass(getGrowthPct(member.lyTargetValue, member.cyTargetValue))}`}>
+                              <i className={`fas fa-arrow-${getGrowthPct(member.lyTargetValue, member.cyTargetValue) >= 0 ? 'up' : 'down'}`}></i>
+                              {Math.abs(getGrowthPct(member.lyTargetValue, member.cyTargetValue)).toFixed(1)}%
+                            </strong>
+                          ) : '—'}
+                        </td>
+                      </tr>
+                    );
+                  })()}
                 </tfoot>
               </table>
             </div>
@@ -824,12 +983,12 @@ function TeamYearlyTargets({
           </div>
           <div className="tyt-summary-divider"></div>
           <div className="tyt-summary-item">
-            <span className="tyt-summary-label">LY Total Target</span>
+            <span className="tyt-summary-label">LY Total Tgt</span>
             <span className="tyt-summary-value">{Utils.formatShortCurrency(teamSummary.totalLyTargetValue)}</span>
           </div>
           <div className="tyt-summary-divider"></div>
           <div className="tyt-summary-item">
-            <span className="tyt-summary-label">LY Total Achieved</span>
+            <span className="tyt-summary-label">LY Total Ahv</span>
             <span className="tyt-summary-value">
               {Utils.formatShortCurrency(teamSummary.totalLyAchievedValue)}
               <span className={`tyt-summary-growth ${getGrowthClass(teamSummary.overallLyGrowth)}`}>
@@ -891,7 +1050,7 @@ function TeamYearlyTargets({
             <span className="tyt-sort-label">Sort:</span>
             {[
               { key: 'name', label: 'Name' },
-              { key: 'lyAchieved', label: 'LY Achieved' },
+              { key: 'lyAchieved', label: 'LY Ahv' },
               { key: 'cyTarget', label: 'CY Target' },
               { key: 'growth', label: 'Growth' },
             ].map(opt => (
@@ -968,6 +1127,179 @@ function TeamYearlyTargets({
               </button>
               <button className="tyt-modal-btn tyt-modal-confirm" onClick={confirmPublish}>
                 <i className="fas fa-paper-plane"></i> Confirm & Publish
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== UNALLOCATED BREAKDOWN WARNING MODAL ========== */}
+      {unallocatedAlert && (
+        <div className="tyt-modal-overlay" onClick={() => setUnallocatedAlert(null)}>
+          <div className="tyt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
+            <div className="tyt-modal-header" style={{ background: '#FFF7ED', borderBottom: '1px solid #FED7AA' }}>
+              <i className="fas fa-layer-group" style={{ color: '#EA580C' }}></i>
+              <h3 style={{ color: '#EA580C' }}>Unallocated Target Amount</h3>
+            </div>
+            <div className="tyt-modal-body">
+              <p style={{ marginBottom: '1rem', color: '#374151', lineHeight: 1.6 }}>
+                The following {unallocatedAlert.members.length > 1 ? `${unallocatedAlert.members.length} members have` : 'member has'} a CY Target that hasn't been fully split across categories:
+              </p>
+              {/* Per-member unallocated list */}
+              <div style={{ marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {unallocatedAlert.members.map(m => (
+                  <div key={m.id} style={{
+                    display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                    background: '#F9FAFB', border: '1px solid #E5E7EB',
+                    borderRadius: '8px', padding: '0.625rem 0.875rem',
+                  }}>
+                    <span style={{ fontWeight: 600, color: '#111827', fontSize: '0.875rem' }}>{m.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.75rem', color: '#6B7280' }}>
+                        Total: <strong>{Utils.formatShortCurrency(m.cyTargetValue)}</strong>
+                      </span>
+                      <span style={{
+                        background: '#FEF3C7', color: '#D97706', fontSize: '0.75rem',
+                        fontWeight: 700, padding: '2px 8px', borderRadius: '999px',
+                        border: '1px solid #FDE68A',
+                      }}>
+                        {Utils.formatShortCurrency(m.unallocated)} unallocated
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div style={{
+                background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: '8px',
+                padding: '0.75rem 1rem', display: 'flex', gap: '0.625rem', alignItems: 'flex-start',
+              }}>
+                <i className="fas fa-info-circle" style={{ color: '#EA580C', marginTop: '2px', flexShrink: 0 }}></i>
+                <p style={{ fontSize: '0.8125rem', color: '#9A3412', lineHeight: 1.55, margin: 0 }}>
+                  Unallocated amounts mean the category breakdown doesn't add up to the total CY Target. 
+                  Expand the member card and allocate the remaining amount before {unallocatedAlert.context === 'publish' ? 'publishing' : 'saving'}.
+                </p>
+              </div>
+            </div>
+            <div className="tyt-modal-actions" style={{ gap: '0.75rem' }}>
+              <button
+                className="tyt-modal-btn tyt-modal-cancel"
+                onClick={() => setUnallocatedAlert(null)}
+                style={{ flex: 1 }}
+              >
+                <i className="fas fa-arrow-left"></i> Go Back & Fix
+              </button>
+              <button
+                className="tyt-modal-btn tyt-modal-confirm"
+                onClick={unallocatedAlert.onProceed}
+                style={{ flex: 1, background: '#EA580C', borderColor: '#EA580C' }}
+              >
+                <i className="fas fa-check"></i> {unallocatedAlert.context === 'publish' ? 'Publish Anyway' : 'Save Anyway'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== CY BELOW LY AHV WARNING MODAL ========== */}
+      {cyBelowLyAlert && (
+        <div className="tyt-modal-overlay" onClick={() => setCyBelowLyAlert(null)}>
+          <div className="tyt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
+            <div className="tyt-modal-header" style={{ background: '#FFFBEB', borderBottom: '1px solid #FDE68A' }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#D97706' }}></i>
+              <h3 style={{ color: '#D97706' }}>CY Target Below LY Achievement</h3>
+            </div>
+            <div className="tyt-modal-body">
+              <p style={{ marginBottom: '1rem', color: '#374151', lineHeight: 1.6 }}>
+                The {cyBelowLyAlert.context} for{' '}
+                <strong>{cyBelowLyAlert.memberName}</strong> is being set to{' '}
+                <strong style={{ color: '#DC2626' }}>{Utils.formatShortCurrency(cyBelowLyAlert.cyValue)}</strong>,
+                which is lower than last year's achievement of{' '}
+                <strong style={{ color: '#059669' }}>{Utils.formatShortCurrency(cyBelowLyAlert.lyAchievedValue)}</strong>.
+              </p>
+              <div style={{
+                background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: '8px',
+                padding: '0.875rem 1rem', marginBottom: '1rem',
+                display: 'flex', gap: '0.75rem', alignItems: 'flex-start',
+              }}>
+                <i className="fas fa-info-circle" style={{ color: '#D97706', marginTop: '2px', flexShrink: 0 }}></i>
+                <div style={{ fontSize: '0.8125rem', color: '#92400E', lineHeight: 1.55 }}>
+                  Setting a target lower than what was actually achieved last year may demotivate the team and signal a declining business plan. Please confirm this is intentional.
+                </div>
+              </div>
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                background: '#F9FAFB', borderRadius: '8px', padding: '0.75rem 1rem',
+                fontSize: '0.8125rem', color: '#374151',
+              }}>
+                <span>LY Ahv: <strong style={{ color: '#059669' }}>{Utils.formatShortCurrency(cyBelowLyAlert.lyAchievedValue)}</strong></span>
+                <i className="fas fa-arrow-right" style={{ color: '#9CA3AF' }}></i>
+                <span>CY Tgt: <strong style={{ color: '#DC2626' }}>{Utils.formatShortCurrency(cyBelowLyAlert.cyValue)}</strong></span>
+                <span style={{
+                  background: '#FEE2E2', color: '#DC2626', padding: '2px 8px',
+                  borderRadius: '999px', fontWeight: 600,
+                }}>
+                  {(((cyBelowLyAlert.cyValue - cyBelowLyAlert.lyAchievedValue) / cyBelowLyAlert.lyAchievedValue) * 100).toFixed(1)}%
+                </span>
+              </div>
+            </div>
+            <div className="tyt-modal-actions" style={{ gap: '0.75rem' }}>
+              <button
+                className="tyt-modal-btn tyt-modal-cancel"
+                onClick={() => setCyBelowLyAlert(null)}
+                style={{ flex: 1 }}
+              >
+                <i className="fas fa-arrow-left"></i> Go Back & Change
+              </button>
+              <button
+                className="tyt-modal-btn tyt-modal-confirm"
+                onClick={cyBelowLyAlert.onProceed}
+                style={{ flex: 1, background: '#D97706', borderColor: '#D97706' }}
+              >
+                <i className="fas fa-check"></i> Proceed Anyway
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* ========== OVER-ALLOCATION BLOCKING MODAL ========== */}
+      {overAllocationAlert && (
+        <div className="tyt-modal-overlay" onClick={() => setOverAllocationAlert(null)}>
+          <div className="tyt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '420px' }}>
+            <div className="tyt-modal-header" style={{ background: '#FEF2F2', borderBottom: '1px solid #FECACA' }}>
+              <i className="fas fa-exclamation-triangle" style={{ color: '#DC2626' }}></i>
+              <h3 style={{ color: '#DC2626' }}>Over-Allocation Not Allowed</h3>
+            </div>
+            <div className="tyt-modal-body">
+              <p style={{ marginBottom: '1rem', color: '#374151', lineHeight: 1.6 }}>
+                You're trying to allocate{' '}
+                <strong style={{ color: '#DC2626' }}>{Utils.formatShortCurrency(overAllocationAlert.attempted)}</strong>{' '}
+                to this category, but the total would exceed{' '}
+                <strong>{overAllocationAlert.memberName}</strong>'s CY Target of{' '}
+                <strong style={{ color: '#00A19B' }}>{Utils.formatShortCurrency(overAllocationAlert.cyTargetValue)}</strong>.
+              </p>
+              <div style={{
+                background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: '8px',
+                padding: '0.875rem 1rem', marginBottom: '1rem',
+              }}>
+                <div style={{ fontSize: '0.8125rem', color: '#6B7280', marginBottom: '0.25rem' }}>
+                  Maximum you can enter for this category:
+                </div>
+                <div style={{ fontSize: '1.25rem', fontWeight: 700, color: '#059669' }}>
+                  {overAllocationAlert.remaining > 0
+                    ? Utils.formatShortCurrency(overAllocationAlert.remaining)
+                    : '₹0 — All other categories are already fully allocated'}
+                </div>
+              </div>
+              <p style={{ fontSize: '0.8125rem', color: '#6B7280', lineHeight: 1.5 }}>
+                <i className="fas fa-info-circle" style={{ marginRight: '0.375rem', color: '#3B82F6' }}></i>
+                To increase this category's target, first raise the overall CY Target at the top of the card, then return here to allocate.
+              </p>
+            </div>
+            <div className="tyt-modal-actions">
+              <button
+                className="tyt-modal-btn tyt-modal-confirm"
+                onClick={() => setOverAllocationAlert(null)}
+                style={{ background: '#DC2626', borderColor: '#DC2626', width: '100%' }}
+              >
+                <i className="fas fa-check"></i> Got it
               </button>
             </div>
           </div>
