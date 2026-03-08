@@ -42,7 +42,7 @@ function TBMDashboard() {
   const { user } = useAuth();
 
   // ==================== STATE ====================
-  const [activeTab, setActiveTab] = useState('approvals');
+  const [activeTab, setActiveTab] = useState('targets');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
@@ -267,19 +267,18 @@ function TBMDashboard() {
 
       {/* ==================== TAB NAVIGATION ==================== */}
       <div className="abm-tabs">
-        <button className={`abm-tab ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
-          <i className="fas fa-user-check"></i><span>Sales Rep Targets</span>
-          {approvalStats.pending > 0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
+        <button className={`abm-tab ${activeTab === 'targets' ? 'active' : ''}`} onClick={() => setActiveTab('targets')}>
+          <i className="fas fa-bullseye"></i><span>Territory Target</span>
+        </button>
+        <button className={`abm-tab ${activeTab === 'yearlyTargets' ? 'active' : ''}`} onClick={() => setActiveTab('yearlyTargets')}>
+          <i className="fas fa-users-cog"></i><span>Team Yearly Targets</span>
         </button>
         {/* <button className={`abm-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <i className="fas fa-chart-pie"></i><span>Overview & Summary</span>
         </button>*/}
-        <button className={`abm-tab ${activeTab === 'targets' ? 'active' : ''}`} onClick={() => setActiveTab('targets')}>
-          <i className="fas fa-bullseye"></i><span>Territory Target</span>
-        </button>
-       
-        <button className={`abm-tab ${activeTab === 'yearlyTargets' ? 'active' : ''}`} onClick={() => setActiveTab('yearlyTargets')}>
-          <i className="fas fa-users-cog"></i><span>Team Yearly Targets</span>
+        <button className={`abm-tab ${activeTab === 'approvals' ? 'active' : ''}`} onClick={() => setActiveTab('approvals')}>
+          <i className="fas fa-user-check"></i><span>Sales Rep Targets</span>
+          {approvalStats.pending > 0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
         </button>
       </div>
 

@@ -54,8 +54,6 @@ function TBMTerritoryTargetGrid({
   const [activeCell, setActiveCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
-  const [expandedSubcategories, setExpandedSubcategories] = useState(new Set());
-  const [expandedSubgroups, setExpandedSubgroups] = useState(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
@@ -200,22 +198,6 @@ function TBMTerritoryTargetGrid({
     setExpandedCategories(prev => {
       const next = new Set(prev);
       next.has(categoryId) ? next.delete(categoryId) : next.add(categoryId);
-      return next;
-    });
-  };
-
-  const toggleSubcategory = (key) => {
-    setExpandedSubcategories(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
-      return next;
-    });
-  };
-
-  const toggleSubgroup = (key) => {
-    setExpandedSubgroups(prev => {
-      const next = new Set(prev);
-      next.has(key) ? next.delete(key) : next.add(key);
       return next;
     });
   };
@@ -467,13 +449,26 @@ function TBMTerritoryTargetGrid({
             </div>
           </div>
 
+          {/* Committed Value */}
+          <div className="tgt-otb-card tgt-otb-committed">
+            <div className="tgt-otb-card-icon tgt-committed-icon">
+              <i className="fas fa-hand-holding-usd"></i>
+            </div>
+            <div className="tgt-otb-card-content">
+              <span className="tgt-otb-card-label">Committed Value</span>
+              <span className="tgt-otb-card-value">
+                ₹{Utils.formatShortCurrency ? Utils.formatShortCurrency(overallTargetSummary.totalCYRev) : Utils.formatCompact(overallTargetSummary.totalCYRev)}
+              </span>
+            </div>
+          </div>
+
           {/* Total Qty */}
           <div className="tgt-otb-card tgt-otb-qty">
             <div className="tgt-otb-card-icon tgt-qty-icon">
               <i className="fas fa-cubes"></i>
             </div>
             <div className="tgt-otb-card-content">
-              <span className="tgt-otb-card-label">Total Qty (Current Year vs Last Year)</span>
+              <span className="tgt-otb-card-label">Total Qty (CY vs LY)</span>
               <span className="tgt-otb-card-value">
                 {Utils.formatNumber(overallTargetSummary.totalCYQty)}
                 <span className="tgt-vs-ly"> vs {Utils.formatNumber(overallTargetSummary.totalLYQty)}</span>
@@ -704,16 +699,14 @@ function TBMTerritoryTargetGrid({
             {subcategories.map(subcatKey => {
               const subcatLabel = subcatKey === '__none__' ? null : subcatKey;
               const subgroups = getSubgroups(category.id, subcatKey);
-              const subcatExpandKey = `${category.id}__${subcatKey}`;
-              const isSubcatExpanded = !expandedSubcategories.has(subcatExpandKey);
 
               return (
                 <div key={subcatKey} className="tgt-subcategory-section">
                   {/* Subcategory header (product_family) — only show if it has a value */}
                   {subcatLabel && (
-                    <div className="tgt-subcategory-header-row" style={{cursor:'pointer'}} onClick={() => toggleSubcategory(subcatExpandKey)}>
+                    <div className="tgt-subcategory-header-row">
                       <div className="tgt-subcategory-name-cell">
-                        <i className={`fas fa-chevron-${isSubcatExpanded ? 'down' : 'right'} tgt-subcat-icon`}></i>
+                        <i className="fas fa-folder tgt-subcat-icon"></i>
                         <span className="tgt-subcategory-name">{highlightMatch(subcatLabel, searchTerm)}</span>
                       </div>
                       {MONTHS.map(month => <div key={month} className="tgt-month-cell tgt-subcat-spacer"></div>)}
@@ -722,10 +715,8 @@ function TBMTerritoryTargetGrid({
                     </div>
                   )}
 
-                  {(subcatLabel ? isSubcatExpanded : true) && subgroups.map(subgroupKey => {
+                  {subgroups.map(subgroupKey => {
                     const subgroupLabel = subgroupKey === '__none__' ? null : subgroupKey;
-                    const subgroupExpandKey = `${category.id}__${subcatKey}__${subgroupKey}`;
-                    const isSubgroupExpanded = !expandedSubgroups.has(subgroupExpandKey);
                     const groupProducts = filteredProducts.filter(p =>
                       p.categoryId === category.id &&
                       (p.subcategory || '__none__') === subcatKey &&
@@ -736,9 +727,9 @@ function TBMTerritoryTargetGrid({
                       <div key={subgroupKey} className="tgt-subgroup-section">
                         {/* Subgroup header (product_subgroup) — only show if it has a value */}
                         {subgroupLabel && (
-                          <div className="tgt-subgroup-header-row" style={{cursor:'pointer'}} onClick={() => toggleSubgroup(subgroupExpandKey)}>
+                          <div className="tgt-subgroup-header-row">
                             <div className="tgt-subgroup-name-cell">
-                              <i className={`fas fa-chevron-${isSubgroupExpanded ? 'down' : 'right'} tgt-subgroup-icon`}></i>
+                              <i className="fas fa-tag tgt-subgroup-icon"></i>
                               <span className="tgt-subgroup-name">{highlightMatch(subgroupLabel, searchTerm)}</span>
                             </div>
                             {MONTHS.map(month => <div key={month} className="tgt-month-cell tgt-subgroup-spacer"></div>)}
@@ -746,7 +737,7 @@ function TBMTerritoryTargetGrid({
                             <div className="tgt-growth-cell tgt-subgroup-spacer"></div>
                           </div>
                         )}
-                        {(subgroupLabel ? isSubgroupExpanded : true) && groupProducts.map(renderProductRow)}
+                        {groupProducts.map(renderProductRow)}
                       </div>
                     );
                   })}

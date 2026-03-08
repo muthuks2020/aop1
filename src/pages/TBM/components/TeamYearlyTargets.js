@@ -1124,28 +1124,7 @@ function TeamYearlyTargets({
             )}
           </div>
         </div>
-        <div className="tyt-toolbar-right">
-          <div className="tyt-sort-group">
-            <span className="tyt-sort-label">Sort:</span>
-            {[
-              { key: 'name', label: 'Name' },
-              { key: 'lyAchieved', label: 'LY Ahv' },
-              { key: 'cyTarget', label: 'CY Target' },
-              { key: 'growth', label: 'Growth' },
-            ].map(opt => (
-              <button
-                key={opt.key}
-                className={`tyt-sort-btn ${sortBy === opt.key ? 'active' : ''}`}
-                onClick={() => toggleSort(opt.key)}
-              >
-                {opt.label}
-                {sortBy === opt.key && (
-                  <i className={`fas fa-arrow-${sortDir === 'asc' ? 'up' : 'down'}`}></i>
-                )}
-              </button>
-            ))}
-          </div>
-        </div>
+
       </div>
 
       {/* ========== MEMBER CARDS ========== */}
