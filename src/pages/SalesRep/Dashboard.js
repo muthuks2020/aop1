@@ -4,15 +4,15 @@
  * 1. Overview & Summary
  * 2. Target Entry Grid (with Overall Target Bar — VALUE-based)
  * 3. Quarterly Summary - Unit Wise
- * 
+ *
  * UPDATED FLOW:
  * - Sales Rep enters targets and submits to TBM
  * - TBM will either approve or correct and approve
  * - No more reject/re-enter cycle
  * - No status badges shown on products
- * 
+ *
  * @author Appasamy Associates - Product Commitment PWA
- * @version 3.0.0 - Simplified approval flow
+ * @version 3.1.0 - TARGET VALUE now fetched from DB (totalLY from dashboard-summary API)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -26,16 +26,16 @@ import QuarterlySummary from '../../components/common/QuarterlySummary';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 
-// ==================== OVERALL YEARLY TARGET (VALUE) ====================
-// This is the fixed yearly VALUE target (₹) assigned to the sales rep by TBM.
-// In production, this should come from the API (e.g., from TBM/ABM assignments).
-// For now, it's set as a constant. Update this value or fetch from backend.
-const OVERALL_YEARLY_TARGET_VALUE = 50000000; // ₹5 Crore — Fixed yearly VALUE target from TBM
+// ==================== REMOVED ====================
+// OVERALL_YEARLY_TARGET_VALUE hardcoded constant removed.
+// TARGET VALUE is now fetched from GET /salesrep/dashboard-summary → totalLY
+// =================================================
 
 function SalesRepDashboard() {
   const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
+  const [dashboardSummary, setDashboardSummary] = useState(null); // ← NEW: holds totalLY, totalCY from DB
   const [activeTab, setActiveTab] = useState('overview');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [toasts, setToasts] = useState([]);
@@ -44,9 +44,14 @@ function SalesRepDashboard() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [cats, prods] = await Promise.all([ApiService.getCategories(), ApiService.getProducts()]);
+        const [cats, prods, summary] = await Promise.all([
+          ApiService.getCategories(),
+          ApiService.getProducts(),
+          ApiService.getDashboardSummary(), // ← NEW: fetches totalLY from DB
+        ]);
         setCategories(cats);
         setProducts(prods);
+        setDashboardSummary(summary);       // ← NEW
       } catch (error) {
         showToast('Error', 'Failed to load data', 'error');
       }
@@ -71,7 +76,6 @@ function SalesRepDashboard() {
 
   const closeToast = useCallback((id) => setToasts(prev => prev.filter(t => t.id !== id)), []);
 
-  // Updated: all products are always editable (no status-based locking)
   const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
@@ -99,21 +103,18 @@ function SalesRepDashboard() {
       type: 'warning',
       onConfirm: async () => {
         try {
-          // Step 1: Auto-save all products first
           const productsToSave = products.map(p => ({
             id: p.id,
             monthlyTargets: p.monthlyTargets || {}
           }));
           const saveResult = await ApiService.saveAllDrafts(productsToSave);
-          
-          // Check if save actually worked
+
           if (!saveResult || !saveResult.success || saveResult.savedCount === 0) {
             showToast('Warning', 'No products were saved. Please enter target values first.', 'warning');
             setModalConfig(prev => ({ ...prev, isOpen: false }));
             return;
           }
 
-          // Step 2: Now submit all draft products to TBM
           const productIds = products.map(p => p.id);
           await ApiService.submitMultipleProducts(productIds);
           showToast('Submitted', 'All targets submitted to TBM for review', 'success');
@@ -143,7 +144,7 @@ function SalesRepDashboard() {
             onSubmitAll={handleSubmitAll}
             userRole="salesrep"
             fiscalYear="2025-26"
-            overallYearlyTargetValue={OVERALL_YEARLY_TARGET_VALUE}
+            overallYearlyTargetValue={dashboardSummary?.lyRev ?? 0} // ← CHANGED: from hardcoded to DB value
           />
         );
       case 'quarterly':
@@ -163,13 +164,8 @@ function SalesRepDashboard() {
     <div className="dashboard">
       {!isOnline && <div className="offline-banner show"><i className="fas fa-wifi-slash"></i><span>You're offline. Changes will sync when connected.</span></div>}
 
-      <Header 
-        user={user} 
-        completionPercent={0}
-        submittedCount={0}
-        totalCount={totalProducts}
-        approvedCount={0}
-        pendingCount={0}
+      <Header
+        user={user}
       />
 
       <div className="main-tabs">
@@ -180,16 +176,28 @@ function SalesRepDashboard() {
           <i className="fas fa-table"></i> Target Entry Grid
         </button>
         {/* HIDDEN - Quarterly Summary temporarily disabled
-<button className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`} onClick={() => setActiveTab('quarterly')}>
-  <i className="fas fa-chart-bar"></i> Quarterly Summary
-</button>
-*/}
+        <button className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`} onClick={() => setActiveTab('quarterly')}>
+          <i className="fas fa-chart-bar"></i> Quarterly Summary
+        </button>
+        */}
       </div>
+
       <main className="main excel-main">
         {renderTabContent()}
       </main>
-      <div className="toast-container">{toasts.map(toast => <Toast key={toast.id} {...toast} onClose={() => closeToast(toast.id)} />)}</div>
-      <Modal isOpen={modalConfig.isOpen} title={modalConfig.title} message={modalConfig.message} type={modalConfig.type} onClose={closeModal} onConfirm={modalConfig.onConfirm} />
+
+      <div className="toast-container">
+        {toasts.map(toast => <Toast key={toast.id} {...toast} onClose={() => closeToast(toast.id)} />)}
+      </div>
+
+      <Modal
+        isOpen={modalConfig.isOpen}
+        title={modalConfig.title}
+        message={modalConfig.message}
+        type={modalConfig.type}
+        onClose={closeModal}
+        onConfirm={modalConfig.onConfirm}
+      />
     </div>
   );
 }

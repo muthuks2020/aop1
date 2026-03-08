@@ -1,59 +1,40 @@
 /**
  * TBMTargetEntryGrid Component
- * Enhanced Excel-like grid for TBM Territory Target Entry
- * Similar to Sales Rep grid but targets go to ABM for approval
- * 
+ * Mirrors Sales Rep TargetEntryGrid — same CSS classes, same layout.
+ * TBM enters territory-level monthly targets → submits to ABM for approval.
+ *
  * @author Appasamy Associates - Product Commitment PWA
- * @version 2.1.0
+ * @version 3.0.0 — Rewritten to match Sales Rep grid (fixes broken layout)
  */
 
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
-import '../../../styles/tbm/tbmTargetGrid.css';
 
-// Constants
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const MONTH_LABELS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
 
-const QUARTERS = [
-  { id: 'Q1', label: 'Q1', fullLabel: 'Q1 (Apr-Jun)', months: ['apr', 'may', 'jun'], color: 'q1' },
-  { id: 'Q2', label: 'Q2', fullLabel: 'Q2 (Jul-Sep)', months: ['jul', 'aug', 'sep'], color: 'q2' },
-  { id: 'Q3', label: 'Q3', fullLabel: 'Q3 (Oct-Dec)', months: ['oct', 'nov', 'dec'], color: 'q3' },
-  { id: 'Q4', label: 'Q4', fullLabel: 'Q4 (Jan-Mar)', months: ['jan', 'feb', 'mar'], color: 'q4' }
-];
-
-const REVENUE_ONLY_CATEGORIES = ['mis', 'others'];
-
-const STATUS_CONFIG = {
-  draft: { icon: 'fa-edit', label: 'Draft', class: 'status-draft' },
-  submitted: { icon: 'fa-clock', label: 'Pending ABM', class: 'status-submitted' },
-  approved: { icon: 'fa-check-circle', label: 'Approved', class: 'status-approved' },
-  rejected: { icon: 'fa-times-circle', label: 'Needs Revision', class: 'status-rejected' }
-};
-
-function TBMTargetEntryGrid({ 
-  categories = [], 
-  products = [], 
+function TBMTargetEntryGrid({
+  categories = [],
+  products = [],
   onUpdateTarget,
   onSaveAll,
   onSubmitAll,
   fiscalYear = '2026-27',
-  targetStats = {}
+  targetStats = {},
+  territoryName = '',
 }) {
-  // State management
-  const [activeCell, setActiveCell] = useState(null);
-  const [editValue, setEditValue] = useState('');
+  const [activeCell, setActiveCell]                 = useState(null);
+  const [editValue, setEditValue]                   = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-  const [viewMode, setViewMode] = useState('qty'); // 'qty' or 'rev'
-  
-  // Refs
-  const inputRef = useRef(null);
-  const gridRef = useRef(null);
+  const [expandedSubcategories, setExpandedSubcategories] = useState(new Set());
+  const [searchTerm, setSearchTerm]                 = useState('');
+  const [isLoading, setIsLoading]                   = useState(false);
+  const [lastSaved, setLastSaved]                   = useState(null);
+  const [showOnlyEntered, setShowOnlyEntered]       = useState(false);
 
-  // Focus input when active cell changes
+  const inputRef       = useRef(null);
+  const searchInputRef = useRef(null);
+
   useEffect(() => {
     if (activeCell && inputRef.current) {
       inputRef.current.focus();
@@ -61,124 +42,156 @@ function TBMTargetEntryGrid({
     }
   }, [activeCell]);
 
-  // ==================== MEMOIZED CALCULATIONS ====================
+  // ==================== HELPERS ====================
 
-  // Filter products based on search term
-  const filteredProducts = useMemo(() => {
-    if (!searchTerm.trim()) return products;
-    const term = searchTerm.toLowerCase();
-    return products.filter(p => 
-      p.name.toLowerCase().includes(term) ||
-      p.code.toLowerCase().includes(term) ||
-      (p.subcategory && p.subcategory.toLowerCase().includes(term))
-    );
-  }, [products, searchTerm]);
+  const isEditable = useCallback((product) => {
+    const status = product.status || 'draft';
+    return status === 'draft' || status === 'rejected';
+  }, []);
 
-  // Group products by category
-  const productsByCategory = useMemo(() => {
-    const grouped = {};
-    categories.forEach(cat => {
-      grouped[cat.id] = filteredProducts.filter(p => p.categoryId === cat.id);
+  const hasAnyCYValue = useCallback((product) => {
+    if (!product.monthlyTargets) return false;
+    return MONTHS.some(m => {
+      const d = product.monthlyTargets[m];
+      return d && (d.cyQty > 0 || d.cyRev > 0);
     });
-    return grouped;
-  }, [categories, filteredProducts]);
+  }, []);
+
+  const getStatusInfo = useCallback((status) => {
+    switch (status) {
+      case 'approved':
+        return { icon: 'fa-lock',         label: 'Approved by ABM — Locked',      color: '#059669', bg: '#D1FAE5' };
+      case 'submitted':
+        return { icon: 'fa-clock',        label: 'Submitted — Pending ABM Review', color: '#D97706', bg: '#FEF3C7' };
+      case 'rejected':
+        return { icon: 'fa-undo',         label: 'Rejected — Click to edit',       color: '#DC2626', bg: '#FEE2E2' };
+      default:
+        return { icon: 'fa-edit',         label: 'Draft — Click to edit',          color: '#00A19B', bg: '#E6FAF9' };
+    }
+  }, []);
+
+  // ==================== FILTERED DATA ====================
+
+  const filteredProducts = useMemo(() => {
+    let result = products;
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(p =>
+        p.name.toLowerCase().includes(term) ||
+        p.code.toLowerCase().includes(term) ||
+        (p.subcategory && p.subcategory.toLowerCase().includes(term))
+      );
+    }
+    if (showOnlyEntered) result = result.filter(p => hasAnyCYValue(p));
+    // dedupe
+    const seen = new Set();
+    result = result.filter(p => {
+      const key = `${p.categoryId}__${p.subcategory}__${p.name.trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return result;
+  }, [products, searchTerm, showOnlyEntered, hasAnyCYValue]);
+
+  const getSubcategories = useCallback((categoryId) => {
+    const subs = new Set();
+    filteredProducts.filter(p => p.categoryId === categoryId).forEach(p => {
+      if (p.subcategory) subs.add(p.subcategory);
+    });
+    return Array.from(subs);
+  }, [filteredProducts]);
 
   // ==================== CALCULATIONS ====================
 
-  const calculateCategoryTotal = useCallback((categoryId, month, year, field = 'qty') => {
-    const catProducts = products.filter(p => p.categoryId === categoryId);
-    return catProducts.reduce((sum, p) => {
-      const monthData = p.monthlyTargets?.[month] || {};
-      if (field === 'qty') {
-        return sum + (year === 'CY' ? (monthData.cyQty || 0) : (monthData.lyQty || 0));
-      }
-      return sum + (year === 'CY' ? (monthData.cyRev || 0) : (monthData.lyRev || 0));
-    }, 0);
-  }, [products]);
-
-  const calculateYearlyTotal = useCallback((productId, year, field = 'qty') => {
+  const calculateYearlyTotal = useCallback((productId, year) => {
     const product = products.find(p => p.id === productId);
     if (!product) return 0;
-    return MONTHS.reduce((sum, month) => {
-      const monthData = product.monthlyTargets?.[month] || {};
-      if (field === 'qty') {
-        return sum + (year === 'CY' ? (monthData.cyQty || 0) : (monthData.lyQty || 0));
-      }
-      return sum + (year === 'CY' ? (monthData.cyRev || 0) : (monthData.lyRev || 0));
+    return MONTHS.reduce((sum, m) => {
+      const d = product.monthlyTargets?.[m] || {};
+      return sum + (year === 'CY' ? (d.cyQty || 0) : (d.lyQty || 0));
     }, 0);
   }, [products]);
 
-  const calculateQuarterTotal = useCallback((productId, quarter, year, field = 'qty') => {
-    const product = products.find(p => p.id === productId);
-    if (!product) return 0;
-    const quarterMonths = QUARTERS.find(q => q.id === quarter)?.months || [];
-    return quarterMonths.reduce((sum, month) => {
-      const monthData = product.monthlyTargets?.[month] || {};
-      if (field === 'qty') {
-        return sum + (year === 'CY' ? (monthData.cyQty || 0) : (monthData.lyQty || 0));
-      }
-      return sum + (year === 'CY' ? (monthData.cyRev || 0) : (monthData.lyRev || 0));
-    }, 0);
+  const calculateCategoryTotal = useCallback((categoryId, month, year) => {
+    return products
+      .filter(p => p.categoryId === categoryId)
+      .reduce((sum, p) => {
+        const d = p.monthlyTargets?.[month] || {};
+        return sum + (year === 'CY' ? (d.cyQty || 0) : (d.lyQty || 0));
+      }, 0);
   }, [products]);
 
-  const calculateGrowth = useCallback((productId, field = 'qty') => {
-    const ly = calculateYearlyTotal(productId, 'LY', field);
-    const cy = calculateYearlyTotal(productId, 'CY', field);
+  const calculateGrowth = useCallback((productId) => {
+    const ly = calculateYearlyTotal(productId, 'LY');
+    const cy = calculateYearlyTotal(productId, 'CY');
     return Utils.calcGrowth(ly, cy);
   }, [calculateYearlyTotal]);
 
-  // ==================== STATUS HELPERS ====================
+  // ==================== SUMMARY BAR ====================
 
-  const getStatusClass = (status) => STATUS_CONFIG[status]?.class || 'status-draft';
-  
-  const isEditable = (status) => status === 'draft' || status === 'rejected';
-
-  const getStatusTooltip = (status) => {
-    switch (status) {
-      case 'submitted': return 'Pending ABM approval - values are locked';
-      case 'approved': return 'Approved by ABM - values are frozen';
-      case 'rejected': return 'Rejected by ABM - click to edit and resubmit';
-      default: return 'Click to edit target value';
-    }
-  };
+  const overallSummary = useMemo(() => {
+    let totalCYQty = 0, totalLYQty = 0, totalCYRev = 0;
+    let draftCount = 0, submittedCount = 0, approvedCount = 0, rejectedCount = 0;
+    products.forEach(p => {
+      if (p.status === 'approved')        approvedCount++;
+      else if (p.status === 'submitted')  submittedCount++;
+      else if (p.status === 'rejected')   rejectedCount++;
+      else                                draftCount++;
+      if (p.monthlyTargets) {
+        MONTHS.forEach(m => {
+          const d = p.monthlyTargets[m] || {};
+          totalCYQty += d.cyQty || 0;
+          totalLYQty += d.lyQty || 0;
+          totalCYRev += d.cyRev || 0;
+        });
+      }
+    });
+    return {
+      totalCYQty, totalLYQty, totalCYRev,
+      draftCount, submittedCount, approvedCount, rejectedCount,
+      qtyGrowth: Utils.calcGrowth(totalLYQty, totalCYQty),
+    };
+  }, [products]);
 
   // ==================== EVENT HANDLERS ====================
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
       const next = new Set(prev);
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
+      next.has(categoryId) ? next.delete(categoryId) : next.add(categoryId);
       return next;
     });
   };
 
-  const handleCellClick = (productId, month, field, currentValue, status) => {
-    if (!isEditable(status)) return;
-    setActiveCell({ productId, month, field });
+  const toggleSubcategory = (key) => {
+    setExpandedSubcategories(prev => {
+      const next = new Set(prev);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+  };
+
+  const handleCellClick = (product, month, currentValue) => {
+    if (!isEditable(product)) return;
+    setActiveCell({ productId: product.id, month });
     setEditValue(currentValue?.toString() || '');
   };
 
   const handleCellChange = (e) => {
-    const value = e.target.value.replace(/[^0-9]/g, '');
-    setEditValue(value);
+    setEditValue(e.target.value.replace(/[^0-9]/g, ''));
   };
 
   const handleCellBlur = () => {
     if (activeCell) {
-      const { productId, month, field } = activeCell;
-      const numericValue = parseInt(editValue) || 0;
-      const valueKey = field === 'qty' ? 'cyQty' : 'cyRev';
-      onUpdateTarget(productId, month, { [valueKey]: numericValue });
+      const numValue = parseInt(editValue) || 0;
+      if (onUpdateTarget) onUpdateTarget(activeCell.productId, activeCell.month, numValue);
+      setActiveCell(null);
+      setEditValue('');
     }
-    setActiveCell(null);
-    setEditValue('');
   };
 
-  const handleKeyDown = (e) => {
+  const handleCellKeyDown = (e) => {
     if (e.key === 'Enter') {
       handleCellBlur();
     } else if (e.key === 'Escape') {
@@ -187,80 +200,85 @@ function TBMTargetEntryGrid({
     } else if (e.key === 'Tab') {
       e.preventDefault();
       handleCellBlur();
-      // Move to next cell logic could be added here
+      if (activeCell) {
+        const monthIdx = MONTHS.indexOf(activeCell.month);
+        if (monthIdx < MONTHS.length - 1) {
+          const product = products.find(p => p.id === activeCell.productId);
+          if (product && isEditable(product)) {
+            const nextMonth = MONTHS[monthIdx + 1];
+            const nextValue = product.monthlyTargets?.[nextMonth]?.cyQty || 0;
+            setActiveCell({ productId: activeCell.productId, month: nextMonth });
+            setEditValue(nextValue.toString());
+          }
+        }
+      }
     }
   };
 
   const handleSaveAll = async () => {
     setIsLoading(true);
     try {
-      await onSaveAll();
+      if (onSaveAll) await onSaveAll();
       setLastSaved(new Date());
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (err) { console.error('Save failed:', err); }
+    setIsLoading(false);
   };
 
   const handleSubmitAll = async () => {
     setIsLoading(true);
     try {
-      await onSubmitAll();
-    } finally {
-      setIsLoading(false);
-    }
+      if (onSubmitAll) await onSubmitAll();
+    } catch (err) { console.error('Submit failed:', err); }
+    setIsLoading(false);
   };
 
-  const toggleExpandAll = () => {
-    if (expandedCategories.size === categories.length) {
-      setExpandedCategories(new Set());
-    } else {
-      setExpandedCategories(new Set(categories.map(c => c.id)));
-    }
+  const clearSearch = () => {
+    setSearchTerm('');
+    searchInputRef.current?.focus();
   };
 
-  // ==================== RENDER HELPERS ====================
+  // ==================== RENDER: PRODUCT ROWS ====================
 
-  const getQuarterColor = (monthIndex) => {
-    if (monthIndex < 3) return 'q1';
-    if (monthIndex < 6) return 'q2';
-    if (monthIndex < 9) return 'q3';
-    return 'q4';
-  };
-
-  const renderProductRow = (product) => {
-    const isRevenueOnly = REVENUE_ONLY_CATEGORIES.includes(product.categoryId);
-    const statusConfig = STATUS_CONFIG[product.status] || STATUS_CONFIG.draft;
-    const canEdit = isEditable(product.status);
-    const currentField = viewMode;
+  const renderProductRows = (product) => {
+    const canEdit    = isEditable(product);
+    const statusInfo = getStatusInfo(product.status);
 
     return (
-      <div key={product.id} className={`tbm-product-rows ${getStatusClass(product.status)}`}>
+      <div
+        key={product.id}
+        className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'}`}
+      >
         {/* CY Row */}
-        <div className="tbm-product-row cy-row">
-          <div className="tbm-product-name-cell">
-            <div className="product-info">
-              <span className="product-name" title={product.name}>{product.name}</span>
-              <span className="product-code">{product.code}</span>
-            </div>
-            <div className={`status-indicator ${product.status}`} title={getStatusTooltip(product.status)}>
-              <i className={`fas ${statusConfig.icon}`}></i>
-            </div>
+        <div className="product-row cy-row">
+          <div className="product-name-cell">
+            <span className="product-name" title={product.name}>{product.name}</span>
+            <span className="year-label">CY</span>
+            <span
+              className="product-status-indicator"
+              title={statusInfo.label}
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                padding: '2px 8px', borderRadius: '12px', fontSize: '0.625rem',
+                fontWeight: 700, background: statusInfo.bg, color: statusInfo.color,
+                marginLeft: '6px', whiteSpace: 'nowrap',
+              }}
+            >
+              <i className={`fas ${statusInfo.icon}`} style={{ fontSize: '0.5625rem' }}></i>
+              {product.status === 'approved' ? 'Locked' : product.status === 'submitted' ? 'Pending' : product.status === 'rejected' ? 'Revision' : 'Draft'}
+            </span>
           </div>
 
-          {/* Monthly CY Values */}
           {MONTHS.map((month, idx) => {
-            const monthData = product.monthlyTargets?.[month] || {};
-            const value = currentField === 'qty' ? monthData.cyQty : monthData.cyRev;
-            const isActive = activeCell?.productId === product.id && 
-                            activeCell?.month === month && 
-                            activeCell?.field === currentField;
+            const monthData  = product.monthlyTargets?.[month] || {};
+            const isActive   = activeCell?.productId === product.id && activeCell?.month === month;
+            const qClass     = idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
 
             return (
-              <div 
+              <div
                 key={month}
-                className={`tbm-month-cell cy-value ${getQuarterColor(idx)} ${canEdit ? 'editable' : 'locked'} ${isActive ? 'active' : ''}`}
-                onClick={() => handleCellClick(product.id, month, currentField, value, product.status)}
-                title={getStatusTooltip(product.status)}
+                className={`month-cell ${canEdit ? 'editable' : 'locked'} ${isActive ? 'active' : ''} ${qClass}`}
+                onClick={() => handleCellClick(product, month, monthData.cyQty || 0)}
+                title={statusInfo.label}
               >
                 {isActive ? (
                   <input
@@ -270,49 +288,29 @@ function TBMTargetEntryGrid({
                     value={editValue}
                     onChange={handleCellChange}
                     onBlur={handleCellBlur}
-                    onKeyDown={handleKeyDown}
+                    onKeyDown={handleCellKeyDown}
                   />
                 ) : (
-                  <span className="cell-value">
-                    {currentField === 'qty' 
-                      ? Utils.formatNumber(value || 0)
-                      : `₹${Utils.formatCompact(value || 0)}`
-                    }
-                  </span>
+                  <span className="cell-value">{Utils.formatNumber(monthData.cyQty || 0)}</span>
                 )}
               </div>
             );
           })}
 
-          {/* Quarterly Totals */}
-          {QUARTERS.map(quarter => {
-            const qTotal = calculateQuarterTotal(product.id, quarter.id, 'CY', currentField);
-            return (
-              <div key={quarter.id} className={`tbm-quarter-cell ${quarter.color}`}>
-                {currentField === 'qty' 
-                  ? Utils.formatNumber(qTotal)
-                  : `₹${Utils.formatCompact(qTotal)}`
-                }
-              </div>
-            );
-          })}
-
-          {/* Yearly Total */}
-          <div className="tbm-total-cell cy-total">
-            {currentField === 'qty' 
-              ? Utils.formatNumber(calculateYearlyTotal(product.id, 'CY', currentField))
-              : `₹${Utils.formatCompact(calculateYearlyTotal(product.id, 'CY', currentField))}`
-            }
+          <div className="total-cell cy-total">
+            {Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}
           </div>
-
-          {/* Growth */}
-          <div className="tbm-growth-cell">
+          <div className="growth-cell">
             {(() => {
-              const growth = calculateGrowth(product.id, currentField);
+              const g = calculateGrowth(product.id);
               return (
-                <span className={`growth-badge ${growth >= 0 ? 'positive' : 'negative'}`}>
-                  <i className={`fas fa-arrow-${growth >= 0 ? 'up' : 'down'}`}></i>
-                  {Utils.formatGrowth(growth)}
+                <span style={{
+                  fontSize: '0.75rem', fontWeight: 700,
+                  color: g >= 0 ? '#059669' : '#DC2626',
+                  fontFamily: 'monospace',
+                }}>
+                  <i className={`fas fa-arrow-${g >= 0 ? 'up' : 'down'}`} style={{ marginRight: 3 }}></i>
+                  {Math.abs(g).toFixed(1)}%
                 </span>
               );
             })()}
@@ -320,162 +318,214 @@ function TBMTargetEntryGrid({
         </div>
 
         {/* LY Row */}
-        <div className="tbm-product-row ly-row">
-          <div className="tbm-product-name-cell ly-label">
-            <span>LY ({currentField === 'qty' ? 'Qty' : 'Rev'})</span>
-          </div>
-
-          {MONTHS.map((month, idx) => {
-            const monthData = product.monthlyTargets?.[month] || {};
-            const value = currentField === 'qty' ? monthData.lyQty : monthData.lyRev;
-            return (
-              <div key={month} className={`tbm-month-cell ly-value ${getQuarterColor(idx)}`}>
-                {currentField === 'qty' 
-                  ? Utils.formatNumber(value || 0)
-                  : `₹${Utils.formatCompact(value || 0)}`
-                }
-              </div>
-            );
-          })}
-
-          {/* Quarterly LY Totals */}
-          {QUARTERS.map(quarter => {
-            const qTotal = calculateQuarterTotal(product.id, quarter.id, 'LY', currentField);
-            return (
-              <div key={quarter.id} className={`tbm-quarter-cell ly ${quarter.color}`}>
-                {currentField === 'qty' 
-                  ? Utils.formatNumber(qTotal)
-                  : `₹${Utils.formatCompact(qTotal)}`
-                }
-              </div>
-            );
-          })}
-
-          <div className="tbm-total-cell ly-total">
-            {currentField === 'qty' 
-              ? Utils.formatNumber(calculateYearlyTotal(product.id, 'LY', currentField))
-              : `₹${Utils.formatCompact(calculateYearlyTotal(product.id, 'LY', currentField))}`
-            }
-          </div>
-          <div className="tbm-growth-cell"></div>
-        </div>
-
-        {/* AOP Row — Read Only (Annual Operating Plan) */}
-        <div className="tbm-product-row aop-row">
-          <div className="tbm-product-name-cell aop-label">
-            <span>AOP ({currentField === 'qty' ? 'Qty' : 'Rev'})</span>
+        <div className="product-row ly-row">
+          <div className="product-name-cell ly-label">
+            <span>LY Qty</span>
           </div>
           {MONTHS.map((month, idx) => {
             const monthData = product.monthlyTargets?.[month] || {};
-            const value = currentField === 'qty' ? (monthData.aopQty || 0) : (monthData.aopRev || 0);
+            const qClass    = idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
             return (
-              <div key={month} className={`tbm-month-cell aop-value ${getQuarterColor(idx)}`}>
-                {currentField === 'qty'
-                  ? Utils.formatNumber(value)
-                  : `₹${Utils.formatCompact(value)}`
-                }
+              <div key={month} className={`month-cell ly-value ${qClass}`}>
+                <span className="cell-value">{Utils.formatNumber(monthData.lyQty || 0)}</span>
               </div>
             );
           })}
-          {QUARTERS.map(quarter => {
-            const qTotal = quarter.months.reduce((sum, m) => {
-              const mt = product.monthlyTargets?.[m] || {};
-              return sum + (currentField === 'qty' ? (mt.aopQty || 0) : (mt.aopRev || 0));
-            }, 0);
-            return (
-              <div key={quarter.id} className={`tbm-quarter-cell ${quarter.color} aop`}>
-                {currentField === 'qty' ? Utils.formatNumber(qTotal) : `₹${Utils.formatCompact(qTotal)}`}
-              </div>
-            );
-          })}
-          <div className="tbm-total-cell aop-total">
-            {(() => {
-              const total = MONTHS.reduce((s, m) => {
-                const mt = product.monthlyTargets?.[m] || {};
-                return s + (currentField === 'qty' ? (mt.aopQty || 0) : (mt.aopRev || 0));
-              }, 0);
-              return currentField === 'qty' ? Utils.formatNumber(total) : `₹${Utils.formatCompact(total)}`;
-            })()}
+          <div className="total-cell ly-total">
+            {Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}
           </div>
-          <div className="tbm-growth-cell">
-            {(() => {
-              const aopT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.[currentField === 'qty' ? 'aopQty' : 'aopRev'] || 0), 0);
-              const lyT = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.[currentField === 'qty' ? 'lyQty' : 'lyRev'] || 0), 0);
-              if (lyT === 0 && aopT === 0) return '';
-              const g = Utils.calcGrowth(lyT, aopT);
-              return (
-                <span className={`growth-badge ${g >= 0 ? 'positive' : 'negative'}`} style={{ opacity: 0.7 }}>
-                  {Utils.formatGrowth(g)}
-                </span>
-              );
-            })()}
-          </div>
+          <div className="growth-cell"></div>
         </div>
+      </div>
+    );
+  };
+
+  // ==================== RENDER: CATEGORY ====================
+
+  const renderCategory = (category) => {
+    const isExpanded    = expandedCategories.has(category.id);
+    const subcategories = getSubcategories(category.id);
+    const catProducts   = filteredProducts.filter(p => p.categoryId === category.id);
+    if (catProducts.length === 0) return null;
+
+    return (
+      <div key={category.id} className="category-section">
+        {/* Category header row */}
+        <div className="category-header-row" onClick={() => toggleCategory(category.id)}>
+          <div className="category-name-cell">
+            <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
+            <div className={`category-icon-badge ${category.id}`}>
+              <i className={`fas ${category.icon || 'fa-box'}`}></i>
+            </div>
+            <span className="category-name-text">{category.name}</span>
+            <span className="category-product-count">{catProducts.length}</span>
+          </div>
+          {MONTHS.map((month, idx) => {
+            const qClass = idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
+            return (
+              <div key={month} className={`month-cell category-total ${qClass}`}>
+                {Utils.formatNumber(calculateCategoryTotal(category.id, month, 'CY'))}
+              </div>
+            );
+          })}
+          <div className="total-cell category-total">
+            {Utils.formatNumber(
+              MONTHS.reduce((s, m) => s + calculateCategoryTotal(category.id, m, 'CY'), 0)
+            )}
+          </div>
+          <div className="growth-cell"></div>
+        </div>
+
+        {/* Subcategories / Products */}
+        {isExpanded && (
+          subcategories.length > 0 ? subcategories.map(sub => {
+            const subKey      = `${category.id}__${sub}`;
+            const subExpanded = expandedSubcategories.has(subKey);
+            const subProducts = catProducts.filter(p => p.subcategory === sub);
+            return (
+              <div key={subKey} className="subcategory-section">
+                <div className="subcategory-header-row" onClick={() => toggleSubcategory(subKey)}>
+                  <div className="subcategory-name-cell">
+                    <i className={`fas fa-chevron-${subExpanded ? 'down' : 'right'} chevron-icon small`}></i>
+                    <span>{sub}</span>
+                    <span className="category-product-count">{subProducts.length}</span>
+                  </div>
+                  {MONTHS.map((month, idx) => {
+                    const qClass = idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
+                    const total  = subProducts.reduce((s, p) => s + (p.monthlyTargets?.[month]?.cyQty || 0), 0);
+                    return (
+                      <div key={month} className={`month-cell subcategory-total ${qClass}`}>
+                        {Utils.formatNumber(total)}
+                      </div>
+                    );
+                  })}
+                  <div className="total-cell subcategory-total">
+                    {Utils.formatNumber(
+                      subProducts.reduce((s, p) =>
+                        s + MONTHS.reduce((ms, m) => ms + (p.monthlyTargets?.[m]?.cyQty || 0), 0), 0
+                      )
+                    )}
+                  </div>
+                  <div className="growth-cell"></div>
+                </div>
+                {subExpanded && subProducts.map(renderProductRows)}
+              </div>
+            );
+          }) : catProducts.map(renderProductRows)
+        )}
       </div>
     );
   };
 
   // ==================== MAIN RENDER ====================
 
-  const draftCount = targetStats.draft || 0;
-  const submittedCount = targetStats.submitted || 0;
-  const approvedCount = targetStats.approved || 0;
-  const rejectedCount = targetStats.rejected || 0;
+  const { totalCYQty, totalLYQty, draftCount, submittedCount, approvedCount, rejectedCount, qtyGrowth } = overallSummary;
+  const submittableCount = draftCount + rejectedCount;
 
   return (
-    <div className="tbm-targets-container" ref={gridRef}>
-      {/* Header */}
-      <div className="targets-header">
-        <div className="targets-header-title">
-          <i className="fas fa-crosshairs"></i>
-          <h2>Territory Target Entry</h2>
-          <span style={{
-            background: 'rgba(255,255,255,0.15)',
-            padding: '0.375rem 0.875rem',
-            borderRadius: '20px',
-            fontSize: '0.8125rem',
-            fontWeight: '700',
-            marginLeft: '0.5rem'
-          }}>FY {fiscalYear}</span>
+    <div className="target-entry-container">
+
+      {/* ── Header ── */}
+      <div className="grid-header" style={{ background: 'linear-gradient(135deg, #0F4C75 0%, #1B4D7A 50%, #0D9488 100%)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12,
+              background: 'rgba(255,255,255,0.15)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.25rem', color: '#fff',
+            }}>
+              <i className="fas fa-map-marker-alt"></i>
+            </div>
+            <div>
+              <div style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#fff', letterSpacing: '-0.01em' }}>
+                Territory Target Entry
+              </div>
+              {territoryName && (
+                <div style={{ fontSize: '0.8125rem', color: 'rgba(255,255,255,0.7)', marginTop: 2 }}>
+                  <i className="fas fa-map-pin" style={{ marginRight: 5 }}></i>{territoryName}
+                </div>
+              )}
+            </div>
+            <span style={{
+              background: 'rgba(255,255,255,0.15)', padding: '0.375rem 0.875rem',
+              borderRadius: 20, fontSize: '0.8125rem', fontWeight: 700, color: '#fff',
+            }}>FY {fiscalYear}</span>
+          </div>
+
+          {/* Stats pills */}
+          <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            {[
+              { label: 'Draft',     count: draftCount,     color: '#60A5FA' },
+              { label: 'Pending',   count: submittedCount, color: '#FBBF24' },
+              { label: 'Approved',  count: approvedCount,  color: '#34D399' },
+              ...(rejectedCount > 0 ? [{ label: 'Revision', count: rejectedCount, color: '#F87171' }] : []),
+            ].map(s => (
+              <span key={s.label} style={{
+                background: 'rgba(255,255,255,0.12)', border: `1px solid ${s.color}40`,
+                borderRadius: 20, padding: '0.25rem 0.75rem',
+                fontSize: '0.75rem', fontWeight: 600, color: s.color,
+              }}>
+                {s.count} {s.label}
+              </span>
+            ))}
+          </div>
         </div>
 
-        <div className="targets-header-stats">
-          <span className="header-stat-pill draft">
-            <i className="fas fa-edit"></i> {draftCount} Draft
-          </span>
-          <span className="header-stat-pill pending">
-            <i className="fas fa-clock"></i> {submittedCount} Pending
-          </span>
-          <span className="header-stat-pill approved">
-            <i className="fas fa-check-circle"></i> {approvedCount} Approved
-          </span>
-          {rejectedCount > 0 && (
-            <span className="header-stat-pill rejected">
-              <i className="fas fa-undo"></i> {rejectedCount} Revision
-            </span>
-          )}
+        {/* Summary cards */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginTop: '1rem' }}>
+          {[
+            { label: 'TERRITORY TARGET (FY ' + fiscalYear + ')', value: 'Not Set', sub: null },
+            { label: 'COMMITTED VALUE', value: `₹${Utils.formatCompact ? Utils.formatCompact(overallSummary.totalCYRev || 0) : 0}`, sub: null },
+            { label: 'TOTAL QTY (CY VS LY)', value: `${Utils.formatNumber(totalCYQty)} vs ${Utils.formatNumber(totalLYQty)}`, sub: null },
+            { label: 'YOY GROWTH', value: `${qtyGrowth >= 0 ? '+' : ''}${(qtyGrowth || 0).toFixed(1)}%`, sub: null, color: qtyGrowth >= 0 ? '#34D399' : '#F87171' },
+          ].map((card, i) => (
+            <div key={i} style={{
+              background: 'rgba(255,255,255,0.1)', borderRadius: 10,
+              padding: '0.75rem 1rem', backdropFilter: 'blur(4px)',
+            }}>
+              <div style={{ fontSize: '0.625rem', fontWeight: 700, color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                {card.label}
+              </div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: card.color || '#fff' }}>
+                {card.value}
+              </div>
+            </div>
+          ))}
         </div>
 
-        <div className="targets-actions">
+        {/* Actions */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.625rem', marginTop: '0.875rem' }}>
           {lastSaved && (
-            <span className="last-saved-indicator">
-              <i className="fas fa-check-circle"></i>
+            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
+              <i className="fas fa-check-circle" style={{ marginRight: 4, color: '#34D399' }}></i>
               Saved {lastSaved.toLocaleTimeString()}
             </span>
           )}
-          <button 
-            className="target-action-btn save"
+          <button
             onClick={handleSaveAll}
             disabled={isLoading}
+            style={{
+              padding: '0.5rem 1.125rem', borderRadius: 8, border: 'none', cursor: 'pointer',
+              background: 'rgba(255,255,255,0.15)', color: '#fff',
+              fontSize: '0.8125rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: '0.375rem',
+            }}
           >
             {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
             Save Draft
           </button>
-          <button 
-            className="target-action-btn submit"
+          <button
             onClick={handleSubmitAll}
-            disabled={isLoading || draftCount + rejectedCount === 0}
-            title={draftCount + rejectedCount === 0 ? 'No drafts to submit' : `Submit ${draftCount + rejectedCount} targets for ABM approval`}
+            disabled={isLoading || submittableCount === 0}
+            title={submittableCount === 0 ? 'No drafts to submit' : `Submit ${submittableCount} targets to ABM`}
+            style={{
+              padding: '0.5rem 1.125rem', borderRadius: 8, border: 'none', cursor: submittableCount === 0 ? 'not-allowed' : 'pointer',
+              background: submittableCount === 0 ? 'rgba(255,255,255,0.08)' : '#00A19B',
+              color: submittableCount === 0 ? 'rgba(255,255,255,0.4)' : '#fff',
+              fontSize: '0.8125rem', fontWeight: 600,
+              display: 'flex', alignItems: 'center', gap: '0.375rem',
+            }}
           >
             {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
             Submit to ABM
@@ -483,170 +533,102 @@ function TBMTargetEntryGrid({
         </div>
       </div>
 
-      {/* Toolbar */}
-      <div className="approval-filters">
-        <div className="filter-group">
-          <label>View Mode</label>
-          <select 
-            className="filter-select"
-            value={viewMode}
-            onChange={(e) => setViewMode(e.target.value)}
-          >
-            <option value="qty">Quantity</option>
-            <option value="rev">Revenue</option>
-          </select>
-        </div>
-
-        <div className="search-input-wrapper">
-          <i className="fas fa-search"></i>
-          <input 
+      {/* ── Search & Filter Bar ── */}
+      <div className="grid-search-bar" style={{
+        display: 'flex', flexWrap: 'wrap', gap: '8px',
+        padding: '0.625rem 1rem', borderBottom: '1px solid #E5E7EB',
+        background: '#FAFAFA', alignItems: 'center',
+      }}>
+        <div className="search-input-wrapper" style={{ flex: '1 1 180px', minWidth: 0 }}>
+          <i className="fas fa-search search-icon"></i>
+          <input
+            ref={searchInputRef}
             type="text"
-            className="search-input"
-            placeholder="Search products or codes..."
+            placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            className="search-input"
           />
-        </div>
-
-        <button 
-          className="target-action-btn save"
-          onClick={toggleExpandAll}
-          style={{marginLeft: 'auto'}}
-        >
-          <i className={`fas fa-${expandedCategories.size === categories.length ? 'compress-alt' : 'expand-alt'}`}></i>
-          {expandedCategories.size === categories.length ? 'Collapse All' : 'Expand All'}
-        </button>
-      </div>
-
-      {/* Grid */}
-      <div className="tbm-grid-wrapper">
-        <div className="tbm-excel-grid">
-          {/* Header Row */}
-          <div className="tbm-grid-header-row">
-            <div className="tbm-header-cell product-header">
-              <span>Product / Territory Target</span>
-              <span className="view-mode-indicator">{viewMode === 'qty' ? 'QTY' : 'REV'}</span>
-            </div>
-            
-            {/* Month Headers */}
-            {MONTH_LABELS.map((label, idx) => (
-              <div key={label} className={`tbm-header-cell month-header ${getQuarterColor(idx)}`}>
-                {label}
-                <span className="year-indicator">{idx < 9 ? '25' : '26'}</span>
-              </div>
-            ))}
-
-            {/* Quarter Headers */}
-            {QUARTERS.map(quarter => (
-              <div key={quarter.id} className={`tbm-header-cell quarter-header ${quarter.color}`}>
-                {quarter.id}
-              </div>
-            ))}
-
-            <div className="tbm-header-cell total-header">TOTAL</div>
-            <div className="tbm-header-cell growth-header">GROWTH</div>
-          </div>
-
-          {/* Category Sections */}
-          {categories.map(category => {
-            const catProducts = productsByCategory[category.id] || [];
-            const isExpanded = expandedCategories.has(category.id);
-            const isRevenueOnly = REVENUE_ONLY_CATEGORIES.includes(category.id);
-
-            if (catProducts.length === 0) return null;
-
-            return (
-              <div key={category.id} className="tbm-category-section">
-                {/* Category Header */}
-                <div 
-                  className="tbm-category-header-row"
-                  onClick={() => toggleCategory(category.id)}
-                >
-                  <div className="tbm-category-name-cell">
-                    <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
-                    <div className={`category-icon ${category.id}`}>
-                      <i className={`fas ${category.icon || 'fa-box'}`}></i>
-                    </div>
-                    <span className="category-name">{category.name}</span>
-                    <span className="category-count">{catProducts.length} targets</span>
-                    {isRevenueOnly && <span className="revenue-badge">Revenue Only</span>}
-                  </div>
-
-                  {/* Category Monthly Totals */}
-                  {MONTHS.map((month, idx) => (
-                    <div key={month} className={`tbm-month-cell category-total ${getQuarterColor(idx)}`}>
-                      {viewMode === 'qty' 
-                        ? Utils.formatNumber(calculateCategoryTotal(category.id, month, 'CY', 'qty'))
-                        : `₹${Utils.formatCompact(calculateCategoryTotal(category.id, month, 'CY', 'rev'))}`
-                      }
-                    </div>
-                  ))}
-
-                  {/* Category Quarter Totals */}
-                  {QUARTERS.map(quarter => {
-                    const qTotal = quarter.months.reduce((sum, month) => 
-                      sum + calculateCategoryTotal(category.id, month, 'CY', viewMode), 0
-                    );
-                    return (
-                      <div key={quarter.id} className={`tbm-quarter-cell category-total ${quarter.color}`}>
-                        {viewMode === 'qty' 
-                          ? Utils.formatNumber(qTotal)
-                          : `₹${Utils.formatCompact(qTotal)}`
-                        }
-                      </div>
-                    );
-                  })}
-
-                  <div className="tbm-total-cell category-total">
-                    {(() => {
-                      const total = MONTHS.reduce((sum, month) => 
-                        sum + calculateCategoryTotal(category.id, month, 'CY', viewMode), 0
-                      );
-                      return viewMode === 'qty' 
-                        ? Utils.formatNumber(total)
-                        : `₹${Utils.formatCompact(total)}`;
-                    })()}
-                  </div>
-                  <div className="tbm-growth-cell"></div>
-                </div>
-
-                {/* Products */}
-                {isExpanded && (
-                  <div className="tbm-products-container">
-                    {catProducts.map(renderProductRow)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Empty State */}
-          {filteredProducts.length === 0 && (
-            <div className="empty-state">
-              <div className="empty-state-icon">
-                <i className="fas fa-search"></i>
-              </div>
-              <h3>No Products Found</h3>
-              <p>Try adjusting your search criteria or clear the search to see all products.</p>
-            </div>
+          {searchTerm && (
+            <button className="clear-search" onClick={clearSearch}>
+              <i className="fas fa-times"></i>
+            </button>
           )}
         </div>
+
+        <label style={{
+          display: 'inline-flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+          fontSize: '0.75rem', color: showOnlyEntered ? '#00A19B' : '#6B7280', fontWeight: 500,
+          padding: '0.3rem 0.6rem', borderRadius: '20px',
+          background: showOnlyEntered ? '#E6FAF9' : '#F3F4F6',
+          border: `1px solid ${showOnlyEntered ? '#00A19B' : '#E5E7EB'}`,
+          userSelect: 'none',
+        }}>
+          <input type="checkbox" checked={showOnlyEntered}
+            onChange={e => setShowOnlyEntered(e.target.checked)}
+            style={{ accentColor: '#00A19B', width: 13, height: 13 }} />
+          Entered only
+        </label>
+
+        <div className="grid-legend" style={{
+          display: 'flex', gap: '10px', alignItems: 'center',
+          fontSize: '0.625rem', color: '#9CA3AF', marginLeft: 'auto',
+        }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, border: '2px solid #00A19B', background: 'rgba(0,161,155,0.06)', display: 'inline-block' }}></span>
+            Editable
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#D1FAE5', border: '1px solid #059669', display: 'inline-block' }}></span>
+            Approved
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#FEF3C7', border: '1px solid #D97706', display: 'inline-block' }}></span>
+            Pending
+          </span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            <span style={{ width: 9, height: 9, borderRadius: 2, background: '#FEE2E2', border: '1px solid #DC2626', display: 'inline-block' }}></span>
+            Revision
+          </span>
+        </div>
       </div>
 
-      {/* Instructions Footer */}
-      <div style={{
-        padding: '1rem 1.5rem',
-        background: 'rgba(0,0,0,0.2)',
-        borderTop: '1px solid rgba(255,255,255,0.1)',
-        display: 'flex',
-        gap: '2rem',
-        color: 'rgba(255,255,255,0.5)',
-        fontSize: '0.75rem'
+      {/* ── Excel Grid ── */}
+      <div className="excel-grid">
+        <div className="grid-header-row">
+          <div className="header-cell product-header">Product / Territory Target</div>
+          {MONTH_LABELS.map((label, idx) => (
+            <div key={label} className={`header-cell month-header ${idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4'}`}>
+              {label}
+            </div>
+          ))}
+          <div className="header-cell total-header">TOTAL</div>
+          <div className="header-cell growth-header">YoY %</div>
+        </div>
+
+        {categories.map(renderCategory)}
+
+        {filteredProducts.length === 0 && searchTerm && (
+          <div className="no-results">
+            <i className="fas fa-search" style={{ fontSize: '1.5rem', opacity: 0.3 }}></i>
+            <p>No products matching "{searchTerm}"</p>
+            <button className="clear-search-btn" onClick={clearSearch}>Clear Search</button>
+          </div>
+        )}
+      </div>
+
+      {/* ── Footer ── */}
+      <div className="grid-footer-info" style={{
+        padding: '0.75rem 1.5rem', background: '#F9FAFB',
+        borderTop: '1px solid #E5E7EB',
+        display: 'flex', gap: '2rem', fontSize: '0.6875rem',
+        color: '#6B7280', flexWrap: 'wrap',
       }}>
-        <span><i className="fas fa-mouse-pointer" style={{marginRight: '0.5rem'}}></i> Click on blue cells to edit CY targets</span>
-        <span><i className="fas fa-lock" style={{marginRight: '0.5rem'}}></i> Submitted/Approved targets are locked</span>
-        <span><i className="fas fa-undo" style={{marginRight: '0.5rem'}}></i> Rejected targets can be edited and resubmitted</span>
-        <span><i className="fas fa-arrow-up" style={{marginRight: '0.5rem', color: '#10B981'}}></i> Targets roll up to ABM for approval</span>
+        <span><i className="fas fa-mouse-pointer" style={{ marginRight: 6, color: '#00A19B' }}></i> Click teal-bordered cells to edit</span>
+        <span><i className="fas fa-lock" style={{ marginRight: 6, color: '#059669' }}></i> Green = Approved by ABM (locked)</span>
+        <span><i className="fas fa-clock" style={{ marginRight: 6, color: '#D97706' }}></i> Yellow = Pending ABM review (locked)</span>
+        <span><i className="fas fa-undo" style={{ marginRight: 6, color: '#DC2626' }}></i> Red = Rejected — edit and resubmit</span>
+        <span><i className="fas fa-keyboard" style={{ marginRight: 6 }}></i> Tab to move, Enter to confirm</span>
       </div>
     </div>
   );

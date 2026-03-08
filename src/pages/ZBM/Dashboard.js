@@ -548,14 +548,14 @@ function ZBMDashboard() {
           </>
         )}
 
-        {/* ==================== TAB 3: OVERVIEW & SUMMARY ==================== */}
+        {/* ==================== TAB 3: OVERVIEW & SUMMARY ==================== 
         {activeTab === 'overview' && (
           <ZBMOverviewStats
             abmSubmissions={abmSubmissions}
             categories={categories}
             approvalStats={approvalStats}
           />
-        )}
+        )}*/}
 
         {/* ==================== TAB 4: TEAM DRILL-DOWN ==================== */}
         {activeTab === 'drilldown' && (

@@ -223,6 +223,7 @@ export function AuthProvider({ children }) {
       });
     } catch { /* ignore */ }
     localStorage.removeItem('appasamy_token');
+    localStorage.removeItem('appasamy_refresh_token');
     localStorage.removeItem('appasamy_user');
     setUser(null);
   }, []);
@@ -276,6 +277,7 @@ export function AuthProvider({ children }) {
       const data       = await response.json();
       const mappedUser = mapUserFromBackend(data.user);
       localStorage.setItem('appasamy_token', data.token);
+      localStorage.removeItem('appasamy_refresh_token'); // no longer used
       localStorage.setItem('appasamy_user',  JSON.stringify(mappedUser));
       setUser(mappedUser);
       console.log('[Auth] Login success — role:', mappedUser?.role);

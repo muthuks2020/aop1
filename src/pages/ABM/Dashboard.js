@@ -337,9 +337,9 @@ function ABMDashboard() {
           <i className="fas fa-user-check"></i><span>TBM Targets</span>
           {approvalStats.pending > 0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
         </button>
-        <button className={`abm-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+         {/*<button className={`abm-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <i className="fas fa-chart-pie"></i><span>Overview & Summary</span>
-        </button>
+        </button>*/}
         <button className={`abm-tab ${activeTab === 'targets' ? 'active' : ''}`} onClick={() => setActiveTab('targets')}>
           <i className="fas fa-bullseye"></i><span>Area Target</span>
         </button>

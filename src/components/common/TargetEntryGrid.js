@@ -227,6 +227,28 @@ function TargetEntryGrid({
     }
   }, [activeCell]);
 
+  // ==================== HELPERS (declared first — used by useMemos below) ====================
+  const hasAnyCYValue = useCallback((product) => {
+    if (!product.monthlyTargets) return false;
+    return MONTHS.some(month => {
+      const monthData = product.monthlyTargets[month];
+      return monthData && (monthData.cyQty > 0 || monthData.cyRev > 0);
+    });
+  }, []);
+
+  const hasAnyLYValue = useCallback((product) => {
+    if (!product.monthlyTargets) return false;
+    return MONTHS.some(month => {
+      const monthData = product.monthlyTargets[month];
+      return monthData && (monthData.lyQty > 0 || monthData.lyRev > 0);
+    });
+  }, []);
+
+  const isEditable = useCallback((product) => {
+    const status = product.status || 'draft';
+    return status === 'draft';
+  }, []);
+
   // ── PART 2: derive all active warnings as a flat list ───────────
   const allWarnings = useMemo(() => {
     const list = [];
@@ -264,28 +286,6 @@ function TargetEntryGrid({
     }
     return null;
   }, [products]);
-
-  // ==================== HELPER: Check if product has any CY values entered ====================
-  const hasAnyCYValue = useCallback((product) => {
-    if (!product.monthlyTargets) return false;
-    return MONTHS.some(month => {
-      const monthData = product.monthlyTargets[month];
-      return monthData && (monthData.cyQty > 0 || monthData.cyRev > 0);
-    });
-  }, []);
-
-  const hasAnyLYValue = useCallback((product) => {
-    if (!product.monthlyTargets) return false;
-    return MONTHS.some(month => {
-      const monthData = product.monthlyTargets[month];
-      return monthData && (monthData.lyQty > 0 || monthData.lyRev > 0);
-    });
-  }, []);
-
-  const isEditable = useCallback((product) => {
-    const status = product.status || 'draft';
-    return status === 'draft';
-  }, []);
 
   const getStatusInfo = useCallback((status) => {
     switch (status) {
@@ -963,13 +963,7 @@ function TargetEntryGrid({
             </div>
           )}
         </div>
-        <div className="otb-status-chips">
-          <span className="otb-chip otb-chip-total"><i className="fas fa-boxes"></i> {overallTargetSummary.totalProducts} Products</span>
-          <span className="otb-chip otb-chip-entered"><i className="fas fa-pencil-alt"></i> {overallTargetSummary.enteredCount} Entered</span>
-          <span className="otb-chip otb-chip-approved"><i className="fas fa-lock"></i> {overallTargetSummary.approvedCount} Approved (Locked)</span>
-          <span className="otb-chip otb-chip-submitted"><i className="fas fa-clock"></i> {overallTargetSummary.submittedCount} Pending</span>
-          <span className="otb-chip otb-chip-draft"><i className="fas fa-edit"></i> {overallTargetSummary.draftCount} Draft</span>
-        </div>
+        
       </div>
 
       {/* ── PART 2: Item 3 — CY < LY warning banner ─────────────────────── */}

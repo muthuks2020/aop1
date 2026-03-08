@@ -218,12 +218,12 @@ function SpecialistDashboard() {
         >
           <i className="fas fa-table"></i> Target Entry Grid
         </button>
-        <button
+       {/*  <button
           className={`main-tab ${activeTab === 'quarterly' ? 'active' : ''}`}
           onClick={() => setActiveTab('quarterly')}
         >
           <i className="fas fa-calendar-alt"></i> Quarterly Summary
-        </button>
+        </button> */}
       </div>
 
       {/* Main Content */}

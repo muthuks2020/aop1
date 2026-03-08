@@ -209,46 +209,6 @@ function TBMDashboard() {
   const closeModal = useCallback(() => { setModalConfig(p => ({ ...p, isOpen: false })); }, []);
   const getQC = (i) => i < 3 ? 'q1' : i < 6 ? 'q2' : i < 9 ? 'q3' : 'q4';
 
-  // ==================== YEARLY TARGETS API SERVICE ====================
-  // Must be defined before any early returns (Rules of Hooks)
-  const tbmYearlyApiService = useMemo(() => {
-    const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
-    const authHeaders = () => {
-      const token = localStorage.getItem('appasamy_token');
-      return {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-      };
-    };
-    return {
-      getYearlyTargets: async (fiscalYear) => {
-        const res = await fetch(`${BASE_URL}/tbm/yearly-targets?fy=${fiscalYear || '2026-27'}`, {
-          headers: authHeaders(),
-        });
-        if (!res.ok) throw new Error('Failed to load yearly targets');
-        return res.json();
-      },
-      saveYearlyTargets: async (fiscalYear, members) => {
-        const res = await fetch(`${BASE_URL}/tbm/yearly-targets/save`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ fiscalYear, members }),
-        });
-        if (!res.ok) throw new Error('Failed to save yearly targets');
-        return res.json();
-      },
-      publishYearlyTargets: async (fiscalYear, memberIds) => {
-        const res = await fetch(`${BASE_URL}/tbm/yearly-targets/publish`, {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ fiscalYear, memberIds }),
-        });
-        if (!res.ok) throw new Error('Failed to publish yearly targets');
-        return res.json();
-      },
-    };
-  }, []);
-
   // ==================== LOADING ====================
   if (isLoading) {
     return (
@@ -271,9 +231,9 @@ function TBMDashboard() {
           <i className="fas fa-user-check"></i><span>Sales Rep Targets</span>
           {approvalStats.pending > 0 && <span className="tab-badge pending">{approvalStats.pending}</span>}
         </button>
-        {/* <button className={`abm-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
+        <button className={`abm-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <i className="fas fa-chart-pie"></i><span>Overview & Summary</span>
-        </button>*/}
+        </button>
         <button className={`abm-tab ${activeTab === 'targets' ? 'active' : ''}`} onClick={() => setActiveTab('targets')}>
           <i className="fas fa-bullseye"></i><span>Territory Target</span>
         </button>
@@ -446,7 +406,7 @@ function TBMDashboard() {
           <TeamYearlyTargets
             role="TBM"
             fiscalYear="2026-27"
-            apiService={tbmYearlyApiService}
+            teamMembers={uniqueSalesReps}
             showToast={showToast}
             managerName={user?.name || ''}
           />

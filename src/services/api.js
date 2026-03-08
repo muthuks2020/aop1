@@ -115,6 +115,11 @@ export const ApiService = {
     return apiRequest('/salesrep/dashboard-summary');
   },
 
+  // Alias — used by SalesRepDashboard.js
+  async getDashboardSummary() {
+    return apiRequest('/salesrep/dashboard-summary');
+  },
+
   async getSalesRepQuarterlySummary(fiscalYear) {
     return apiRequest(`/salesrep/quarterly-summary?fy=${fiscalYear}`);
   },
