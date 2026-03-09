@@ -245,6 +245,12 @@ function ZBMTeamDrilldown({ showToast }) {
                       {abmTotals.totalCyAchRev > 0 ? `₹${Utils.formatCompact(abmTotals.totalCyAchRev)}` : '—'}
                     </span>
                   </div>
+                  <div className="zbm-dd-mini-stat">
+                    <span className="zbm-dd-mini-label">Growth</span>
+                    <span className={`zbm-dd-mini-value ${abmTotals.growth >= 0 ? 'positive' : 'negative'}`}>
+                      {abmTotals.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(abmTotals.growth)}
+                    </span>
+                  </div>
                 </div>
               </div>
 
@@ -280,6 +286,12 @@ function ZBMTeamDrilldown({ showToast }) {
                               <span className="zbm-dd-mini-label">CY Rev</span>
                               <span className="zbm-dd-mini-value">₹{Utils.formatCompact(tbmTotals.totalCyRev)}</span>
                             </div>
+                            <div className="zbm-dd-mini-stat">
+                              <span className="zbm-dd-mini-label">Growth</span>
+                              <span className={`zbm-dd-mini-value ${tbmTotals.growth >= 0 ? 'positive' : 'negative'}`}>
+                                {tbmTotals.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(tbmTotals.growth)}
+                              </span>
+                            </div>
                           </div>
                         </div>
 
@@ -313,6 +325,12 @@ function ZBMTeamDrilldown({ showToast }) {
                                       <div className="zbm-dd-mini-stat">
                                         <span className="zbm-dd-mini-label">CY Rev</span>
                                         <span className="zbm-dd-mini-value">₹{Utils.formatCompact(repTotals.totalCyRev)}</span>
+                                      </div>
+                                      <div className="zbm-dd-mini-stat">
+                                        <span className="zbm-dd-mini-label">Growth</span>
+                                        <span className={`zbm-dd-mini-value ${repTotals.growth >= 0 ? 'positive' : 'negative'}`}>
+                                          {repTotals.growth >= 0 ? '↑' : '↓'}{Utils.formatGrowth(repTotals.growth)}
+                                        </span>
                                       </div>
                                     </div>
                                   </div>

@@ -366,11 +366,13 @@ function TargetEntryGrid({
   const overallTargetSummary = useMemo(() => {
     let totalCYQty = 0, totalLYQty = 0, totalCYRev = 0, totalLYRev = 0;
     let enteredCount = 0, approvedCount = 0, submittedCount = 0, draftCount = 0;
+    let liveEnteredValue = 0;
     products.forEach(p => {
       if (hasAnyCYValue(p)) enteredCount++;
       if (p.status === 'approved')  approvedCount++;
       else if (p.status === 'submitted') submittedCount++;
       else draftCount++;
+      const unitCost = p.listPrice || p.unitCost || 0;
       if (p.monthlyTargets) {
         MONTHS.forEach(month => {
           const md = p.monthlyTargets[month] || {};
@@ -378,6 +380,12 @@ function TargetEntryGrid({
           totalLYQty += md.lyQty || 0;
           totalCYRev += md.cyRev || 0;
           totalLYRev += md.lyRev || 0;
+          // Live value: for revenue-only products use cyRev, else qty × price
+          if (p.isRevenueOnly) {
+            liveEnteredValue += md.cyRev || 0;
+          } else {
+            liveEnteredValue += (md.cyQty || 0) * unitCost;
+          }
         });
       }
     });
@@ -392,7 +400,7 @@ function TargetEntryGrid({
       totalCYQty, totalLYQty, totalCYRev, totalLYRev,
       enteredCount, approvedCount, submittedCount, draftCount,
       totalProducts: products.length,
-      yearlyTargetValue, totalEnteredValue, completionPercent,
+      yearlyTargetValue, totalEnteredValue, liveEnteredValue, completionPercent,
       qtyGrowth: Utils.calcGrowth(totalLYQty, totalCYQty),
       revGrowth: Utils.calcGrowth(totalLYRev, totalCYRev),
     };
@@ -560,14 +568,6 @@ function TargetEntryGrid({
           <div className="total-cell">
             {Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0))}
           </div>
-          <div className="growth-cell">
-            {(() => {
-              const ly = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
-              const cy = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
-              const growth = Utils.calcGrowth(ly, cy);
-              return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
-            })()}
-          </div>
         </div>
 
         {isExpanded && (
@@ -594,7 +594,6 @@ function TargetEntryGrid({
                 );
               })}
               <div className="total-cell">{Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0))}</div>
-              <div className="growth-cell">-</div>
             </div>
             <div className="revenue-row ly-row">
               <div className="product-name-cell"><span className="year-label ly">Last Year Actual</span></div>
@@ -602,7 +601,6 @@ function TargetEntryGrid({
                 <div key={month} className="month-cell ly-value">{Utils.formatNumber(calculateCategoryTotal(category.id, month, 'LY'))}</div>
               ))}
               <div className="total-cell ly-value">{Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0))}</div>
-              <div className="growth-cell">-</div>
             </div>
             <div className="revenue-row aop-row">
               <div className="product-name-cell"><span className="year-label aop">AOP Target</span></div>
@@ -617,7 +615,6 @@ function TargetEntryGrid({
               <div className="total-cell aop-value">
                 {Utils.formatNumber(MONTHS.reduce((s, m) => s + (firstProduct?.monthlyTargets?.[m]?.aopRev || 0), 0))}
               </div>
-              <div className="growth-cell">—</div>
             </div>
           </div>
         )}
@@ -737,12 +734,6 @@ function TargetEntryGrid({
             );
           })}
           <div className="total-cell cy-total">{Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}</div>
-          <div className="growth-cell">
-            {(() => {
-              const growth = calculateGrowth(product.id);
-              return <span className={`growth-value small ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
-            })()}
-          </div>
         </div>
 
         {/* LY Row */}
@@ -753,7 +744,6 @@ function TargetEntryGrid({
             return <div key={month} className="month-cell ly-value">{Utils.formatNumber(monthData.lyQty || 0)}</div>;
           })}
           <div className="total-cell ly-value">{Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}</div>
-          <div className="growth-cell"></div>
         </div>
 
         {/* AOP Row */}
@@ -765,15 +755,6 @@ function TargetEntryGrid({
           })}
           <div className="total-cell aop-value">
             {Utils.formatNumber(MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0))}
-          </div>
-          <div className="growth-cell">
-            {(() => {
-              const aopTotal = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.aopQty || 0), 0);
-              const lyTotal  = MONTHS.reduce((s, m) => s + (product.monthlyTargets?.[m]?.lyQty  || 0), 0);
-              if (lyTotal === 0 && aopTotal === 0) return <span className="growth-value neutral">—</span>;
-              const growth = Utils.calcGrowth(lyTotal, aopTotal);
-              return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
-            })()}
           </div>
         </div>
       </div>
@@ -803,14 +784,6 @@ function TargetEntryGrid({
           ))}
           <div className="total-cell">
             {Utils.formatNumber(MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0))}
-          </div>
-          <div className="growth-cell">
-            {(() => {
-              const ly = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'LY'), 0);
-              const cy = MONTHS.reduce((sum, m) => sum + calculateCategoryTotal(category.id, m, 'CY'), 0);
-              const growth = Utils.calcGrowth(ly, cy);
-              return <span className={`growth-value ${growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(growth)}</span>;
-            })()}
           </div>
         </div>
 
@@ -867,11 +840,6 @@ function TargetEntryGrid({
                 ))}
                 <div className="total-cell" style={{ fontSize: '0.6875rem', color: '#6B7280' }}>
                   {Utils.formatNumber(subcatCYTotal)}
-                </div>
-                <div className="growth-cell">
-                  <span className={`growth-value small ${subcatGrowth >= 0 ? 'positive' : 'negative'}`}>
-                    {Utils.formatGrowth(subcatGrowth)}
-                  </span>
                 </div>
               </div>
 
@@ -950,22 +918,24 @@ function TargetEntryGrid({
           <div className="otb-card otb-entered-value">
             <div className="otb-card-icon"><i className="fas fa-rupee-sign"></i></div>
             <div className="otb-card-content">
-              <span className="otb-card-label">Total Entered Value</span>
+              <span className="otb-card-label">Target for FY 26-27</span>
               <span className="otb-card-value">₹{Utils.formatCompact(overallTargetSummary.totalEnteredValue)}</span>
             </div>
           </div>
-          {overallTargetSummary.yearlyTargetValue > 0 && (
-            <div className="otb-card otb-completion">
-              <div className="otb-card-icon"><i className="fas fa-percentage"></i></div>
-              <div className="otb-card-content">
-                <span className="otb-card-label">Completion</span>
-                <span className="otb-card-value">{overallTargetSummary.completionPercent}%</span>
-              </div>
-              <div className="otb-progress-bar">
-                <div className="otb-progress-fill" style={{ width: `${overallTargetSummary.completionPercent}%` }}></div>
-              </div>
+          <div className="otb-card otb-live-value" style={{ borderLeft: '3px solid #00A19B' }}>
+            <div className="otb-card-icon" style={{ background: 'linear-gradient(135deg, #00A19B, #00C4BC)' }}>
+              <i className="fas fa-calculator"></i>
             </div>
-          )}
+            <div className="otb-card-content">
+              <span className="otb-card-label">Entered Value (Qty × Price)</span>
+              <span className="otb-card-value" style={{ color: overallTargetSummary.liveEnteredValue > 0 ? '#00A19B' : '#94a3b8' }}>
+                {overallTargetSummary.liveEnteredValue > 0
+                  ? `₹${Utils.formatCompact(overallTargetSummary.liveEnteredValue)}`
+                  : '—'}
+              </span>
+            </div>
+          </div>
+
         </div>
         
       </div>

@@ -85,12 +85,11 @@ function ZBMDashboard() {
     setIsLoading(true);
     try {
       // Load categories, submissions, yearly targets, and direct reports in parallel
-      // Each call has its own fallback so one failure never blocks the others
       const [cats, subs, guidanceData, directReports] = await Promise.all([
-        ZBMApiService.getCategories().catch(() => []),
-        ZBMApiService.getABMSubmissions().catch(() => []),
+        ZBMApiService.getCategories(),
+        ZBMApiService.getABMSubmissions(),
         ZBMApiService.getTeamYearlyTargets().catch(() => ({ members: [] })),
-        ZBMApiService.getUniqueABMs().catch(() => []),
+        ZBMApiService.getUniqueABMs().catch(() => []),         // actual direct reports
       ]);
       setCategories(cats);
       setAbmSubmissions(subs);

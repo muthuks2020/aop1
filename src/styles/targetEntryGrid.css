@@ -310,7 +310,7 @@
 
 .grid-header-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   background: linear-gradient(180deg, #F7F9FB 0%, #EEF2F6 100%);
   border-bottom: 2px solid var(--excel-border);
   position: sticky;
@@ -375,17 +375,12 @@
   font-size: 0.75rem;
 }
 
-.header-cell.growth-header {
-  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%);
-  color: var(--white);
-  font-size: 0.75rem;
-}
 
 /* ==================== QUARTER ROW - SIMPLIFIED WITH TOTALS ==================== */
 
 .quarter-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   background: var(--gray-50);
   border-bottom: 2px solid var(--excel-border);
 }
@@ -407,7 +402,6 @@
 .quarter-cell.q4 { background: linear-gradient(135deg, var(--q4-color) 0%, #DC2626 100%); }
 .quarter-cell.empty { background: transparent; }
 .quarter-cell.total-spacer { background: rgba(16, 185, 129, 0.1); }
-.quarter-cell.growth-spacer { background: rgba(245, 158, 11, 0.1); }
 
 /* Quarter Content - Label + Total Value */
 .quarter-content {
@@ -449,7 +443,7 @@
 
 .category-header-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   background: linear-gradient(180deg, #F5F7FA 0%, #EDF1F5 100%);
   border-bottom: 1px solid var(--excel-border);
   cursor: pointer;
@@ -604,39 +598,6 @@
   background: var(--gray-50);
 }
 
-/* ==================== GROWTH CELLS ==================== */
-
-.growth-cell {
-  padding: 0.5rem;
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.growth-value {
-  font-size: 0.8125rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  padding: 0.25rem 0.625rem;
-  border-radius: var(--radius-full);
-}
-
-.growth-value.positive {
-  background: linear-gradient(135deg, var(--success-light) 0%, #A7F3D0 100%);
-  color: var(--success-dark);
-}
-
-.growth-value.negative {
-  background: linear-gradient(135deg, var(--danger-light) 0%, #FECACA 100%);
-  color: var(--danger-dark);
-}
-
-.growth-value.small {
-  font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
-}
-
 /* ==================== SUBCATEGORY SECTION ==================== */
 
 .subcategory-section {
@@ -645,7 +606,7 @@
 
 .subcategory-header-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   background: linear-gradient(180deg, #FAFBFC 0%, #F5F7F9 100%);
   border-bottom: 1px solid var(--gray-200);
 }
@@ -679,7 +640,7 @@
 
 .product-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
 }
 
 .product-row.cy-row {
@@ -874,7 +835,7 @@
 
 .revenue-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   border-bottom: 1px solid var(--gray-200);
 }
 
@@ -1298,28 +1259,6 @@
 }
 
 /* ==========================================================================
-   6. GROWTH % COLUMN — enhanced styling
-   ========================================================================== */
-.growth-header {
-  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
-  color: var(--white) !important;
-  font-weight: 800 !important;
-  min-width: 80px !important;
-}
-
-.growth-cell {
-  min-width: 80px;
-}
-
-.growth-value.small {
-  font-size: 0.6875rem;
-  padding: 0.125rem 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 2px;
-}
-
-/* ==========================================================================
    7. STATUS SUMMARY CHIPS (in Overall Target Bar)
    ========================================================================== */
 .otb-status-chips {
@@ -1462,7 +1401,7 @@
 
 .monthly-totals-row {
   display: grid;
-  grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
+  grid-template-columns: 280px repeat(12, 1fr) 90px;
   background: linear-gradient(180deg, #EEF2FF 0%, #E0E7FF 100%);
   border-bottom: 2px solid var(--excel-border);
   position: sticky;
@@ -1516,11 +1455,6 @@
   font-size: 0.875rem;
   font-weight: 900;
   border-left: 2px solid rgba(16, 185, 129, 0.3);
-}
-
-/* Growth spacer cell */
-.monthly-totals-cell.growth-spacer {
-  background: transparent;
 }
 
 /* ==================== PRINT STYLES ==================== */
