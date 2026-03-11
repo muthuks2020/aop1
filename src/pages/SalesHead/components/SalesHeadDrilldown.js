@@ -47,13 +47,13 @@ function SalesHeadDrilldown({ showToast }) {
 
   const expandAll = () => {
     const zbmIds = new Set(), abmIds = new Set(), tbmIds = new Set(), repIds = new Set();
-    hierarchy.forEach(z => {
+    (hierarchy || []).forEach(z => {
       zbmIds.add(z.id);
-      z.abms.forEach(a => {
+      (z.abms || []).forEach(a => {
         abmIds.add(a.id);
-        a.tbms.forEach(t => {
+        (a.tbms || []).forEach(t => {
           tbmIds.add(t.id);
-          t.salesReps.forEach(r => repIds.add(r.id));
+          (t.salesReps || []).forEach(r => repIds.add(r.id));
         });
       });
     });
@@ -71,17 +71,28 @@ function SalesHeadDrilldown({ showToast }) {
   };
 
   const filteredHierarchy = useMemo(() => {
+    if (!hierarchy || !Array.isArray(hierarchy)) return [];
     if (!searchTerm) return hierarchy;
     const term = searchTerm.toLowerCase();
     return hierarchy.filter(zbm => {
-      if (zbm.name.toLowerCase().includes(term) || zbm.territory.toLowerCase().includes(term)) return true;
+      const zbmName = (zbm.name || zbm.fullName || '').toLowerCase();
+      const zbmTerritory = (zbm.territory || zbm.zone || '').toLowerCase();
+      if (zbmName.includes(term) || zbmTerritory.includes(term)) return true;
+      if (!zbm.abms || !Array.isArray(zbm.abms)) return false;
       return zbm.abms.some(abm => {
-        if (abm.name.toLowerCase().includes(term) || abm.territory.toLowerCase().includes(term)) return true;
+        const abmName = (abm.name || abm.fullName || '').toLowerCase();
+        const abmTerritory = (abm.territory || abm.zone || '').toLowerCase();
+        if (abmName.includes(term) || abmTerritory.includes(term)) return true;
+        if (!abm.tbms || !Array.isArray(abm.tbms)) return false;
         return abm.tbms.some(tbm => {
-          if (tbm.name.toLowerCase().includes(term) || tbm.territory.toLowerCase().includes(term)) return true;
+          const tbmName = (tbm.name || tbm.fullName || '').toLowerCase();
+          const tbmTerritory = (tbm.territory || tbm.zone || '').toLowerCase();
+          if (tbmName.includes(term) || tbmTerritory.includes(term)) return true;
+          if (!tbm.salesReps || !Array.isArray(tbm.salesReps)) return false;
           return tbm.salesReps.some(rep =>
-            rep.name.toLowerCase().includes(term) || rep.territory.toLowerCase().includes(term) ||
-            rep.products?.some(p => p.productName.toLowerCase().includes(term))
+            (rep.name || rep.fullName || '').toLowerCase().includes(term) ||
+            (rep.territory || rep.zone || '').toLowerCase().includes(term) ||
+            rep.products?.some(p => (p.productName || '').toLowerCase().includes(term))
           );
         });
       });
@@ -91,9 +102,9 @@ function SalesHeadDrilldown({ showToast }) {
   const getZBMTotals = (zbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
     let totalLyAchRev = 0, totalCyAchRev = 0;
-    zbm.abms.forEach(abm => {
-      abm.tbms.forEach(tbm => {
-        tbm.salesReps.forEach(rep => {
+    (zbm.abms || []).forEach(abm => {
+      (abm.tbms || []).forEach(tbm => {
+        (tbm.salesReps || []).forEach(rep => {
           rep.products?.forEach(p => {
             MONTHS.forEach(m => {
               totalCyRev    += p.monthlyTargets?.[m]?.cyRev    || 0;
@@ -112,8 +123,8 @@ function SalesHeadDrilldown({ showToast }) {
 
   const getABMTotals = (abm) => {
     let totalCyRev = 0, totalLyRev = 0;
-    abm.tbms.forEach(tbm => {
-      tbm.salesReps.forEach(rep => {
+    (abm.tbms || []).forEach(tbm => {
+      (tbm.salesReps || []).forEach(rep => {
         rep.products?.forEach(p => {
           MONTHS.forEach(m => {
             totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
@@ -127,7 +138,7 @@ function SalesHeadDrilldown({ showToast }) {
 
   const getTBMTotals = (tbm) => {
     let totalCyRev = 0, totalLyRev = 0;
-    tbm.salesReps.forEach(rep => {
+    (tbm.salesReps || []).forEach(rep => {
       rep.products?.forEach(p => {
         MONTHS.forEach(m => {
           totalCyRev += p.monthlyTargets?.[m]?.cyRev || 0;
@@ -150,10 +161,11 @@ function SalesHeadDrilldown({ showToast }) {
   };
 
   const orgSummary = useMemo(() => {
-    let totalZBMs = hierarchy.length;
-    let totalABMs = hierarchy.reduce((s, z) => s + z.abms.length, 0);
-    let totalTBMs = hierarchy.reduce((s, z) => s + z.abms.reduce((ss, a) => ss + a.tbms.length, 0), 0);
-    let totalReps = hierarchy.reduce((s, z) => s + z.abms.reduce((ss, a) => ss + a.tbms.reduce((sss, t) => sss + t.salesReps.length, 0), 0), 0);
+    const h = hierarchy || [];
+    let totalZBMs = h.length;
+    let totalABMs = h.reduce((s, z) => s + (z.abms || []).length, 0);
+    let totalTBMs = h.reduce((s, z) => s + (z.abms || []).reduce((ss, a) => ss + (a.tbms || []).length, 0), 0);
+    let totalReps = h.reduce((s, z) => s + (z.abms || []).reduce((ss, a) => ss + (a.tbms || []).reduce((sss, t) => sss + (t.salesReps || []).length, 0), 0), 0);
     return { totalZBMs, totalABMs, totalTBMs, totalReps };
   }, [hierarchy]);
 
@@ -205,16 +217,16 @@ function SalesHeadDrilldown({ showToast }) {
               <div className="sh-dd-zbm-header" onClick={() => toggleZBM(zbm.id)}>
                 <div className="sh-dd-zbm-left">
                   <i className={`fas fa-chevron-${isZBMExpanded ? 'down' : 'right'} sh-dd-chevron`}></i>
-                  <div className="sh-dd-zbm-avatar">{zbm.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</div>
+                  <div className="sh-dd-zbm-avatar">{(zbm.name || zbm.fullName || '?').split(' ').map(n => n[0]).join('').substring(0, 2)}</div>
                   <div>
-                    <span className="sh-dd-zbm-name">{zbm.name}</span>
-                    <span className="sh-dd-zbm-territory"><i className="fas fa-globe-asia"></i> {zbm.territory}</span>
+                    <span className="sh-dd-zbm-name">{zbm.name || zbm.fullName}</span>
+                    <span className="sh-dd-zbm-territory"><i className="fas fa-globe-asia"></i> {zbm.territory || zbm.zone}</span>
                   </div>
                 </div>
                 <div className="sh-dd-zbm-stats">
-                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">ABMs</span><span className="sh-dd-mini-value">{zbm.abms.length}</span></div>
-                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">TBMs</span><span className="sh-dd-mini-value">{zbm.abms.reduce((s, a) => s + a.tbms.length, 0)}</span></div>
-                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">Reps</span><span className="sh-dd-mini-value">{zbm.abms.reduce((s, a) => s + a.tbms.reduce((ss, t) => ss + t.salesReps.length, 0), 0)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">ABMs</span><span className="sh-dd-mini-value">{(zbm.abms || []).length}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">TBMs</span><span className="sh-dd-mini-value">{(zbm.abms || []).reduce((s, a) => s + (a.tbms || []).length, 0)}</span></div>
+                  <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">Reps</span><span className="sh-dd-mini-value">{(zbm.abms || []).reduce((s, a) => s + (a.tbms || []).reduce((ss, t) => ss + (t.salesReps || []).length, 0), 0)}</span></div>
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Target</span><span className="sh-dd-mini-value">₹{Utils.formatCompact(zbmTotals.totalCyRev)}</span></div>
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">LY Ahv</span><span className="sh-dd-mini-value">{(zbmTotals.totalLyAchRev > 0) ? `₹${Utils.formatCompact(zbmTotals.totalLyAchRev)}` : '—'}</span></div>
                   <div className="sh-dd-mini-stat"><span className="sh-dd-mini-label">CY Ahv</span><span className="sh-dd-mini-value">{(zbmTotals.totalCyAchRev > 0) ? `₹${Utils.formatCompact(zbmTotals.totalCyAchRev)}` : '—'}</span></div>
@@ -230,7 +242,7 @@ function SalesHeadDrilldown({ showToast }) {
               {}
               {isZBMExpanded && (
                 <div className="sh-dd-zbm-body">
-                  {zbm.abms.map(abm => {
+                  {(zbm.abms || []).map(abm => {
                     const isABMExpanded = expandedABMs.has(abm.id);
                     const abmTotals = getABMTotals(abm);
 
@@ -239,10 +251,10 @@ function SalesHeadDrilldown({ showToast }) {
                         <div className="sh-dd-abm-header" onClick={() => toggleABM(abm.id)}>
                           <div className="sh-dd-abm-left">
                             <i className={`fas fa-chevron-${isABMExpanded ? 'down' : 'right'} sh-dd-chevron`}></i>
-                            <div className="sh-dd-abm-avatar">{abm.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</div>
+                            <div className="sh-dd-abm-avatar">{(abm.name || abm.fullName || '?').split(' ').map(n => n[0]).join('').substring(0, 2)}</div>
                             <div>
-                              <span className="sh-dd-abm-name">{abm.name}</span>
-                              <span className="sh-dd-abm-territory"><i className="fas fa-map-marker-alt"></i> {abm.territory}</span>
+                              <span className="sh-dd-abm-name">{abm.name || abm.fullName}</span>
+                              <span className="sh-dd-abm-territory"><i className="fas fa-map-marker-alt"></i> {abm.territory || abm.zone}</span>
                             </div>
                           </div>
                           <div className="sh-dd-abm-stats">
