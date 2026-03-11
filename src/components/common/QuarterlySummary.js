@@ -1,16 +1,6 @@
-/**
- * QuarterlySummary Component
- * Quarterly Summary - Unit Wise Dashboard for Sales Reps
- * Month-wise split under each quarter with quarter subtotals
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0 - Month-wise breakdown
- */
-
 import React, { useState, useMemo } from 'react';
 import '../../styles/quarterlySummary.css';
 
-// Constants
 const QUARTERS = [
   { id: 'Q1', label: 'Q1', fullLabel: 'Apr – Jun', months: ['apr', 'may', 'jun'], monthLabels: ['APR', 'MAY', 'JUN'], color: '#3B82F6', bg: '#EFF6FF' },
   { id: 'Q2', label: 'Q2', fullLabel: 'Jul – Sep', months: ['jul', 'aug', 'sep'], monthLabels: ['JUL', 'AUG', 'SEP'], color: '#22C55E', bg: '#F0FDF4' },
@@ -47,7 +37,6 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
   const [selectedQuarter, setSelectedQuarter] = useState(null);
   const [viewMode, setViewMode] = useState('qty');
 
-  // Calculate quarterly + monthly data for each product
   const quarterlySummaryData = useMemo(() => {
     if (!products.length) return {};
     const data = {};
@@ -57,7 +46,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
       const isRevenueOnly = cat.isRevenueOnly;
 
       const productSummaries = catProducts.map(product => {
-        // Use unitCost already on the product from the backend JOIN
+
         const unitCost = product.unitCost || product.listPrice || 0;
         const quarterData = {};
         const monthData = {};
@@ -82,12 +71,12 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
 
             let monthValue, lyMonthValue, aopMonthValue;
             if (isRevenueOnly) {
-              // Revenue-only: always use stored rev values
+
               monthValue = cyRev;
               lyMonthValue = lyRev;
               aopMonthValue = aopRev;
             } else {
-              // Use stored rev first (most accurate); fall back to qty × price
+
               monthValue    = cyRev  || (cyQty  * unitCost);
               lyMonthValue  = lyRev  || (lyQty  * unitCost);
               aopMonthValue = aopRev || (aopQty * unitCost);
@@ -127,7 +116,6 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         };
       });
 
-      // Category totals
       const categoryTotals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 }, aopFyTotal: { qty: 0, value: 0 } };
       QUARTERS.forEach(q => {
         categoryTotals.quarters[q.id] = { cyQty: 0, lyQty: 0, aopQty: 0, cyValue: 0, lyValue: 0, aopValue: 0 };
@@ -167,7 +155,6 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
     return data;
   }, [products, categories]);
 
-  // Grand totals
   const grandTotals = useMemo(() => {
     const totals = { months: {}, quarters: {}, fyTotal: { qty: 0, value: 0 }, lyFyTotal: { qty: 0, value: 0 }, aopFyTotal: { qty: 0, value: 0 } };
     QUARTERS.forEach(q => {
@@ -245,7 +232,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
 
   return (
     <div className="qs-container">
-      {/* ==================== HEADER ==================== */}
+      {}
       <div className="qs-header">
         <div className="qs-header-left">
           <h2 className="qs-title">
@@ -275,7 +262,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         </div>
       </div>
 
-      {/* ==================== GRAND TOTAL CARDS ==================== */}
+      {}
       <div className="qs-grand-totals">
         <div className="qs-grand-card qs-grand-fy">
           <div className="qs-grand-card-header">
@@ -310,7 +297,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         ))}
       </div>
 
-      {/* ==================== CATEGORY SECTIONS ==================== */}
+      {}
       {Object.entries(quarterlySummaryData).map(([catId, catData]) => {
         const config = CATEGORY_CONFIG[catId] || CATEGORY_CONFIG.others;
         const isExpanded = expandedCategories.has(catId);
@@ -351,10 +338,10 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                 <div className="qs-table-wrapper">
                   <table className="qs-table">
                     <thead>
-                      {/* Row 1: Quarter group headers spanning 3 months + 1 subtotal */}
+                      {}
                       <tr className="qs-table-quarter-row">
                         <th className="qs-th-product" rowSpan="2">Product</th>
-                       
+
                         {displayQuarters.map(q => (
                           <th key={q.id} className="qs-th-quarter-group" colSpan={4} style={{ '--q-color': q.color, '--q-bg': q.bg }}>
                             <div className="qs-th-quarter-inner">
@@ -367,7 +354,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                         <th className="qs-th-growth" rowSpan="2">Growth</th>
                       </tr>
 
-                      {/* Row 2: Individual month headers + Qn Total */}
+                      {}
                       <tr className="qs-table-month-row">
                         {displayQuarters.map(q => (
                           <React.Fragment key={q.id}>
@@ -395,7 +382,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                               </div>
                             </div>
                           </td>
-                        
+
                           {displayQuarters.map(q => (
                             <React.Fragment key={q.id}>
                               {q.months.map(m => {
@@ -436,7 +423,7 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
                         </tr>
                       ))}
 
-                      {/* Category Total Row */}
+                      {}
                       <tr className="qs-total-row">
                         <td className="qs-td-product">
                           <span className="qs-total-label"><i className="fas fa-sigma"></i> {cat.name} Total</span>
@@ -489,8 +476,8 @@ function QuarterlySummary({ products = [], categories = [], fiscalYear = '2026-2
         );
       })}
 
-      {/* ==================== GRAND TOTAL FOOTER ==================== */}
-  
+      {}
+
     </div>
   );
 }

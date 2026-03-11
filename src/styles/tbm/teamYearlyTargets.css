@@ -1,23 +1,9 @@
-/**
- * Team Yearly Targets Styles
- * Reusable for TBM / ABM / ZBM roles
- * 
- * PREFIX: tyt- (Team Yearly Targets)
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
-/* ==================== CONTAINER ==================== */
-
 .tyt-container {
   background: var(--bg-main, #F0F4F8);
   border-radius: var(--radius-xl, 16px);
   overflow: hidden;
   margin: 0.5rem 0;
 }
-
-/* ==================== LOADING ==================== */
 
 .tyt-loading {
   display: flex;
@@ -41,8 +27,6 @@
 @keyframes tyt-spin {
   to { transform: rotate(360deg); }
 }
-
-/* ==================== HEADER ==================== */
 
 .tyt-header {
   background: linear-gradient(135deg, var(--primary, #1B365D) 0%, var(--primary-dark, #142744) 100%);
@@ -110,7 +94,6 @@
   50% { opacity: 0.5; }
 }
 
-/* Action Buttons */
 .tyt-action-btn {
   display: inline-flex;
   align-items: center;
@@ -166,8 +149,6 @@
   font-size: 0.6875rem;
   font-weight: 800;
 }
-
-/* ==================== SUMMARY STRIP ==================== */
 
 .tyt-summary-strip {
   display: flex;
@@ -242,8 +223,6 @@
   flex-shrink: 0;
 }
 
-/* ==================== TOOLBAR ==================== */
-
 .tyt-toolbar {
   display: flex;
   justify-content: space-between;
@@ -266,7 +245,6 @@
   gap: 0.75rem;
 }
 
-/* Checkbox */
 .tyt-checkbox-wrapper {
   display: inline-flex;
   align-items: center;
@@ -314,7 +292,6 @@
   font-weight: 500;
 }
 
-/* Search */
 .tyt-search-box {
   display: flex;
   align-items: center;
@@ -364,7 +341,6 @@
   color: var(--gray-600, #4B5563);
 }
 
-/* Sort */
 .tyt-sort-group {
   display: flex;
   align-items: center;
@@ -408,16 +384,12 @@
   font-size: 0.5625rem;
 }
 
-/* ==================== MEMBERS LIST ==================== */
-
 .tyt-members-list {
   padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
-
-/* ==================== MEMBER CARD ==================== */
 
 .tyt-member-card {
   background: var(--white, #FFFFFF);
@@ -442,7 +414,6 @@
   box-shadow: var(--shadow-lg, 0 10px 15px -3px rgba(0, 0, 0, 0.1));
 }
 
-/* Card Header */
 .tyt-card-header {
   display: flex;
   justify-content: space-between;
@@ -537,8 +508,6 @@
   background: var(--gray-100, #F3F4F6);
   color: var(--gray-700, #374151);
 }
-
-/* ==================== TARGET GRID (3 Columns) ==================== */
 
 .tyt-target-grid {
   display: grid;
@@ -638,7 +607,6 @@
 .tyt-cy-target .tyt-primary-value { color: var(--accent-dark, #008177); }
 .tyt-cy-target .tyt-secondary-value { color: var(--accent, #00A19B); opacity: 0.8; }
 
-/* Achievement Bar */
 .tyt-achievement-bar-wrapper {
   display: flex;
   align-items: center;
@@ -675,7 +643,6 @@
 .tyt-achievement-pct.good { color: #2563EB; }
 .tyt-achievement-pct.low { color: #D97706; }
 
-/* Growth Indicator */
 .tyt-growth-indicator {
   display: inline-flex;
   align-items: center;
@@ -692,8 +659,6 @@
 .tyt-growth-indicator.neutral { background: rgba(156, 163, 175, 0.1); color: #6B7280; }
 
 .tyt-growth-indicator i { font-size: 0.625rem; }
-
-/* ==================== EDITABLE VALUES ==================== */
 
 .tyt-col-values.tyt-editable .tyt-primary-value,
 .tyt-col-values.tyt-editable .tyt-secondary-value {
@@ -733,8 +698,6 @@
 .tyt-inline-input:focus {
   box-shadow: 0 0 0 4px rgba(0, 161, 155, 0.2);
 }
-
-/* ==================== QUICK ACTIONS ==================== */
 
 .tyt-quick-actions {
   display: flex;
@@ -785,8 +748,6 @@
 .tyt-last-updated i {
   font-size: 0.5625rem;
 }
-
-/* ==================== CATEGORY BREAKDOWN ==================== */
 
 .tyt-category-breakdown {
   border-top: 2px solid var(--accent, #00A19B);
@@ -945,7 +906,6 @@
 
 .tyt-cat-growth i { font-size: 0.5625rem; }
 
-/* Breakdown Total Row */
 .tyt-breakdown-total-row td {
   background: var(--gray-50, #F9FAFB);
   border-top: 2px solid var(--gray-200, #E5E7EB);
@@ -955,8 +915,6 @@
 .tyt-breakdown-total-row .tyt-cat-name {
   color: var(--gray-800, #1F2937);
 }
-
-/* ==================== EMPTY STATE ==================== */
 
 .tyt-empty-state {
   display: flex;
@@ -985,8 +943,6 @@
   font-size: 0.875rem;
 }
 
-/* ==================== FOOTER ==================== */
-
 .tyt-footer {
   padding: 0.875rem 1.5rem;
   background: var(--gray-50, #F9FAFB);
@@ -1010,8 +966,6 @@
 .tyt-footer-hints i {
   font-size: 0.625rem;
 }
-
-/* ==================== PUBLISH CONFIRMATION MODAL ==================== */
 
 .tyt-modal-overlay {
   position: fixed;
@@ -1153,22 +1107,17 @@
   box-shadow: 0 6px 16px rgba(0, 161, 155, 0.5);
 }
 
-/* ==================== CY TARGET INPUT + GROWTH BADGE ==================== */
-
-/* The row that holds input box + growth badge side by side */
 .tyt-cy-row {
   display: flex;
   align-items: center;
   gap: 0.875rem;
 }
 
-/* Input box wrapper */
 .tyt-cy-input-box {
   flex: 1;
   min-width: 0;
 }
 
-/* Empty target — dashed border box prompting user to enter */
 .tyt-editable-value.tyt-empty-target {
   display: flex;
   align-items: center;
@@ -1195,7 +1144,6 @@
   transform: translateY(-1px);
 }
 
-/* Filled target — solid value display */
 .tyt-editable-value.tyt-has-value {
   display: inline-flex;
   align-items: center;
@@ -1218,7 +1166,6 @@
   box-shadow: 0 0 0 3px rgba(0, 161, 155, 0.1);
 }
 
-/* Growth badge — always visible on the right */
 .tyt-growth-badge {
   display: flex;
   align-items: center;
@@ -1251,7 +1198,6 @@
   font-family: var(--font-sans, 'Inter', sans-serif);
 }
 
-/* Growth badge color states */
 .tyt-growth-badge.positive {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.15) 100%);
   color: #059669;
@@ -1279,8 +1225,6 @@
 .tyt-growth-badge.waiting i {
   opacity: 0.5;
 }
-
-/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1200px) {
   .tyt-summary-strip {
@@ -1404,8 +1348,6 @@
     padding: 0.375rem 0.5rem;
   }
 }
-
-/* ==================== PRINT STYLES ==================== */
 
 @media print {
   .tyt-container {

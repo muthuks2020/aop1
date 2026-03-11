@@ -1,0 +1,116 @@
+/**
+ * ZBM Team Drilldown Styles — 'zbm-dd-' prefix
+ * 3-Level Hierarchical: ABM → TBM → Sales Rep
+ * Purple/Violet accent (#7C3AED)
+ * @version 1.0.0
+ */
+
+.zbm-dd-container { background: #fff; border-radius: 16px; border: 1px solid #E5E7EB; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08); overflow: hidden; }
+.zbm-dd-loading { text-align: center; padding: 3rem; color: #6B7280; }
+
+/* Header */
+.zbm-dd-header { background: linear-gradient(135deg, #4C1D95, #7C3AED 60%, #8B5CF6); padding: 1.25rem 1.5rem; color: #fff; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.zbm-dd-header-left { display: flex; align-items: center; gap: 0.875rem; }
+.zbm-dd-icon { width: 44px; height: 44px; background: rgba(255, 255, 255, 0.15); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; }
+.zbm-dd-header h2 { font-size: 1.125rem; font-weight: 700; margin: 0; }
+.zbm-dd-subtitle { font-size: 0.8125rem; opacity: 0.8; display: block; }
+.zbm-dd-actions { display: flex; gap: 0.5rem; }
+.zbm-dd-btn { padding: 0.4rem 0.875rem; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 8px; color: #fff; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 0.375rem; }
+.zbm-dd-btn:hover { background: rgba(255, 255, 255, 0.25); }
+
+/* Info Banner */
+.zbm-dd-info { display: flex; align-items: center; gap: 0.625rem; padding: 0.75rem 1.5rem; background: #F5F3FF; color: #6D28D9; font-size: 0.8125rem; border-bottom: 1px solid #EDE9FE; }
+.zbm-dd-info i { flex-shrink: 0; }
+
+/* Search */
+.zbm-dd-search { display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-bottom: 1px solid #E5E7EB; position: relative; }
+.zbm-dd-search > i { color: #9CA3AF; }
+.zbm-dd-search input { flex: 1; border: none; outline: none; font-size: 0.875rem; color: #374151; }
+.zbm-dd-search button { background: none; border: none; color: #9CA3AF; cursor: pointer; }
+
+/* ==================== LEVEL 1: ABM CARDS ==================== */
+.zbm-dd-list { padding: 0.75rem; display: flex; flex-direction: column; gap: 0.75rem; }
+
+.zbm-dd-abm-card { border: 2px solid #E5E7EB; border-radius: 12px; overflow: hidden; transition: all 0.2s; }
+.zbm-dd-abm-card.expanded { border-color: #C4B5FD; box-shadow: 0 2px 12px rgba(124, 58, 237, 0.12); }
+
+.zbm-dd-abm-header { display: flex; justify-content: space-between; align-items: center; padding: 1rem 1.25rem; cursor: pointer; transition: background 0.15s; background: linear-gradient(135deg, rgba(124, 58, 237, 0.02), rgba(139, 92, 246, 0.04)); }
+.zbm-dd-abm-header:hover { background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(139, 92, 246, 0.08)); }
+
+.zbm-dd-abm-left { display: flex; align-items: center; gap: 0.75rem; }
+.zbm-dd-abm-avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #7C3AED, #A78BFA); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: 700; flex-shrink: 0; }
+.zbm-dd-abm-name { font-size: 1rem; font-weight: 700; color: #1F2937; display: block; }
+.zbm-dd-abm-territory { font-size: 0.75rem; color: #6B7280; display: flex; align-items: center; gap: 4px; }
+.zbm-dd-abm-stats { display: flex; gap: 1.5rem; }
+
+/* ==================== LEVEL 2: TBM CARDS ==================== */
+.zbm-dd-abm-body { padding: 0.5rem 0.75rem 0.75rem 2rem; }
+
+.zbm-dd-tbm-card { border: 1px solid #E5E7EB; border-radius: 10px; overflow: hidden; transition: all 0.2s; margin-bottom: 0.5rem; }
+.zbm-dd-tbm-card.expanded { border-color: #A5B4FC; box-shadow: 0 1px 8px rgba(79, 70, 229, 0.08); }
+
+.zbm-dd-tbm-header { display: flex; justify-content: space-between; align-items: center; padding: 0.875rem 1rem; cursor: pointer; transition: background 0.15s; background: rgba(249, 250, 251, 0.5); }
+.zbm-dd-tbm-header:hover { background: #F9FAFB; }
+
+.zbm-dd-tbm-left { display: flex; align-items: center; gap: 0.75rem; }
+.zbm-dd-tbm-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4F46E5, #818CF8); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 700; flex-shrink: 0; }
+.zbm-dd-tbm-name { font-size: 0.9375rem; font-weight: 700; color: #1F2937; display: block; }
+.zbm-dd-tbm-territory { font-size: 0.6875rem; color: #6B7280; display: flex; align-items: center; gap: 4px; }
+.zbm-dd-tbm-stats { display: flex; gap: 1.25rem; }
+
+/* ==================== LEVEL 3: SALES REP CARDS ==================== */
+.zbm-dd-tbm-body { padding: 0.5rem 0.5rem 0.5rem 1.75rem; }
+
+.zbm-dd-rep-card { border: 1px solid #F3F4F6; border-radius: 8px; overflow: hidden; transition: all 0.2s; margin-bottom: 0.5rem; }
+.zbm-dd-rep-card.expanded { border-color: #BFDBFE; box-shadow: 0 1px 6px rgba(59, 130, 246, 0.08); }
+
+.zbm-dd-rep-header { display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0.875rem; cursor: pointer; transition: background 0.15s; }
+.zbm-dd-rep-header:hover { background: #F9FAFB; }
+
+.zbm-dd-rep-left { display: flex; align-items: center; gap: 0.625rem; }
+.zbm-dd-rep-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3B82F6, #93C5FD); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.6875rem; font-weight: 700; flex-shrink: 0; }
+.zbm-dd-rep-name { font-size: 0.875rem; font-weight: 600; color: #374151; display: block; }
+.zbm-dd-rep-territory { font-size: 0.6875rem; color: #9CA3AF; display: flex; align-items: center; gap: 4px; }
+.zbm-dd-rep-stats { display: flex; gap: 1rem; }
+
+/* ==================== SHARED MINI STATS ==================== */
+.zbm-dd-chevron { font-size: 0.6875rem; color: #9CA3AF; width: 14px; transition: transform 0.2s; }
+.zbm-dd-mini-stat { text-align: center; }
+.zbm-dd-mini-label { font-size: 0.625rem; color: #9CA3AF; display: block; text-transform: uppercase; letter-spacing: 0.05em; }
+.zbm-dd-mini-value { font-size: 0.875rem; font-weight: 700; color: #1F2937; display: block; }
+.zbm-dd-mini-value.positive { color: #059669; }
+.zbm-dd-mini-value.negative { color: #DC2626; }
+
+/* ==================== PRODUCT TABLE ==================== */
+.zbm-dd-products-wrapper { padding: 0.5rem 0.75rem 0.75rem; overflow-x: auto; }
+
+.zbm-dd-product-table { width: 100%; border-collapse: collapse; font-size: 0.75rem; }
+.zbm-dd-product-table th { background: #F9FAFB; padding: 0.375rem 0.25rem; font-weight: 600; color: #6B7280; text-align: center; font-size: 0.625rem; text-transform: uppercase; border-bottom: 1px solid #E5E7EB; }
+.zbm-dd-th-product { text-align: left !important; min-width: 120px; }
+
+.zbm-dd-product-table td { padding: 0.25rem 0.25rem; text-align: center; border-bottom: 1px solid #F3F4F6; }
+.zbm-dd-td-product { text-align: left !important; font-weight: 600; color: #374151; font-size: 0.75rem; }
+.zbm-dd-td-type { font-weight: 700; font-size: 0.625rem; }
+.zbm-dd-td-type.ly { color: #9CA3AF; }
+.zbm-dd-td-type.cy { color: #7C3AED; }
+.zbm-dd-td-val.ly { color: #9CA3AF; }
+.zbm-dd-td-val.cy { color: #374151; font-weight: 600; }
+.zbm-dd-td-total { font-weight: 700; }
+.zbm-dd-td-total.ly { color: #6B7280; }
+.zbm-dd-td-total.cy { color: #7C3AED; }
+
+.zbm-dd-ly-row { background: rgba(249, 250, 251, 0.5); }
+.zbm-dd-cy-row { background: rgba(245, 243, 255, 0.3); }
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 900px) {
+  .zbm-dd-abm-stats, .zbm-dd-tbm-stats, .zbm-dd-rep-stats { gap: 0.75rem; }
+  .zbm-dd-mini-value { font-size: 0.75rem; }
+  .zbm-dd-abm-body { padding-left: 1rem; }
+  .zbm-dd-tbm-body { padding-left: 1rem; }
+}
+
+@media (max-width: 600px) {
+  .zbm-dd-abm-header, .zbm-dd-tbm-header, .zbm-dd-rep-header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+  .zbm-dd-abm-stats, .zbm-dd-tbm-stats, .zbm-dd-rep-stats { flex-wrap: wrap; }
+}

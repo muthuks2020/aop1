@@ -1,19 +1,3 @@
-/**
- * ZBMTeamDrilldown Component
- * Provides ZBM with drill-down visibility: ABM → TBM → Sales Reps → Product Targets
- * 
- * READ-ONLY — ZBM can view but NOT edit targets at any level below.
- * ZBM sets targets only for ABMs (via Team Yearly Targets tab).
- * 
- * THREE-LEVEL HIERARCHY:
- * Level 1: ABM cards (expandable)
- *   Level 2: TBM cards under each ABM (expandable)
- *     Level 3: Sales Rep cards under each TBM (with product target grid)
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.1 — Patched: defensive null checks on tbms/salesReps
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ZBMApiService } from '../../../services/zbmApi';
 import { Utils } from '../../../utils/helpers';
@@ -32,7 +16,7 @@ function ZBMTeamDrilldown({ showToast }) {
 
   useEffect(() => {
     loadHierarchy();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   const loadHierarchy = async () => {
@@ -47,7 +31,6 @@ function ZBMTeamDrilldown({ showToast }) {
     setIsLoading(false);
   };
 
-  // Toggle functions
   const toggleABM = useCallback((abmId) => {
     setExpandedABMs(prev => { const n = new Set(prev); n.has(abmId) ? n.delete(abmId) : n.add(abmId); return n; });
   }, []);
@@ -60,7 +43,6 @@ function ZBMTeamDrilldown({ showToast }) {
     setExpandedReps(prev => { const n = new Set(prev); n.has(repId) ? n.delete(repId) : n.add(repId); return n; });
   }, []);
 
-  // PATCHED: Added optional chaining for tbms and salesReps
   const expandAll = () => {
     setExpandedABMs(new Set(hierarchy.map(a => a.id)));
     setExpandedTBMs(new Set(hierarchy.flatMap(a => (a.tbms || []).map(t => t.id))));
@@ -69,7 +51,6 @@ function ZBMTeamDrilldown({ showToast }) {
 
   const collapseAll = () => { setExpandedABMs(new Set()); setExpandedTBMs(new Set()); setExpandedReps(new Set()); };
 
-  // PATCHED: Added optional chaining for tbms and salesReps in filter logic
   const filteredHierarchy = useMemo(() => {
     if (!searchTerm.trim()) return hierarchy;
     const term = searchTerm.toLowerCase();
@@ -94,9 +75,6 @@ function ZBMTeamDrilldown({ showToast }) {
     );
   }, [hierarchy, searchTerm]);
 
-  // ==================== TOTALS HELPERS ====================
-  // PATCHED: Added defensive (|| []) for tbms, salesReps
-  // PART 3 — Item 8
   const getABMTotals = (abm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
     let totalLyAchRev = 0, totalCyAchRev = 0;
@@ -119,7 +97,6 @@ function ZBMTeamDrilldown({ showToast }) {
              growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
-  // PATCHED: Added defensive (|| []) for salesReps
   const getTBMTotals = (tbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
     let totalLyAchRev = 0, totalCyAchRev = 0;
@@ -153,7 +130,6 @@ function ZBMTeamDrilldown({ showToast }) {
     return { totalCyRev, totalLyRev, totalCyQty, totalLyQty, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
-  // PATCHED: Zone-level summary with defensive checks
   const zoneSummary = useMemo(() => {
     let totalABMs = hierarchy.length;
     let totalTBMs = hierarchy.reduce((s, a) => s + (a.tbms?.length || 0), 0);
@@ -167,7 +143,7 @@ function ZBMTeamDrilldown({ showToast }) {
 
   return (
     <div className="zbm-dd-container">
-      {/* Header */}
+      {}
       <div className="zbm-dd-header">
         <div className="zbm-dd-header-left">
           <div className="zbm-dd-icon"><i className="fas fa-project-diagram"></i></div>
@@ -184,20 +160,20 @@ function ZBMTeamDrilldown({ showToast }) {
         </div>
       </div>
 
-      {/* Info Banner */}
+      {}
       <div className="zbm-dd-info">
         <i className="fas fa-eye"></i>
         <span>Read-only view of the full zone hierarchy: <strong>ABM → TBM → Sales Rep</strong>. To set ABM targets, use the <strong>Team Yearly Targets</strong> tab.</span>
       </div>
 
-      {/* Search */}
+      {}
       <div className="zbm-dd-search">
         <i className="fas fa-search"></i>
         <input type="text" placeholder="Search ABMs, TBMs, Sales Reps, or products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         {searchTerm && <button onClick={() => setSearchTerm('')}><i className="fas fa-times"></i></button>}
       </div>
 
-      {/* ABM Cards */}
+      {}
       <div className="zbm-dd-list">
         {filteredHierarchy.map(abm => {
           const isABMExpanded = expandedABMs.has(abm.id);
@@ -205,7 +181,7 @@ function ZBMTeamDrilldown({ showToast }) {
 
           return (
             <div key={abm.id} className={`zbm-dd-abm-card ${isABMExpanded ? 'expanded' : ''}`}>
-              {/* ABM Header */}
+              {}
               <div className="zbm-dd-abm-header" onClick={() => toggleABM(abm.id)}>
                 <div className="zbm-dd-abm-left">
                   <i className={`fas fa-chevron-${isABMExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
@@ -220,15 +196,15 @@ function ZBMTeamDrilldown({ showToast }) {
                 <div className="zbm-dd-abm-stats">
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">TBMs</span>
-                    {/* PATCHED: defensive check */}
+                    {}
                     <span className="zbm-dd-mini-value">{(abm.tbms || []).length}</span>
                   </div>
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">Reps</span>
-                    {/* PATCHED: defensive check */}
+                    {}
                     <span className="zbm-dd-mini-value">{(abm.tbms || []).reduce((s, t) => s + (t.salesReps?.length || 0), 0)}</span>
                   </div>
-                  {/* PART 3 — Item 8: CY Target, LY Ahv, CY Ahv */}
+                  {}
                   <div className="zbm-dd-mini-stat">
                     <span className="zbm-dd-mini-label">CY Target</span>
                     <span className="zbm-dd-mini-value">₹{Utils.formatCompact(abmTotals.totalCyRev)}</span>
@@ -248,17 +224,17 @@ function ZBMTeamDrilldown({ showToast }) {
                 </div>
               </div>
 
-              {/* Expanded ABM Content — TBM Cards */}
+              {}
               {isABMExpanded && (
                 <div className="zbm-dd-abm-body">
-                  {/* PATCHED: defensive check */}
+                  {}
                   {(abm.tbms || []).map(tbm => {
                     const isTBMExpanded = expandedTBMs.has(tbm.id);
                     const tbmTotals = getTBMTotals(tbm);
 
                     return (
                       <div key={tbm.id} className={`zbm-dd-tbm-card ${isTBMExpanded ? 'expanded' : ''}`}>
-                        {/* TBM Header */}
+                        {}
                         <div className="zbm-dd-tbm-header" onClick={() => toggleTBM(tbm.id)}>
                           <div className="zbm-dd-tbm-left">
                             <i className={`fas fa-chevron-${isTBMExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
@@ -273,7 +249,7 @@ function ZBMTeamDrilldown({ showToast }) {
                           <div className="zbm-dd-tbm-stats">
                             <div className="zbm-dd-mini-stat">
                               <span className="zbm-dd-mini-label">Reps</span>
-                              {/* PATCHED: defensive check */}
+                              {}
                               <span className="zbm-dd-mini-value">{(tbm.salesReps || []).length}</span>
                             </div>
                             <div className="zbm-dd-mini-stat">
@@ -283,17 +259,17 @@ function ZBMTeamDrilldown({ showToast }) {
                           </div>
                         </div>
 
-                        {/* Expanded TBM Content — Sales Rep Cards */}
+                        {}
                         {isTBMExpanded && (
                           <div className="zbm-dd-tbm-body">
-                            {/* PATCHED: defensive check */}
+                            {}
                             {(tbm.salesReps || []).map(rep => {
                               const isRepExpanded = expandedReps.has(rep.id);
                               const repTotals = getRepTotals(rep);
 
                               return (
                                 <div key={rep.id} className={`zbm-dd-rep-card ${isRepExpanded ? 'expanded' : ''}`}>
-                                  {/* Sales Rep Header */}
+                                  {}
                                   <div className="zbm-dd-rep-header" onClick={() => toggleRep(rep.id)}>
                                     <div className="zbm-dd-rep-left">
                                       <i className={`fas fa-chevron-${isRepExpanded ? 'down' : 'right'} zbm-dd-chevron`}></i>
@@ -317,7 +293,7 @@ function ZBMTeamDrilldown({ showToast }) {
                                     </div>
                                   </div>
 
-                                  {/* Expanded Rep Content — Product Target Grid */}
+                                  {}
                                   {isRepExpanded && (
                                     <div className="zbm-dd-rep-body">
                                       {(!rep.products || rep.products.length === 0) ? (

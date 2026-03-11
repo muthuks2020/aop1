@@ -1,11 +1,3 @@
-/**
- * Sales Head API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest, API_URL } from './apiClient';
 import { normalizeCategory, normalizeSubmission, normalizeArray } from './normalizers';
 
@@ -24,14 +16,10 @@ export const SALESHEAD_API_CONFIG = {
 
 export const SalesHeadApiService = {
 
-  // ==================== CATEGORIES ====================
-
   async getCategories() {
     const raw = await apiRequest('/saleshead/categories');
     return normalizeArray(raw, normalizeCategory);
   },
-
-  // ==================== ZBM SUBMISSIONS ====================
 
   async getZBMSubmissions(filters = {}) {
     const params = new URLSearchParams();
@@ -42,8 +30,6 @@ export const SalesHeadApiService = {
     const raw = await apiRequest(`/saleshead/zbm-submissions${query ? '?' + query : ''}`);
     return normalizeArray(raw, normalizeSubmission);
   },
-
-  // ==================== APPROVALS ====================
 
   async approveZBMTarget(submissionId, corrections = null) {
     return apiRequest(`/saleshead/approve-zbm/${submissionId}`, {
@@ -66,13 +52,9 @@ export const SalesHeadApiService = {
     });
   },
 
-  // ==================== HIERARCHY DRILL-DOWN ====================
-
   async getZBMHierarchy() {
     return apiRequest('/saleshead/zbm-hierarchy');
   },
-
-  // ==================== TEAM YEARLY TARGETS ====================
 
   async getTeamMembers() {
     return apiRequest('/saleshead/team-members');
@@ -89,8 +71,6 @@ export const SalesHeadApiService = {
     });
   },
 
-  // ==================== DASHBOARD ====================
-
   async getDashboardStats() {
     return apiRequest('/saleshead/dashboard-stats');
   },
@@ -98,8 +78,6 @@ export const SalesHeadApiService = {
   async getUniqueZBMs() {
     return apiRequest('/saleshead/unique-zbms');
   },
-
-  // ==================== ANALYTICS ====================
 
   async getRegionalPerformance() {
     return apiRequest('/saleshead/regional-performance');

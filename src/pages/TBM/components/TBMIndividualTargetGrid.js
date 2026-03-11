@@ -1,20 +1,7 @@
-/**
- * TBMIndividualTargetGrid Component
- * Excel-like grid for TBM's OWN Personal Target Entry
- * 
- * This is separate from the Territory Target grid.
- * TBM enters their personal sales commitment here.
- * These targets are submitted to ABM for approval so ABM can track TBM individually.
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/tbmIndividualTarget.css';
 
-// Constants
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const MONTH_LABELS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
 
@@ -43,28 +30,24 @@ function TBMIndividualTargetGrid({
   fiscalYear = '2026-27',
   targetStats = {}
 }) {
-  // State management
+
   const [activeCell, setActiveCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
-  const [viewMode, setViewMode] = useState('qty'); // 'qty' or 'rev'
+  const [viewMode, setViewMode] = useState('qty');
 
-  // Refs
   const inputRef = useRef(null);
   const gridRef = useRef(null);
 
-  // Focus input when active cell changes
   useEffect(() => {
     if (activeCell && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [activeCell]);
-
-  // ==================== COMPUTED DATA ====================
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) return products;
@@ -75,8 +58,6 @@ function TBMIndividualTargetGrid({
       (p.subcategory && p.subcategory.toLowerCase().includes(term))
     );
   }, [products, searchTerm]);
-
-  // ==================== CALCULATION HELPERS ====================
 
   const calculateCategoryTotal = useCallback((categoryId, month, year, field) => {
     return products
@@ -122,8 +103,6 @@ function TBMIndividualTargetGrid({
     return Utils.calcGrowth(ly, cy);
   }, [calculateYearlyTotal]);
 
-  // ==================== STATUS HELPERS ====================
-
   const getStatusClass = (status) => STATUS_CONFIG[status]?.class || 'status-draft';
   const isEditable = (status) => status === 'draft' || status === 'rejected';
 
@@ -135,8 +114,6 @@ function TBMIndividualTargetGrid({
       default: return 'Click to edit your personal target value';
     }
   };
-
-  // ==================== EVENT HANDLERS ====================
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
@@ -206,8 +183,6 @@ function TBMIndividualTargetGrid({
     }
   };
 
-  // ==================== RENDER HELPERS ====================
-
   const getQuarterColor = (monthIndex) => {
     if (monthIndex < 3) return 'q1';
     if (monthIndex < 6) return 'q2';
@@ -236,7 +211,7 @@ function TBMIndividualTargetGrid({
 
     return (
       <div key={product.id} className={`ind-product-rows ${getStatusClass(product.status)}`}>
-        {/* CY Row */}
+        {}
         <div className="ind-product-row cy-row">
           <div className="ind-product-name-cell">
             <div className="ind-product-info">
@@ -250,7 +225,7 @@ function TBMIndividualTargetGrid({
             </div>
           </div>
 
-          {/* Monthly CY Values */}
+          {}
           {MONTHS.map((month, idx) => {
             const monthData = product.monthlyTargets?.[month] || {};
             const value = currentField === 'qty' ? monthData.cyQty : monthData.cyRev;
@@ -287,7 +262,7 @@ function TBMIndividualTargetGrid({
             );
           })}
 
-          {/* Quarterly Totals */}
+          {}
           {QUARTERS.map(quarter => {
             const qTotal = calculateQuarterTotal(product.id, quarter.id, 'CY', currentField);
             return (
@@ -300,7 +275,7 @@ function TBMIndividualTargetGrid({
             );
           })}
 
-          {/* Yearly Total */}
+          {}
           <div className="ind-total-cell cy-total">
             {currentField === 'qty'
               ? Utils.formatNumber(calculateYearlyTotal(product.id, 'CY', currentField))
@@ -308,7 +283,7 @@ function TBMIndividualTargetGrid({
             }
           </div>
 
-          {/* Growth */}
+          {}
           <div className="ind-growth-cell">
             {(() => {
               const growth = calculateGrowth(product.id, currentField);
@@ -322,7 +297,7 @@ function TBMIndividualTargetGrid({
           </div>
         </div>
 
-        {/* LY Row */}
+        {}
         <div className="ind-product-row ly-row">
           <div className="ind-product-name-cell ly-label">
             <span>LY ({currentField === 'qty' ? 'Qty' : 'Rev'})</span>
@@ -363,7 +338,7 @@ function TBMIndividualTargetGrid({
           <div className="ind-growth-cell"></div>
         </div>
 
-        {/* AOP Row — Read Only (Annual Operating Plan) */}
+        {}
         <div className="ind-product-row aop-row">
           <div className="ind-product-name-cell aop-label">
             <span>AOP ({currentField === 'qty' ? 'Qty' : 'Rev'})</span>
@@ -420,8 +395,6 @@ function TBMIndividualTargetGrid({
     );
   };
 
-  // ==================== MAIN RENDER ====================
-
   const draftCount = targetStats.draft || 0;
   const submittedCount = targetStats.submitted || 0;
   const approvedCount = targetStats.approved || 0;
@@ -429,7 +402,7 @@ function TBMIndividualTargetGrid({
 
   return (
     <div className="ind-targets-container" ref={gridRef}>
-      {/* Header */}
+      {}
       <div className="ind-targets-header">
         <div className="ind-targets-header-title">
           <i className="fas fa-user-tie"></i>
@@ -437,11 +410,11 @@ function TBMIndividualTargetGrid({
           <span className="ind-fy-badge">FY {fiscalYear}</span>
         </div>
 
-        {/* Info Banner */}
+        {}
         <div className="ind-info-banner">
           <i className="fas fa-info-circle"></i>
           <span>
-            This is your <strong>personal target</strong> as a TBM. Your individual commitment is tracked separately by ABM. 
+            This is your <strong>personal target</strong> as a TBM. Your individual commitment is tracked separately by ABM.
             Territory-level targets are entered in the "Territory Target" tab.
           </span>
         </div>
@@ -490,7 +463,7 @@ function TBMIndividualTargetGrid({
         </div>
       </div>
 
-      {/* Toolbar */}
+      {}
       <div className="ind-filters">
         <div className="ind-filter-group">
           <label>View Mode</label>
@@ -525,17 +498,17 @@ function TBMIndividualTargetGrid({
         </button>
       </div>
 
-      {/* Grid */}
+      {}
       <div className="ind-grid-wrapper">
         <div className="ind-excel-grid">
-          {/* Header Row */}
+          {}
           <div className="ind-grid-header-row">
             <div className="ind-header-cell product-header">
               <span>Product / My Target</span>
               <span className="ind-view-mode-indicator">{viewMode === 'qty' ? 'QTY' : 'REV'}</span>
             </div>
 
-            {/* Month Headers */}
+            {}
             {MONTH_LABELS.map((label, idx) => (
               <div key={label} className={`ind-header-cell month-header ${getQuarterColor(idx)}`}>
                 {label}
@@ -543,7 +516,7 @@ function TBMIndividualTargetGrid({
               </div>
             ))}
 
-            {/* Quarter Headers */}
+            {}
             {QUARTERS.map(q => (
               <div key={q.id} className={`ind-header-cell quarter-header ${q.color}`}>
                 {q.label}
@@ -554,7 +527,7 @@ function TBMIndividualTargetGrid({
             <div className="ind-header-cell growth-header">YoY %</div>
           </div>
 
-          {/* Category Sections */}
+          {}
           {categories.map(category => {
             const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
             if (catProducts.length === 0 && searchTerm) return null;
@@ -562,7 +535,7 @@ function TBMIndividualTargetGrid({
 
             return (
               <div key={category.id} className="ind-category-section">
-                {/* Category Header */}
+                {}
                 <div
                   className={`ind-category-header-row ${isExpanded ? 'expanded' : ''}`}
                   onClick={() => toggleCategory(category.id)}
@@ -574,7 +547,7 @@ function TBMIndividualTargetGrid({
                     <span className="ind-product-count">{catProducts.length}</span>
                   </div>
 
-                  {/* Category Monthly Totals */}
+                  {}
                   {MONTHS.map((month, idx) => {
                     const total = calculateCategoryTotal(category.id, month, 'CY', viewMode);
                     return (
@@ -587,7 +560,7 @@ function TBMIndividualTargetGrid({
                     );
                   })}
 
-                  {/* Category Quarterly Totals */}
+                  {}
                   {QUARTERS.map(quarter => {
                     const qTotal = quarter.months.reduce((sum, month) =>
                       sum + calculateCategoryTotal(category.id, month, 'CY', viewMode), 0
@@ -615,7 +588,7 @@ function TBMIndividualTargetGrid({
                   <div className="ind-growth-cell"></div>
                 </div>
 
-                {/* Products */}
+                {}
                 {isExpanded && (
                   <div className="ind-products-container">
                     {catProducts.map(renderProductRow)}
@@ -625,7 +598,7 @@ function TBMIndividualTargetGrid({
             );
           })}
 
-          {/* Empty State */}
+          {}
           {filteredProducts.length === 0 && (
             <div className="ind-empty-state">
               <div className="ind-empty-state-icon">
@@ -638,7 +611,7 @@ function TBMIndividualTargetGrid({
         </div>
       </div>
 
-      {/* Instructions Footer */}
+      {}
       <div className="ind-grid-footer">
         <span><i className="fas fa-mouse-pointer"></i> Click on teal-bordered cells to edit your targets</span>
         <span><i className="fas fa-lock"></i> Submitted/Approved targets are locked</span>

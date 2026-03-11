@@ -1,34 +1,6 @@
-/**
- * TeamYearlyTargets Component (Reusable)
- * 
- * A user-friendly yearly target setting screen where managers (TBM/ABM/ZBM)
- * can set yearly targets for all their team members. Shows Last Year Target
- * and Last Year Achieved alongside each member for informed decision-making.
- * 
- * USAGE:
- *   <TeamYearlyTargets
- *     role="TBM"                          // "TBM" | "ABM" | "ZBM"
- *     fiscalYear="2026-27"
- *     teamMembers={[...]}                 // Array of team member objects
- *     apiService={TeamTargetApiService}   // API service with required methods
- *     showToast={showToast}               // Toast notification function
- *     managerName="Rajesh Kumar"          // Current manager name
- *   />
- * 
- * REQUIRED API SERVICE METHODS:
- *   - getYearlyTargets(fiscalYear)        → { members: [...] }
- *   - saveYearlyTargets(fiscalYear, data) → { success: boolean }
- *   - publishYearlyTargets(fiscalYear, memberIds) → { success: boolean }
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0 - Per-card Save & Publish buttons
- */
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/teamYearlyTargets.css';
-
-// ==================== CONSTANTS ====================
 
 const ROLE_CONFIG = {
   TBM: {
@@ -80,32 +52,29 @@ function TeamYearlyTargets({
   showToast,
   managerName = '',
 }) {
-  // ==================== STATE ====================
+
   const [members, setMembers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
-  const [savingMemberId, setSavingMemberId] = useState(null);   // per-card save
-  const [publishingMemberId, setPublishingMemberId] = useState(null); // per-card publish
+  const [savingMemberId, setSavingMemberId] = useState(null);
+  const [publishingMemberId, setPublishingMemberId] = useState(null);
   const [selectedMembers, setSelectedMembers] = useState(new Set());
   const [expandedMember, setExpandedMember] = useState(null);
-  const [editingCell, setEditingCell] = useState(null); // { memberId, field }
+  const [editingCell, setEditingCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [sortBy, setSortBy] = useState('name'); // 'name' | 'territory' | 'lyAchieved' | 'growth'
+  const [sortBy, setSortBy] = useState('name');
   const [sortDir, setSortDir] = useState('asc');
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [showPublishConfirm, setShowPublishConfirm] = useState(false);
-  const [viewMode, setViewMode] = useState('cards'); // 'cards' | 'table'
+  const [viewMode, setViewMode] = useState('cards');
   const [overAllocationAlert, setOverAllocationAlert] = useState(null);
   const [cyBelowLyAlert, setCyBelowLyAlert] = useState(null);
-  const [unallocatedAlert, setUnallocatedAlert] = useState(null); // { members: [{name, unallocated, cyTargetValue}], onProceed }
-  
+  const [unallocatedAlert, setUnallocatedAlert] = useState(null);
+
   const inputRef = useRef(null);
   const config = ROLE_CONFIG[role] || ROLE_CONFIG.TBM;
-
-  // ==================== BUILT-IN MOCK DATA ====================
-  // Used when no apiService is provided (development/demo mode)
 
   const BUILTIN_MOCK_MEMBERS = useMemo(() => [
     {
@@ -170,22 +139,20 @@ function TeamYearlyTargets({
     },
   ], []);
 
-  // ==================== DATA LOADING ====================
-
   useEffect(() => {
     loadTargets();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, [fiscalYear]);
 
   const loadTargets = useCallback(async () => {
     setIsLoading(true);
     try {
       if (apiService?.getYearlyTargets) {
-        // PRODUCTION PATH: use API service
+
         const data = await apiService.getYearlyTargets(fiscalYear);
         setMembers(data.members || []);
       } else if (teamMembers && teamMembers.length > 0) {
-        // teamMembers provided but no API — enrich with mock LY data
+
         const membersWithHistory = teamMembers.map(tm => ({
           id: tm.id,
           name: tm.name,
@@ -204,20 +171,18 @@ function TeamYearlyTargets({
         }));
         setMembers(membersWithHistory);
       } else {
-        // No API, no teamMembers — use built-in mock data for demo
+
         setMembers(JSON.parse(JSON.stringify(BUILTIN_MOCK_MEMBERS)));
       }
     } catch (error) {
       console.error('TeamYearlyTargets: Failed to load data', error);
-      // Fallback to built-in mock on error
+
       setMembers(JSON.parse(JSON.stringify(BUILTIN_MOCK_MEMBERS)));
       showToast?.('Info', 'Loaded demo data. Connect API for live data.', 'info');
     } finally {
       setIsLoading(false);
     }
   }, [fiscalYear, teamMembers, apiService, config.memberLabel, showToast, BUILTIN_MOCK_MEMBERS]);
-
-  // ==================== FOCUS MANAGEMENT ====================
 
   useEffect(() => {
     if (editingCell && inputRef.current) {
@@ -226,12 +191,9 @@ function TeamYearlyTargets({
     }
   }, [editingCell]);
 
-  // ==================== COMPUTED VALUES ====================
-
   const filteredMembers = useMemo(() => {
     let result = [...members];
 
-    // Search filter
     if (searchTerm.trim()) {
       const term = searchTerm.toLowerCase();
       result = result.filter(m =>
@@ -240,7 +202,6 @@ function TeamYearlyTargets({
       );
     }
 
-    // Sort
     result.sort((a, b) => {
       let valA, valB;
       switch (sortBy) {
@@ -286,10 +247,8 @@ function TeamYearlyTargets({
     };
   }, [members]);
 
-  // ==================== HANDLERS ====================
-
   const handleTargetChange = useCallback((memberId, field, value) => {
-    // Value fields (cyTargetValue etc.) are entered in Crores → convert to raw rupees for storage
+
     const isValueField = field.endsWith('Value') || field.endsWith('Rev');
     const numValue = isValueField
       ? Math.round((parseFloat(value) || 0) * 10000000)
@@ -309,7 +268,7 @@ function TeamYearlyTargets({
   }, []);
 
   const handleCategoryTargetChange = useCallback((memberId, categoryId, field, value) => {
-    // Value fields (cyTargetValue etc.) are entered in Crores → convert to raw rupees for storage
+
     const isValueField = field.endsWith('Value') || field.endsWith('Rev');
     const numValue = isValueField
       ? Math.round((parseFloat(value) || 0) * 10000000)
@@ -322,9 +281,7 @@ function TeamYearlyTargets({
           }
           return cat;
         });
-        // NOTE: Do NOT recalculate cyTarget/cyTargetValue from the breakdown sum.
-        // The top-level target is set independently by the TBM and must stay locked.
-        // The breakdown is a manual split of that fixed total.
+
         return {
           ...m,
           categoryBreakdown: updatedBreakdown,
@@ -345,7 +302,7 @@ function TeamYearlyTargets({
     if (editingCell) {
       const { memberId, field } = editingCell;
       if (field.startsWith('cat_')) {
-        // field format: cat_<categoryId>_<catField>
+
         const withoutPrefix = field.slice(4);
         const lastUnderscore = withoutPrefix.lastIndexOf('_');
         const categoryId = withoutPrefix.slice(0, lastUnderscore);
@@ -355,7 +312,6 @@ function TeamYearlyTargets({
           const member = members.find(m => m.id === memberId);
           const cat = member?.categoryBreakdown?.find(c => c.id === categoryId);
 
-          // ── CY < LY Ahv warning (category level) ──────────────────────────
           if (member && cat && cat.lyAchievedValue > 0) {
             const enteredRaw = Math.round((parseFloat(editValue) || 0) * 10000000);
             if (enteredRaw > 0 && enteredRaw < cat.lyAchievedValue) {
@@ -375,7 +331,6 @@ function TeamYearlyTargets({
             }
           }
 
-          // ── Over-allocation guard ──────────────────────────────────────────
           if (member && member.cyTargetValue > 0) {
             const enteredRaw = Math.round((parseFloat(editValue) || 0) * 10000000);
             const otherCatsTotal = (member.categoryBreakdown || [])
@@ -399,7 +354,7 @@ function TeamYearlyTargets({
 
         handleCategoryTargetChange(memberId, categoryId, catField, editValue);
       } else {
-        // ── CY < LY Ahv warning (top-level) ─────────────────────────────────
+
         if (field === 'cyTargetValue') {
           const member = members.find(m => m.id === memberId);
           if (member && member.lyAchievedValue > 0) {
@@ -460,7 +415,6 @@ function TeamYearlyTargets({
     }
   }, [selectedMembers.size, filteredMembers]);
 
-  // ── Helper: find members with unallocated breakdown amounts ──────────────
   const getUnallocatedMembers = useCallback((memberIds = null) => {
     const pool = memberIds
       ? members.filter(m => memberIds.includes(m.id))
@@ -476,7 +430,7 @@ function TeamYearlyTargets({
   }, [members]);
 
   const handleSave = useCallback(async () => {
-    // Warn if any member has unallocated breakdown amounts
+
     const unallocated = getUnallocatedMembers();
     if (unallocated.length > 0) {
       setUnallocatedAlert({
@@ -519,7 +473,7 @@ function TeamYearlyTargets({
       showToast?.('Warning', `Please select at least one ${config.memberLabel} to publish.`, 'warning');
       return;
     }
-    // Warn if any selected member has unallocated breakdown amounts
+
     const unallocated = getUnallocatedMembers(Array.from(selectedMembers));
     if (unallocated.length > 0) {
       setUnallocatedAlert({
@@ -582,7 +536,6 @@ function TeamYearlyTargets({
     showToast?.('Copied', 'Last year targets copied. Adjust as needed.', 'info');
   }, [showToast]);
 
-  // ── Per-card Save ──
   const handleSaveMember = useCallback(async (memberId) => {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
@@ -602,7 +555,6 @@ function TeamYearlyTargets({
     }
   }, [members, fiscalYear, apiService, showToast]);
 
-  // ── Per-card Publish (saves first, then publishes) ──
   const handlePublishMember = useCallback(async (memberId) => {
     const member = members.find(m => m.id === memberId);
     if (!member) return;
@@ -660,8 +612,6 @@ function TeamYearlyTargets({
       setSortDir('asc');
     }
   }, [sortBy]);
-
-  // ==================== RENDER HELPERS ====================
 
   const getAchievementPct = (achieved, target) => {
     if (!target || target === 0) return 0;
@@ -728,7 +678,6 @@ function TeamYearlyTargets({
       );
     }
 
-    // Always show a clickable box — filled style when value exists, empty prompt when not
     return (
       <span
         className={`tyt-editable-value ${value > 0 ? 'tyt-has-value' : 'tyt-empty-target'}`}
@@ -740,8 +689,6 @@ function TeamYearlyTargets({
     );
   };
 
-  // ==================== MEMBER CARD RENDERER ====================
-
   const renderMemberCard = (member) => {
     const lyAchievePct = getAchievementPct(member.lyAchievedValue, member.lyTargetValue);
     const lyGrowth = getGrowthPct(member.lyTargetValue, member.lyAchievedValue);
@@ -752,11 +699,11 @@ function TeamYearlyTargets({
     const initials = Utils.getInitials(member.name);
 
     return (
-      <div 
-        key={member.id} 
+      <div
+        key={member.id}
         className={`tyt-member-card ${isExpanded ? 'expanded' : ''} ${isSelected ? 'selected' : ''}`}
       >
-        {/* Card Header */}
+        {}
         <div className="tyt-card-header">
           <div className="tyt-card-header-left">
             <label className="tyt-checkbox-wrapper" onClick={(e) => e.stopPropagation()}>
@@ -792,9 +739,9 @@ function TeamYearlyTargets({
           </div>
         </div>
 
-        {/* Main Target Row - 3 columns: LY Tgt | LY Ahv | CY Target */}
+        {}
         <div className="tyt-target-grid">
-          {/* LY Tgt */}
+          {}
           <div className="tyt-target-col tyt-ly-target">
             <div className="tyt-col-label">
               <i className="fas fa-bullseye"></i>
@@ -805,7 +752,7 @@ function TeamYearlyTargets({
             </div>
           </div>
 
-          {/* LY Ahv */}
+          {}
           <div className="tyt-target-col tyt-ly-achieved">
             <div className="tyt-col-label">
               <i className="fas fa-trophy"></i>
@@ -827,7 +774,7 @@ function TeamYearlyTargets({
             </div>
           </div>
 
-          {/* CY Target (Editable - Value only) + Growth Badge */}
+          {}
           <div className="tyt-target-col tyt-cy-target">
             <div className="tyt-col-label">
               <i className="fas fa-flag"></i>
@@ -855,7 +802,7 @@ function TeamYearlyTargets({
           </div>
         </div>
 
-        {/* ── Per-card Action Footer ── */}
+        {}
         <div className="tyt-card-footer-actions">
           <button
             className="tyt-card-btn tyt-card-save-btn"
@@ -885,7 +832,7 @@ function TeamYearlyTargets({
           </button>
         </div>
 
-        {/* Expanded Category Breakdown */}
+        {}
         {isExpanded && member.categoryBreakdown && (
           <div className="tyt-category-breakdown">
             <div className="tyt-breakdown-header">
@@ -993,8 +940,6 @@ function TeamYearlyTargets({
     );
   };
 
-  // ==================== LOADING STATE ====================
-
   if (isLoading) {
     return (
       <div className="tyt-container">
@@ -1006,11 +951,9 @@ function TeamYearlyTargets({
     );
   }
 
-  // ==================== MAIN RENDER ====================
-
   return (
     <div className="tyt-container">
-      {/* ========== HEADER SECTION ========== */}
+      {}
       <div className="tyt-header" style={{ '--role-accent': config.accentColor }}>
         <div className="tyt-header-top">
           <div className="tyt-header-title">
@@ -1046,7 +989,7 @@ function TeamYearlyTargets({
           </div>
         </div>
 
-        {/* Summary Strip */}
+        {}
         <div className="tyt-summary-strip">
           <div className="tyt-summary-item">
             <span className="tyt-summary-label">Team Size</span>
@@ -1095,7 +1038,7 @@ function TeamYearlyTargets({
         </div>
       </div>
 
-      {/* ========== TOOLBAR ========== */}
+      {}
       <div className="tyt-toolbar">
         <div className="tyt-toolbar-left">
           <label className="tyt-checkbox-wrapper tyt-select-all" onClick={(e) => e.stopPropagation()}>
@@ -1127,7 +1070,7 @@ function TeamYearlyTargets({
 
       </div>
 
-      {/* ========== MEMBER CARDS ========== */}
+      {}
       <div className="tyt-members-list">
         {filteredMembers.length === 0 ? (
           <div className="tyt-empty-state">
@@ -1145,7 +1088,7 @@ function TeamYearlyTargets({
         )}
       </div>
 
-      {/* ========== FOOTER ========== */}
+      {}
       <div className="tyt-footer">
         <div className="tyt-footer-hints">
           <span><i className="fas fa-mouse-pointer"></i> Click target values to edit inline</span>
@@ -1155,7 +1098,7 @@ function TeamYearlyTargets({
         </div>
       </div>
 
-      {/* ========== PUBLISH CONFIRMATION MODAL ========== */}
+      {}
       {showPublishConfirm && (
         <div className="tyt-modal-overlay" onClick={() => setShowPublishConfirm(false)}>
           <div className="tyt-modal" onClick={(e) => e.stopPropagation()}>
@@ -1190,7 +1133,7 @@ function TeamYearlyTargets({
           </div>
         </div>
       )}
-      {/* ========== UNALLOCATED BREAKDOWN WARNING MODAL ========== */}
+      {}
       {unallocatedAlert && (
         <div className="tyt-modal-overlay" onClick={() => setUnallocatedAlert(null)}>
           <div className="tyt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '460px' }}>
@@ -1232,7 +1175,7 @@ function TeamYearlyTargets({
               }}>
                 <i className="fas fa-info-circle" style={{ color: '#EA580C', marginTop: '2px', flexShrink: 0 }}></i>
                 <p style={{ fontSize: '0.8125rem', color: '#9A3412', lineHeight: 1.55, margin: 0 }}>
-                  Unallocated amounts mean the category breakdown doesn't add up to the total CY Target. 
+                  Unallocated amounts mean the category breakdown doesn't add up to the total CY Target.
                   Expand the member card and allocate the remaining amount before {unallocatedAlert.context === 'publish' ? 'publishing' : 'saving'}.
                 </p>
               </div>
@@ -1256,7 +1199,7 @@ function TeamYearlyTargets({
           </div>
         </div>
       )}
-      {/* ========== CY BELOW LY AHV WARNING MODAL ========== */}
+      {}
       {cyBelowLyAlert && (
         <div className="tyt-modal-overlay" onClick={() => setCyBelowLyAlert(null)}>
           <div className="tyt-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '440px' }}>
@@ -1367,8 +1310,6 @@ function TeamYearlyTargets({
   );
 }
 
-// ==================== MOCK CATEGORY BREAKDOWN HELPER ====================
-
 function generateMockCategoryBreakdown() {
   return [
     {
@@ -1424,7 +1365,6 @@ function generateMockCategoryBreakdown() {
   ];
 }
 
-// ── Inject per-card button styles (avoids needing CSS file changes) ──
 const perCardStyles = `
   .tyt-card-footer-actions {
     display: flex;

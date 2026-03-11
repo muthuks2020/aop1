@@ -1,7 +1,5 @@
-/* ABM Dashboard Styles - 'abm-' prefix, Accent: Indigo (#4F46E5) */
 .abm-dashboard{min-height:100vh;background:var(--bg-main,#F0F4F8);font-family:var(--font-sans,'Inter',-apple-system,BlinkMacSystemFont,sans-serif)}
 
-/* TABS */
 .abm-tabs{display:flex;gap:0;padding:1rem 1.5rem;background:#fff;border-bottom:1px solid #E5E7EB;overflow-x:auto;scrollbar-width:none}
 .abm-tabs::-webkit-scrollbar{display:none}
 .abm-tab{flex:1;display:flex;align-items:center;justify-content:center;gap:0.5rem;padding:0.75rem 1rem;background:#F3F4F6;border:1px solid #E5E7EB;border-radius:12px;color:#4B5563;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
@@ -13,7 +11,6 @@
 .abm-tab.active .tab-badge.pending{background:rgba(255,255,255,0.25)}
 @media(max-width:900px){.abm-tab{min-width:120px;flex:0 0 auto;padding:0.625rem 0.75rem;font-size:0.75rem}}
 
-/* APPROVAL STATS */
 .abm-approval-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.25rem}
 .abm-stat-card{display:flex;align-items:center;gap:1rem;padding:1.25rem 1.5rem;background:#fff;border-radius:12px;border:1px solid #E5E7EB;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .abm-stat-card>i{font-size:1.5rem;width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:12px;background:#EEF2FF;color:#4F46E5}
@@ -23,7 +20,6 @@
 .abm-stat-label{font-size:0.8125rem;color:#6B7280;display:block;margin-top:2px}
 @media(max-width:768px){.abm-approval-stats{grid-template-columns:1fr}}
 
-/* FILTERS */
 .abm-approval-filters{display:flex;align-items:center;gap:1rem;margin-bottom:1rem;flex-wrap:wrap;background:#fff;padding:1rem 1.25rem;border-radius:12px;border:1px solid #E5E7EB}
 .abm-filter-group{display:flex;align-items:center;gap:0.5rem}
 .abm-filter-group label{font-size:0.8125rem;font-weight:600;color:#4B5563;white-space:nowrap}
@@ -36,7 +32,6 @@
 .abm-bulk-approve-btn{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 1rem;background:linear-gradient(135deg,#059669,#047857);color:#fff;border:none;border-radius:8px;font-size:0.875rem;font-weight:600;cursor:pointer;transition:all 0.2s;white-space:nowrap}
 .abm-bulk-approve-btn:hover{background:linear-gradient(135deg,#047857,#065F46);box-shadow:0 4px 12px rgba(5,150,105,0.3)}
 
-/* TABLE */
 .abm-approval-table-container{background:#fff;border-radius:12px;border:1px solid #E5E7EB;overflow-x:auto;box-shadow:0 1px 3px rgba(0,0,0,0.06)}
 .abm-approval-table{width:100%;border-collapse:collapse;font-size:0.8125rem;min-width:1200px}
 .abm-approval-table thead th{padding:0.75rem 0.5rem;background:#F8FAFC;color:#4B5563;font-weight:700;font-size:0.6875rem;text-transform:uppercase;letter-spacing:0.05em;border-bottom:2px solid #E5E7EB;position:sticky;top:0;z-index:5;white-space:nowrap;text-align:center}

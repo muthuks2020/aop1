@@ -1,18 +1,3 @@
-/**
- * Header Component — v5.1
- *
- * Works with both old (user.name, user.territory) and new
- * (user.fullName, user.territoryName) fields thanks to backward compat
- * mapping in AuthContext.mapUserFromBackend().
- *
- * PART 1 — Item 5:
- * For ZBM role, the subtitle now prominently shows:
- *   Zone Name · Zone Code · Employee Name
- * instead of the generic territory badge.
- *
- * @version 5.1.0 — Part 1 Item 5: ZBM zone info in header
- */
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -23,7 +8,6 @@ function Header({ user: userProp, onRefresh }) {
   const navigate = useNavigate();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  // Use prop first, fallback to auth context
   const user = userProp || authUser;
 
   const handleLogout = async () => {
@@ -31,18 +15,15 @@ function Header({ user: userProp, onRefresh }) {
     navigate('/login');
   };
 
-  // Display name: fullName > name > 'User'
   const displayName = user?.fullName || user?.name || 'User';
-  // Display territory: territoryName > territory > 'Territory'
+
   const displayTerritory = user?.territoryName || user?.territory || 'Territory';
 
-  // ─── PART 1 — Item 5: ZBM-specific zone identity ───────────────
   const isZBM = user?.role === 'zbm';
   const zoneName = user?.zoneName || user?.zone_name || '';
   const zoneCode = user?.zoneCode || user?.zone_code || '';
-  // Build the ZBM subtitle: "Zone Name · Zone Code"
+
   const zbmZoneLabel = [zoneName, zoneCode].filter(Boolean).join(' · ');
-  // ────────────────────────────────────────────────────────────────
 
   return (
     <header className="header">
@@ -63,7 +44,7 @@ function Header({ user: userProp, onRefresh }) {
                 <i className="fas fa-calendar-alt"></i> FY 2026-27
               </span>
 
-              {/* PART 1 — Item 5: ZBM gets zone badge; others keep territory badge */}
+              {}
               {isZBM ? (
                 <span className="territory-badge zbm-zone-badge" title={`Zone: ${zbmZoneLabel}`}>
                   <i className="fas fa-globe-asia"></i>
@@ -116,7 +97,7 @@ function Header({ user: userProp, onRefresh }) {
                 }}
               >
                 <div style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
-                  {/* PART 1 — Item 5: ZBM menu shows Employee Name + Zone Name + Zone Code */}
+                  {}
                   <div style={{ fontWeight: 600, color: 'var(--gray-800)' }}>
                     {displayName}
                   </div>
@@ -130,7 +111,7 @@ function Header({ user: userProp, onRefresh }) {
                     {user?.employeeCode && ` · ${user.employeeCode}`}
                   </div>
 
-                  {/* ZBM: show Zone Name + Zone Code explicitly */}
+                  {}
                   {isZBM && zbmZoneLabel && (
                     <div style={{
                       marginTop: '0.375rem',
@@ -158,7 +139,7 @@ function Header({ user: userProp, onRefresh }) {
                     </div>
                   )}
 
-                  {/* Non-ZBM: show geography as before */}
+                  {}
                   {!isZBM && (
                     <div style={{ fontSize: '0.75rem', color: 'var(--accent)', marginTop: '0.25rem' }}>
                       <i className="fas fa-map-marker-alt" style={{ marginRight: '0.25rem' }}></i>

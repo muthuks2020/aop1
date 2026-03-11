@@ -1,28 +1,7 @@
-/**
- * TBMTerritoryTargetGrid Component
- * 
- * REPLICATED from Sales Rep TargetEntryGrid with TERRITORY FLAVOUR.
- * This is the TBM's territory-level target entry screen.
- * 
- * KEY DIFFERENCES FROM SALES REP GRID:
- * - Territory branding (teal/navy gradient, territory icon, territory labels)
- * - Submits to ABM (not TBM) for approval
- * - Overall Territory Target Bar with territory-level stats
- * - Territory info banner explaining the flow
- * - Uses 'tgt-' CSS prefix to avoid conflicts with Sales Rep grid
- * - Exclusive to TBM role
- * 
- * FLOW: TBM enters territory targets → Save Draft → Submit to ABM → ABM approves
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0 - Replicated from Sales Rep TargetEntryGrid
- */
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/tbmTerritoryTargetGrid.css';
 
-// Constants
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const MONTH_LABELS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
 const MONTH_LABEL_MAP = {
@@ -71,8 +50,6 @@ function TBMTerritoryTargetGrid({
     }
   }, [activeCell]);
 
-  // ==================== FILTERED DATA ====================
-
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) return products;
     const term = searchTerm.toLowerCase();
@@ -85,7 +62,6 @@ function TBMTerritoryTargetGrid({
     );
   }, [products, searchTerm]);
 
-  // Get unique subcategories for a category
   const getSubcategories = useCallback((categoryId) => {
     const subs = new Set();
     filteredProducts.filter(p => p.categoryId === categoryId).forEach(p => {
@@ -94,7 +70,6 @@ function TBMTerritoryTargetGrid({
     return Array.from(subs).sort();
   }, [filteredProducts]);
 
-  // Get unique subgroups within a subcategory
   const getSubgroups = useCallback((categoryId, subcategory) => {
     const groups = new Set();
     filteredProducts
@@ -102,8 +77,6 @@ function TBMTerritoryTargetGrid({
       .forEach(p => { groups.add(p.subgroup || '__none__'); });
     return Array.from(groups).sort();
   }, [filteredProducts]);
-
-  // ==================== CALCULATIONS ====================
 
   const calculateQuarterTotal = useCallback((productId, quarterId, year) => {
     const product = products.find(p => p.id === productId);
@@ -146,13 +119,10 @@ function TBMTerritoryTargetGrid({
       }, 0);
   }, [products]);
 
-  // ==================== OVERALL TERRITORY TARGET SUMMARY ====================
-
   const overallTargetSummary = useMemo(() => {
     const totalCYQty = products.reduce((sum, p) => sum + calculateYearlyTotal(p.id, 'CY'), 0);
     const totalLYQty = products.reduce((sum, p) => sum + calculateYearlyTotal(p.id, 'LY'), 0);
 
-    // Revenue totals
     const totalCYRev = products.reduce((sum, p) => {
       return sum + MONTHS.reduce((ms, month) => {
         return ms + (p.monthlyTargets?.[month]?.cyRev || 0);
@@ -162,7 +132,6 @@ function TBMTerritoryTargetGrid({
     const yearlyTargetValue = overallYearlyTargetValue || null;
     const achievement = yearlyTargetValue ? (totalCYRev / yearlyTargetValue) * 100 : 0;
 
-    // Quarterly breakdown
     const quarterlyBreakdown = QUARTERS.map(q => {
       const cyQty = products.reduce((sum, p) =>
         sum + q.months.reduce((ms, m) => ms + (p.monthlyTargets?.[m]?.cyQty || 0), 0), 0);
@@ -183,8 +152,6 @@ function TBMTerritoryTargetGrid({
     };
   }, [products, calculateYearlyTotal, overallYearlyTargetValue]);
 
-  // ==================== MONTHLY COLUMN TOTALS ====================
-
   const monthlyColumnTotals = useMemo(() => {
     const totals = {};
     MONTHS.forEach(month => {
@@ -193,8 +160,6 @@ function TBMTerritoryTargetGrid({
     totals.yearly = Object.values(totals).reduce((a, b) => a + b, 0);
     return totals;
   }, [products]);
-
-  // ==================== EVENT HANDLERS ====================
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
@@ -298,8 +263,6 @@ function TBMTerritoryTargetGrid({
     searchInputRef.current?.focus();
   };
 
-  // ==================== RENDER HELPERS ====================
-
   const highlightMatch = (text, search) => {
     if (!search || !search.trim()) return text;
     const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -317,8 +280,6 @@ function TBMTerritoryTargetGrid({
     };
     return icons[catId] || 'fa-box';
   };
-
-  // ==================== REVENUE ONLY CATEGORY RENDERER ====================
 
   const renderRevenueOnlyCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
@@ -341,7 +302,7 @@ function TBMTerritoryTargetGrid({
             </div>
           </div>
 
-          {/* Category month totals — revenue only */}
+          {}
           {MONTHS.map(month => (
             <div key={month} className="tgt-month-cell tgt-category-total-cell">
               —
@@ -397,12 +358,10 @@ function TBMTerritoryTargetGrid({
     );
   };
 
-  // ==================== MAIN RENDER ====================
-
   return (
     <div className="tgt-territory-container" ref={gridRef}>
 
-      {/* ===== TERRITORY HEADER ===== */}
+      {}
       <div className="tgt-grid-header">
         <div className="tgt-grid-title">
           <div className="tgt-title-left">
@@ -417,12 +376,12 @@ function TBMTerritoryTargetGrid({
           <span className="tgt-fiscal-year">FY {fiscalYear}</span>
         </div>
 
-        {/* Territory Info Banner */}
+        {}
         <div className="tgt-info-banner">
           <i className="fas fa-info-circle"></i>
           <span>
-            Enter your <strong>territory-level</strong> monthly targets below. 
-            These represent the combined target for your entire territory. 
+            Enter your <strong>territory-level</strong> monthly targets below.
+            These represent the combined target for your entire territory.
             Once submitted, targets go to <strong>ABM</strong> for approval.
           </span>
         </div>
@@ -448,10 +407,10 @@ function TBMTerritoryTargetGrid({
         </div>
       </div>
 
-      {/* ===== OVERALL TERRITORY TARGET SUMMARY BAR ===== */}
+      {}
       <div className="tgt-overall-target-bar">
         <div className="tgt-otb-main-section">
-          {/* Yearly Target Card */}
+          {}
           <div className="tgt-otb-card tgt-otb-yearly-target">
             <div className="tgt-otb-card-icon">
               <i className="fas fa-flag-checkered"></i>
@@ -467,7 +426,7 @@ function TBMTerritoryTargetGrid({
             </div>
           </div>
 
-          {/* Total Qty */}
+          {}
           <div className="tgt-otb-card tgt-otb-qty">
             <div className="tgt-otb-card-icon tgt-qty-icon">
               <i className="fas fa-cubes"></i>
@@ -481,11 +440,11 @@ function TBMTerritoryTargetGrid({
             </div>
           </div>
 
-          {/* Growth */}
-          
+          {}
+
         </div>
 
-        {/* Progress Bar (if target value is set) */}
+        {}
         {overallTargetSummary.yearlyTargetValue && (
           <div className="tgt-otb-progress-wrapper">
             <div className="tgt-otb-progress-bar">
@@ -500,7 +459,7 @@ function TBMTerritoryTargetGrid({
           </div>
         )}
 
-        {/* Quarter Contribution Chips */}
+        {}
         <div className="tgt-otb-quarter-breakdown">
           {overallTargetSummary.quarterlyBreakdown.map(q => (
             <div key={q.id} className={`tgt-otb-quarter-chip ${q.color}`}>
@@ -513,7 +472,7 @@ function TBMTerritoryTargetGrid({
           ))}
         </div>
 
-        {/* Month-wise breakdown */}
+        {}
         <div className="tgt-otb-month-breakdown">
           {overallTargetSummary.quarterlyBreakdown.map(q => (
             <div key={q.id} className={`tgt-otb-month-group ${q.color}`}>
@@ -531,7 +490,7 @@ function TBMTerritoryTargetGrid({
         </div>
       </div>
 
-      {/* ===== SEARCH BAR ===== */}
+      {}
       <div className="tgt-grid-search-bar">
         <div className="tgt-search-input-wrapper">
           <i className="fas fa-search tgt-search-icon"></i>
@@ -553,7 +512,7 @@ function TBMTerritoryTargetGrid({
         <span className="tgt-product-count">{filteredProducts.length} products</span>
       </div>
 
-      {/* ===== MONTHLY COLUMN TOTALS ROW ===== */}
+      {}
       <div className="tgt-monthly-totals-row">
         <div className="tgt-monthly-totals-label-cell">
           <i className="fas fa-calculator"></i> Territory Totals
@@ -569,9 +528,9 @@ function TBMTerritoryTargetGrid({
         <div className="tgt-monthly-totals-cell tgt-growth-spacer"></div>
       </div>
 
-      {/* ===== EXCEL GRID ===== */}
+      {}
       <div className="tgt-excel-grid">
-        {/* Header Row */}
+        {}
         <div className="tgt-grid-header-row">
           <div className="tgt-header-cell tgt-product-header">Product / Territory Target</div>
           {MONTH_LABELS.map((label, idx) => (
@@ -583,7 +542,7 @@ function TBMTerritoryTargetGrid({
           <div className="tgt-header-cell tgt-growth-header">YoY</div>
         </div>
 
-        {/* Categories */}
+        {}
         {categories.map(category =>
           category.isRevenueOnly
             ? renderRevenueOnlyCategory(category)
@@ -593,12 +552,10 @@ function TBMTerritoryTargetGrid({
     </div>
   );
 
-  // ==================== PRODUCT ROW RENDERER ====================
-
   function renderProductRow(product) {
     return (
       <div key={product.id} className="tgt-product-rows">
-        {/* CY Row - Editable */}
+        {}
         <div className="tgt-product-row tgt-cy-row">
           <div className="tgt-product-name-cell">
             <div className="tgt-product-info">
@@ -639,7 +596,7 @@ function TBMTerritoryTargetGrid({
             })()}
           </div>
         </div>
-        {/* LY Row - Read Only */}
+        {}
         <div className="tgt-product-row tgt-ly-row">
           <div className="tgt-product-name-cell">
             <span className="tgt-year-label tgt-ly">Last Year</span>
@@ -659,8 +616,6 @@ function TBMTerritoryTargetGrid({
     );
   }
 
-  // ==================== CATEGORY RENDERER ====================
-
   function renderCategory(category) {
     const isExpanded = expandedCategories.has(category.id);
     const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
@@ -673,7 +628,7 @@ function TBMTerritoryTargetGrid({
 
     return (
       <div key={category.id} className="tgt-category-section">
-        {/* Category Header */}
+        {}
         <div className="tgt-category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="tgt-category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} tgt-chevron-icon`}></i>
@@ -698,7 +653,7 @@ function TBMTerritoryTargetGrid({
           </div>
         </div>
 
-        {/* Expanded: Subcategory → Subgroup → Products */}
+        {}
         {isExpanded && (
           <div className="tgt-products-container">
             {subcategories.map(subcatKey => {
@@ -709,7 +664,7 @@ function TBMTerritoryTargetGrid({
 
               return (
                 <div key={subcatKey} className="tgt-subcategory-section">
-                  {/* Subcategory header (product_family) — only show if it has a value */}
+                  {}
                   {subcatLabel && (
                     <div className="tgt-subcategory-header-row" style={{cursor:'pointer'}} onClick={() => toggleSubcategory(subcatExpandKey)}>
                       <div className="tgt-subcategory-name-cell">
@@ -734,7 +689,7 @@ function TBMTerritoryTargetGrid({
 
                     return (
                       <div key={subgroupKey} className="tgt-subgroup-section">
-                        {/* Subgroup header (product_subgroup) — only show if it has a value */}
+                        {}
                         {subgroupLabel && (
                           <div className="tgt-subgroup-header-row" style={{cursor:'pointer'}} onClick={() => toggleSubgroup(subgroupExpandKey)}>
                             <div className="tgt-subgroup-name-cell">

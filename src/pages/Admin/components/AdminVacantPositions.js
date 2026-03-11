@@ -1,17 +1,3 @@
-/**
- * AdminVacantPositions Component
- * Flat list of all vacant positions across hierarchy
- * Admin can fill vacancies when recruits are hired
- *
- * Features:
- * - List of all vacant positions with reporting chain
- * - Quick-fill form to assign a name to the vacant slot
- * - Filter by role level
- * - Summary cards showing vacancies by level
- *
- * @version 1.0.0
- */
-
 import React, { useState, useMemo } from 'react';
 import { AdminApiService } from '../../../services/adminApi';
 
@@ -45,20 +31,17 @@ function AdminVacantPositions({ vacantPositions, onRefresh, showToast, showModal
   const [fillForm, setFillForm] = useState({ name: '', territory: '' });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Count by role
   const countByRole = useMemo(() => {
     const counts = { zbm: 0, abm: 0, tbm: 0, sales_rep: 0 };
     vacantPositions.forEach(v => { if (counts[v.role] !== undefined) counts[v.role]++; });
     return counts;
   }, [vacantPositions]);
 
-  // Filtered
   const filtered = useMemo(() => {
     if (roleFilter === 'all') return vacantPositions;
     return vacantPositions.filter(v => v.role === roleFilter);
   }, [vacantPositions, roleFilter]);
 
-  // Fill a vacant position
   const handleFill = (position) => {
     setFillingId(position.id);
     setFillForm({ name: '', territory: position.territory || '' });
@@ -84,7 +67,6 @@ function AdminVacantPositions({ vacantPositions, onRefresh, showToast, showModal
     setIsSaving(false);
   };
 
-  // Remove vacant position
   const handleRemoveVacant = (position) => {
     showModal(
       'Remove Vacant Position',
@@ -104,7 +86,7 @@ function AdminVacantPositions({ vacantPositions, onRefresh, showToast, showModal
 
   return (
     <div className="adm-vacant-section">
-      {/* Summary Cards */}
+      {}
       <div className="adm-vacant-summary">
         {Object.entries(countByRole).map(([role, count]) => (
           <div
@@ -135,7 +117,7 @@ function AdminVacantPositions({ vacantPositions, onRefresh, showToast, showModal
         </div>
       </div>
 
-      {/* Vacant List */}
+      {}
       {filtered.length === 0 ? (
         <div className="adm-vacant-empty">
           <i className="fas fa-check-circle"></i>
@@ -205,11 +187,11 @@ function AdminVacantPositions({ vacantPositions, onRefresh, showToast, showModal
         </div>
       )}
 
-      {/* Info Note */}
+      {}
       <div className="adm-vacant-note">
         <i className="fas fa-lightbulb"></i>
         <div>
-          <strong>Tip:</strong> Vacant positions allow targets and values to be entered for planning purposes even before recruitment is complete. 
+          <strong>Tip:</strong> Vacant positions allow targets and values to be entered for planning purposes even before recruitment is complete.
           Once a recruit joins, click "Fill Position" to assign their name. All previously entered values will be preserved.
         </div>
       </div>

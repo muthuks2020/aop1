@@ -1,19 +1,3 @@
-/**
- * ABM Area Target Grid Styles
- * Replicated from TBM Territory Target Grid with AREA FLAVOUR
- * Uses 'abm-tgt-' prefix to avoid conflicts
- *
- * AREA COLOUR SCHEME:
- * - Primary: Navy (#1B365D) + Blue (#3B82F6)
- * - Area accent: #2563EB (deeper blue)
- * - Submitted to ZBM: Blue (#3B82F6)
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
-/* ==================== CSS VARIABLES ==================== */
-
 .abm-tgt-container {
   --abm-primary: #1B365D;
   --abm-primary-dark: #0D2240;
@@ -47,12 +31,9 @@
   border: 1px solid var(--abm-gray-200);
 }
 
-/* Preserve rounded corners on header since container is overflow:visible */
 .abm-tgt-container > .abm-tgt-grid-header {
   border-radius: 16px 16px 0 0;
 }
-
-/* ==================== GRID HEADER ==================== */
 
 .abm-tgt-grid-header {
   background: linear-gradient(135deg, #1E3A5F 0%, #1B365D 50%, #2563EB 100%);
@@ -115,7 +96,6 @@
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* Info Banner */
 .abm-tgt-info-banner {
   display: flex;
   align-items: flex-start;
@@ -131,7 +111,6 @@
 
 .abm-tgt-info-banner i { margin-top: 2px; opacity: 0.8; }
 
-/* Actions */
 .abm-tgt-grid-actions {
   display: flex;
   align-items: center;
@@ -174,8 +153,6 @@
 }
 
 .abm-tgt-action-btn.abm-tgt-submit:hover { box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3); }
-
-/* ==================== OVERALL TARGET BAR ==================== */
 
 .abm-tgt-overall-bar {
   padding: 1rem 1.5rem;
@@ -220,8 +197,6 @@
 .abm-tgt-otb-value { display: block; font-size: 1.125rem; font-weight: 800; color: var(--abm-gray-800); }
 .abm-tgt-otb-value.positive { color: #10B981; }
 .abm-tgt-otb-value.negative { color: #EF4444; }
-
-/* ==================== SEARCH BAR ==================== */
 
 .abm-tgt-search-bar {
   display: flex;
@@ -278,8 +253,6 @@
   color: var(--abm-gray-500);
   white-space: nowrap;
 }
-
-/* ==================== CATEGORY SECTIONS ==================== */
 
 .abm-tgt-categories { padding: 0.5rem 0; }
 
@@ -338,8 +311,6 @@
 .abm-tgt-cat-growth { font-size: 0.8125rem; font-weight: 600; }
 .abm-tgt-cat-growth.positive { color: #10B981; }
 .abm-tgt-cat-growth.negative { color: #EF4444; }
-
-/* ==================== GRID TABLE ==================== */
 
 .abm-tgt-grid-table {
   overflow-x: auto;
@@ -487,13 +458,11 @@
 
 .abm-tgt-ly-row { background: var(--abm-gray-50); }
 
-/* Quarter header colors */
 .abm-tgt-header.abm-tgt-q1 { background: rgba(59, 130, 246, 0.15); }
 .abm-tgt-header.abm-tgt-q2 { background: rgba(34, 197, 94, 0.15); }
 .abm-tgt-header.abm-tgt-q3 { background: rgba(245, 158, 11, 0.15); }
 .abm-tgt-header.abm-tgt-q4 { background: rgba(239, 68, 68, 0.15); }
 
-/* Revenue only grid */
 .abm-tgt-revenue-grid {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -529,7 +498,6 @@
   color: #fff;
 }
 
-/* Search highlight */
 .abm-tgt-container mark,
 .abm-tgt-container .search-highlight {
   background: #FDE68A;
@@ -537,8 +505,6 @@
   padding: 0 2px;
   border-radius: 2px;
 }
-
-/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1024px) {
   .abm-tgt-otb-main { grid-template-columns: repeat(2, 1fr); }

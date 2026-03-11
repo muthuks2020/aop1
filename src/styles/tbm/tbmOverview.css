@@ -1,22 +1,9 @@
-/* ============================================================
-   TBM Overview Dashboard - Premium Design
-   Product Commitment PWA - Appasamy Associates
-   Version: 1.0.0 — Territory Manager KPIs
-   
-   Mirrors Sales Rep OverviewStats design but with tbm-ov- prefix
-   to avoid any CSS conflicts with Sales Rep styles.
-   ============================================================ */
-
-/* ==================== DASHBOARD CONTAINER ==================== */
-
 .tbm-ov-dashboard {
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
   padding: 0.5rem 0;
 }
-
-/* ==================== ENTRANCE ANIMATIONS ==================== */
 
 .tbm-ov-dashboard .tbm-ov-hero-card,
 .tbm-ov-dashboard .tbm-ov-panel,
@@ -36,8 +23,6 @@
   opacity: 1;
   transform: translateY(0);
 }
-
-/* ==================== HERO KPI STRIP ==================== */
 
 .tbm-ov-hero-strip {
   display: grid;
@@ -160,7 +145,6 @@
 
 .tbm-ov-hero-badge i { font-size: 0.5625rem; }
 
-/* Ring Chart */
 .tbm-ov-hero-ring {
   position: absolute;
   top: 0.5rem;
@@ -174,8 +158,6 @@
   height: 100%;
   transform: rotate(-90deg);
 }
-
-/* ==================== TEAM STATS BAR ==================== */
 
 .tbm-ov-team-bar {
   background: var(--white, #fff);
@@ -267,8 +249,6 @@
   white-space: nowrap;
 }
 
-/* ==================== PANEL SHARED ==================== */
-
 .tbm-ov-panel {
   background: var(--white, #fff);
   border-radius: 16px;
@@ -299,8 +279,6 @@
   color: var(--accent, #00A19B);
   font-size: 1rem;
 }
-
-/* ==================== CHART AREA ==================== */
 
 .tbm-ov-chart-area {
   display: flex;
@@ -405,8 +383,6 @@
 
 .tbm-ov-legend-item.cy .tbm-ov-legend-dot { background: #00A19B; }
 .tbm-ov-legend-item.ly .tbm-ov-legend-dot { background: #CBD5E1; }
-
-/* ==================== QUARTER STRIP ==================== */
 
 .tbm-ov-quarter-strip {
   display: grid;
@@ -515,15 +491,11 @@
 .tbm-ov-qm-growth.up { color: #059669; }
 .tbm-ov-qm-growth.down { color: #DC2626; }
 
-/* ==================== TWIN SECTION ==================== */
-
 .tbm-ov-twin-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1.25rem;
 }
-
-/* ==================== CATEGORY LIST ==================== */
 
 .tbm-ov-category-list {
   padding: 0.5rem 0;
@@ -642,8 +614,6 @@
   text-align: right;
 }
 
-/* ==================== TOP PRODUCTS ==================== */
-
 .tbm-ov-top-list {
   padding: 0.5rem 0;
 }
@@ -744,8 +714,6 @@
   margin: 0;
 }
 
-/* ==================== REVENUE FOOTER ==================== */
-
 .tbm-ov-revenue-footer {
   display: flex;
   align-items: center;
@@ -832,8 +800,6 @@
   color: #DC2626;
 }
 
-/* ==================== RESPONSIVE ==================== */
-
 @media (max-width: 1280px) {
   .tbm-ov-hero-strip { grid-template-columns: repeat(2, 1fr); }
   .tbm-ov-twin-section { grid-template-columns: 1fr; }
@@ -855,8 +821,6 @@
   .tbm-ov-hero-value { font-size: 1.25rem; }
 }
 
-/* ==================== PRINT ==================== */
-
 @media print {
   .tbm-ov-dashboard .tbm-ov-hero-card,
   .tbm-ov-dashboard .tbm-ov-panel,
@@ -865,7 +829,7 @@
     opacity: 1;
     transform: none;
   }
-  
+
   .tbm-ov-hero-card:hover,
   .tbm-ov-qchip:hover,
   .tbm-ov-cat-row:hover,

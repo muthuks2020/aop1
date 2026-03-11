@@ -1,16 +1,5 @@
-/**
- * apiClient.js — Shared API request helper
- *
- * - Automatic Bearer token injection
- * - 401 redirect to login (no JWT refresh needed)
- * - Consistent error handling
- *
- * @version 6.0.0 - Removed JWT refresh (simple token, no expiry)
- */
-
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
 
-/** Get auth headers with current session token */
 export const getAuthHeaders = () => {
   const token = localStorage.getItem('appasamy_token');
   return {
@@ -19,13 +8,6 @@ export const getAuthHeaders = () => {
   };
 };
 
-/**
- * Make an authenticated API request.
- *
- * @param {string} endpoint  – API path, e.g. '/products'
- * @param {object} options   – fetch options (method, body, etc.)
- * @returns {Promise<any>}   – parsed JSON response
- */
 export const apiRequest = async (endpoint, options = {}) => {
   const url = `${API_URL}${endpoint}`;
 
@@ -37,7 +19,6 @@ export const apiRequest = async (endpoint, options = {}) => {
     }),
   });
 
-  // 401 — force re-login
   if (response.status === 401) {
     localStorage.removeItem('appasamy_token');
     localStorage.removeItem('appasamy_user');
@@ -51,7 +32,7 @@ export const apiRequest = async (endpoint, options = {}) => {
     try {
       const parsed = JSON.parse(errorBody);
       errorMessage = parsed.message || errorMessage;
-    } catch { /* use default */ }
+    } catch {  }
     throw new Error(errorMessage);
   }
 

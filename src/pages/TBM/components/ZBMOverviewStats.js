@@ -1,15 +1,3 @@
-/**
- * ZBM Overview Dashboard
- * Zone-level KPIs for ZBM performance tracking
- * Mirrors ABM OverviewStats design but with zone-specific metrics
- *
- * PART 1 — Item 1: Consistent LY labels ("LY Tgt", "LY Ahv")
- * PART 1 — Item 4: Added % metrics — growth (achievement), growth (target),
- *                  contribution %, % of target achievement for both CY and LY
- *
- * @version 1.1.0 — Part 1 Items 1 & 4
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/zbm/zbmOverview.css';
@@ -24,8 +12,6 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     return () => clearTimeout(timer);
   }, []);
 
-  // ==================== COMPUTED DATA ====================
-
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
     let lyAchQty = 0, lyAchRev = 0;
@@ -36,7 +22,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
           cyQty    += m.cyQty    || 0;
           lyRev    += m.lyRev    || 0;
           cyRev    += m.cyRev    || 0;
-          // PART 1 — Item 4: capture LY achievement fields
+
           lyAchQty += m.lyAchQty !== undefined ? (m.lyAchQty || 0) : (m.lyQty || 0) * 0.92;
           lyAchRev += m.lyAchRev !== undefined ? (m.lyAchRev || 0) : (m.lyRev || 0) * 0.92;
         });
@@ -44,16 +30,15 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     });
     return {
       lyQty, cyQty, lyRev, cyRev, lyAchQty, lyAchRev,
-      // PART 1 — Item 4: growth (target) = CY vs LY target
+
       qtyGrowthTgt: Utils.calcGrowth(lyQty, cyQty),
       revGrowthTgt: Utils.calcGrowth(lyRev, cyRev),
-      // PART 1 — Item 4: growth (achievement) = LY achievement vs LY target
+
       qtyAchPct: lyQty > 0 ? Math.round((lyAchQty / lyQty) * 100) : 0,
       revAchPct: lyRev > 0 ? Math.round((lyAchRev / lyRev) * 100) : 0,
     };
   }, [abmSubmissions]);
 
-  // ABM-level summary
   const abmSummary = useMemo(() => {
     const map = {};
     abmSubmissions.forEach(p => {
@@ -73,7 +58,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         Object.values(p.monthlyTargets).forEach(m => {
           e.totalLyRev  += m.lyRev  || 0;
           e.totalCyRev  += m.cyRev  || 0;
-          // PART 1 — Item 4: LY achievement at ABM level
+
           e.totalLyAchRev += m.lyAchRev !== undefined ? (m.lyAchRev || 0) : (m.lyRev || 0) * 0.92;
         });
       }
@@ -81,9 +66,8 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     return Object.values(map);
   }, [abmSubmissions]);
 
-  // Category performance
   const categoryPerformance = useMemo(() => {
-    const totalCyQty = overallTotals.cyQty || 1; // avoid /0
+    const totalCyQty = overallTotals.cyQty || 1;
     const totalCyRev = overallTotals.cyRev || 1;
 
     return categories.map(cat => {
@@ -101,11 +85,10 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         }
       });
 
-      // PART 1 — Item 4: all four % metrics
-      const growthTgt = Utils.calcGrowth(lyQty, cyQty);       // growth (target): CY vs LY target
-      const growthAch = lyQty > 0                             // growth (achievement): LY Ahv vs LY Tgt
+      const growthTgt = Utils.calcGrowth(lyQty, cyQty);
+      const growthAch = lyQty > 0
         ? Math.round((lyAchQty / lyQty) * 100) : 0;
-      const contribQty = Math.round((cyQty / totalCyQty) * 100); // contribution %
+      const contribQty = Math.round((cyQty / totalCyQty) * 100);
       const contribRev = Math.round((cyRev / totalCyRev) * 100);
 
       return {
@@ -119,30 +102,28 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     });
   }, [abmSubmissions, categories, overallTotals]);
 
-  // ==================== RENDER ====================
-
   return (
     <div className={`zbm-overview ${animateIn ? 'animate-in' : ''}`}>
 
-      {/* ── KPI Cards ─────────────────────────────────────────────── */}
+      {}
       <div className="zbm-ov-kpi-row">
 
-        {/* Revenue KPI */}
+        {}
         <div className="zbm-ov-kpi-card zbm-ov-kpi-revenue">
           <div className="zbm-ov-kpi-icon"><i className="fas fa-rupee-sign"></i></div>
           <div className="zbm-ov-kpi-content">
             <span className="zbm-ov-kpi-label">CY Revenue Target</span>
             <span className="zbm-ov-kpi-value">₹{Utils.formatCompact(overallTotals.cyRev)}</span>
             <span className="zbm-ov-kpi-sub">
-              {/* PART 1 — Item 1: "LY Tgt" */}
+              {}
               LY Tgt: ₹{Utils.formatCompact(overallTotals.lyRev)}
             </span>
-            {/* PART 1 — Item 4: growth (target) % */}
+            {}
             <span className={`zbm-ov-kpi-growth ${overallTotals.revGrowthTgt >= 0 ? 'positive' : 'negative'}`}>
               <i className={`fas fa-arrow-${overallTotals.revGrowthTgt >= 0 ? 'up' : 'down'}`}></i>
               {Utils.formatGrowth(overallTotals.revGrowthTgt)} Tgt Growth
             </span>
-            {/* PART 1 — Item 4: % of LY target achieved */}
+            {}
             <span className={`zbm-ov-kpi-growth ${overallTotals.revAchPct >= 100 ? 'positive' : 'negative'}`}
               style={{ marginLeft: '0.5rem' }}>
               <i className="fas fa-check-circle"></i>
@@ -151,20 +132,20 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
           </div>
         </div>
 
-        {/* Qty KPI */}
+        {}
         <div className="zbm-ov-kpi-card zbm-ov-kpi-qty">
           <div className="zbm-ov-kpi-icon"><i className="fas fa-boxes"></i></div>
           <div className="zbm-ov-kpi-content">
             <span className="zbm-ov-kpi-label">CY Quantity Target</span>
             <span className="zbm-ov-kpi-value">{Utils.formatNumber(overallTotals.cyQty)}</span>
-            {/* PART 1 — Item 1: "LY Tgt" */}
+            {}
             <span className="zbm-ov-kpi-sub">LY Tgt: {Utils.formatNumber(overallTotals.lyQty)}</span>
-            {/* PART 1 — Item 4: growth (target) % */}
+            {}
             <span className={`zbm-ov-kpi-growth ${overallTotals.qtyGrowthTgt >= 0 ? 'positive' : 'negative'}`}>
               <i className={`fas fa-arrow-${overallTotals.qtyGrowthTgt >= 0 ? 'up' : 'down'}`}></i>
               {Utils.formatGrowth(overallTotals.qtyGrowthTgt)} Tgt Growth
             </span>
-            {/* PART 1 — Item 4: % of LY target achieved */}
+            {}
             <span className={`zbm-ov-kpi-growth ${overallTotals.qtyAchPct >= 100 ? 'positive' : 'negative'}`}
               style={{ marginLeft: '0.5rem' }}>
               <i className="fas fa-check-circle"></i>
@@ -173,7 +154,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
           </div>
         </div>
 
-        {/* ABMs KPI */}
+        {}
         <div className="zbm-ov-kpi-card zbm-ov-kpi-abms">
           <div className="zbm-ov-kpi-icon"><i className="fas fa-user-shield"></i></div>
           <div className="zbm-ov-kpi-content">
@@ -185,7 +166,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
           </div>
         </div>
 
-        {/* Approval KPI */}
+        {}
         <div className="zbm-ov-kpi-card zbm-ov-kpi-approval">
           <div className="zbm-ov-kpi-icon"><i className="fas fa-clipboard-check"></i></div>
           <div className="zbm-ov-kpi-content">
@@ -203,16 +184,16 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         </div>
       </div>
 
-      {/* ── ABM Performance ───────────────────────────────────────── */}
+      {}
       <div className="zbm-ov-section">
         <h3 className="zbm-ov-section-title"><i className="fas fa-user-shield"></i> ABM Performance</h3>
         <div className="zbm-ov-abm-grid">
           {abmSummary.map(abm => {
             const g = Utils.calcGrowth(abm.totalLyRev, abm.totalCyRev);
-            // PART 1 — Item 4: LY achievement % for this ABM
+
             const abmAchPct = abm.totalLyRev > 0
               ? Math.round((abm.totalLyAchRev / abm.totalLyRev) * 100) : 0;
-            // PART 1 — Item 4: contribution of this ABM to total CY rev
+
             const abmContrib = overallTotals.cyRev > 0
               ? ((abm.totalCyRev / overallTotals.cyRev) * 100).toFixed(1) : '0';
 
@@ -235,26 +216,26 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
                     <span className="zbm-ov-abm-metric-label">CY Rev</span>
                     <span className="zbm-ov-abm-metric-value">₹{Utils.formatCompact(abm.totalCyRev)}</span>
                   </div>
-                  {/* PART 1 — Item 1: "LY Tgt" */}
+                  {}
                   <div className="zbm-ov-abm-metric">
                     <span className="zbm-ov-abm-metric-label">LY Tgt</span>
                     <span className="zbm-ov-abm-metric-value">₹{Utils.formatCompact(abm.totalLyRev)}</span>
                   </div>
-                  {/* PART 1 — Item 4: Tgt Growth % */}
+                  {}
                   <div className="zbm-ov-abm-metric">
                     <span className="zbm-ov-abm-metric-label">Tgt Growth</span>
                     <span className={`zbm-ov-abm-metric-value ${g >= 0 ? 'positive' : 'negative'}`}>
                       {g >= 0 ? '↑' : '↓'}{Utils.formatGrowth(g)}
                     </span>
                   </div>
-                  {/* PART 1 — Item 4: LY Ahv % */}
+                  {}
                   <div className="zbm-ov-abm-metric">
                     <span className="zbm-ov-abm-metric-label">LY Ahv %</span>
                     <span className={`zbm-ov-abm-metric-value ${abmAchPct >= 100 ? 'positive' : 'negative'}`}>
                       {abmAchPct}%
                     </span>
                   </div>
-                  {/* PART 1 — Item 4: Contribution % */}
+                  {}
                   <div className="zbm-ov-abm-metric">
                     <span className="zbm-ov-abm-metric-label">Contrib %</span>
                     <span className="zbm-ov-abm-metric-value">{abmContrib}%</span>
@@ -266,7 +247,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         </div>
       </div>
 
-      {/* ── Category Performance ──────────────────────────────────── */}
+      {}
       <div className="zbm-ov-section">
         <h3 className="zbm-ov-section-title"><i className="fas fa-th-large"></i> Category Performance</h3>
         <div className="zbm-ov-category-grid">
@@ -275,7 +256,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
               <div className="zbm-ov-cat-header">
                 <div className="zbm-ov-cat-icon"><i className={`fas ${cat.icon}`}></i></div>
                 <span className="zbm-ov-cat-name">{cat.name}</span>
-                {/* PART 1 — Item 4: contribution % badge */}
+                {}
                 <span className="zbm-ov-cat-contribution" title="Contribution % of CY target">
                   {cat.contribQty}%
                 </span>
@@ -285,26 +266,26 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
                   <span>CY Qty</span>
                   <span className="zbm-ov-cat-bold">{Utils.formatNumber(cat.cyQty)}</span>
                 </div>
-                {/* PART 1 — Item 1: "LY Tgt" */}
+                {}
                 <div className="zbm-ov-cat-row">
                   <span>LY Tgt</span>
                   <span>{Utils.formatNumber(cat.lyQty)}</span>
                 </div>
-                {/* PART 1 — Item 4: growth (target) */}
+                {}
                 <div className="zbm-ov-cat-row">
                   <span>Tgt Growth</span>
                   <span className={cat.growthTgt >= 0 ? 'positive' : 'negative'}>
                     {cat.growthTgt >= 0 ? '↑' : '↓'}{Utils.formatGrowth(cat.growthTgt)}
                   </span>
                 </div>
-                {/* PART 1 — Item 4: % of target achieved (LY) */}
+                {}
                 <div className="zbm-ov-cat-row">
                   <span>LY Ahv %</span>
                   <span className={cat.growthAch >= 100 ? 'positive' : 'negative'}>
                     {cat.growthAch}%
                   </span>
                 </div>
-                {/* PART 1 — Item 4: revenue contribution % */}
+                {}
                 <div className="zbm-ov-cat-row">
                   <span>Rev Contrib</span>
                   <span>{cat.contribRev}%</span>

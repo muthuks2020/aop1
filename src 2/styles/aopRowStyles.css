@@ -1,0 +1,98 @@
+/* ==========================================================================
+   AOP (Annual Operating Plan) ROW STYLES — ALL GRIDS
+   Product Commitment PWA - Appasamy Associates v5.0.0
+   
+   Visual: Indigo (#6366F1 / #4338CA) — Read-only reference row
+   Import this file ONCE in index.css or App.js
+   ========================================================================== */
+
+/* --- Common AOP Label --- */
+.year-label.aop, .tgt-year-label.tgt-aop {
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #fff; font-size: 0.625rem; font-weight: 700;
+  padding: 0.125rem 0.5rem; border-radius: 4px;
+  letter-spacing: 0.05em; text-transform: uppercase;
+}
+
+/* --- Sales Rep Grid --- */
+.product-row.aop-row {
+  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, rgba(99,102,241,0.02) 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.12);
+}
+.product-row.aop-row .product-name-cell { background: rgba(99,102,241,0.04); }
+.product-row.aop-row .month-cell {
+  color: #4338CA; font-size: 0.75rem;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace); font-weight: 500;
+}
+.product-row.aop-row .total-cell {
+  font-weight: 700; color: #4338CA; background: rgba(99,102,241,0.08);
+}
+.product-row.aop-row .growth-cell .growth-value { font-size: 0.6875rem; }
+.revenue-row.aop-row {
+  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, rgba(99,102,241,0.02) 100%);
+  border-bottom: 1px solid rgba(99,102,241,0.12);
+}
+.revenue-row.aop-row .month-cell { color: #4338CA; }
+.revenue-row.aop-row .total-cell { font-weight: 700; color: #4338CA; }
+
+/* --- TBM Territory Grid --- */
+.tgt-product-row.tgt-aop-row {
+  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, transparent 100%);
+  border-bottom: 1px dashed rgba(99,102,241,0.15);
+}
+.tgt-cell-value.tgt-aop-value { color: #4338CA; font-size: 0.75rem; }
+.tgt-total-cell.tgt-aop-total { font-weight: 700; color: #4338CA; background: rgba(99,102,241,0.08); }
+/* Revenue-only */
+.tgt-product-row.tgt-aop-row .tgt-month-cell { color: #4338CA; }
+
+/* --- TBM Target Entry Grid (tbm- prefix) --- */
+.tbm-product-row.aop-row {
+  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, transparent 100%);
+  border-bottom: 1px dashed rgba(99,102,241,0.15);
+}
+.tbm-product-row.aop-row .tbm-product-name-cell span,
+.tbm-product-row.aop-row .aop-label span { color: #6366F1; font-weight: 600; font-size: 0.6875rem; }
+.tbm-product-row.aop-row .tbm-month-cell { color: #4338CA; font-size: 0.75rem; }
+.tbm-product-row.aop-row .tbm-quarter-cell { color: #4338CA; font-size: 0.75rem; background: rgba(99,102,241,0.04); }
+.tbm-total-cell.aop-total { font-weight: 700; color: #4338CA; background: rgba(99,102,241,0.08); }
+
+/* --- TBM Individual Grid (ind- prefix) --- */
+.ind-product-row.aop-row {
+  background: linear-gradient(90deg, rgba(99,102,241,0.06) 0%, transparent 100%);
+  border-bottom: 1px dashed rgba(99,102,241,0.15);
+}
+.ind-product-row.aop-row .aop-label span { color: #6366F1; font-weight: 600; font-size: 0.6875rem; }
+.ind-product-row.aop-row .ind-month-cell { color: #4338CA; font-size: 0.75rem; }
+.ind-product-row.aop-row .ind-quarter-cell { color: #4338CA; font-size: 0.75rem; background: rgba(99,102,241,0.04); }
+.ind-total-cell.aop-total { font-weight: 700; color: #4338CA; background: rgba(99,102,241,0.08); }
+
+/* --- ABM Grid (abm-tgt- prefix) --- */
+.abm-tgt-grid-row.abm-tgt-aop-row { background: rgba(99,102,241,0.05); border-bottom: 1px dashed rgba(99,102,241,0.12); }
+.abm-tgt-type-cell.abm-tgt-aop-label { color: #6366F1; font-weight: 600; font-size: 0.6875rem; }
+.abm-tgt-month-cell.abm-tgt-aop { color: #4338CA; font-size: 0.75rem; }
+.abm-tgt-total-cell.abm-tgt-aop { font-weight: 700; color: #4338CA; }
+
+/* --- ZBM Drilldown --- */
+.zbm-dd-aop-row { background: rgba(99,102,241,0.05); }
+.zbm-dd-aop-row td { border-bottom: 1px dashed rgba(99,102,241,0.15); }
+.zbm-dd-td-type.aop { color: #6366F1; font-weight: 600; font-size: 0.6875rem; }
+.zbm-dd-td-val.aop { color: #4338CA; font-size: 0.75rem; }
+.zbm-dd-td-total.aop { font-weight: 700; color: #4338CA; }
+
+/* --- Sales Head --- */
+.sh-row-aop { background: rgba(99,102,241,0.05); }
+.sh-row-aop td { border-bottom: 1px dashed rgba(99,102,241,0.15); }
+.type-tag.aop {
+  background: linear-gradient(135deg, #6366F1, #4F46E5);
+  color: #fff; font-size: 0.625rem; font-weight: 700;
+  padding: 0.125rem 0.375rem; border-radius: 4px;
+}
+.td-val.aop { color: #4338CA; font-size: 0.75rem; }
+.td-total.aop { font-weight: 700; color: #4338CA; }
+
+/* --- Responsive --- */
+@media (max-width: 1200px) {
+  .product-row.aop-row .month-cell,
+  .tbm-product-row.aop-row .tbm-month-cell,
+  .ind-product-row.aop-row .ind-month-cell { font-size: 0.6875rem; }
+}

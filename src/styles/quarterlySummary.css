@@ -1,20 +1,8 @@
-/**
- * Quarterly Summary Dashboard Styles
- * Month-wise breakdown under each quarter
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0
- */
-
-/* ==================== CONTAINER ==================== */
-
 .qs-container {
   padding: 1.5rem;
   font-family: 'DM Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   max-width: 100%;
 }
-
-/* ==================== LOADING ==================== */
 
 .qs-loading {
   display: flex;
@@ -38,8 +26,6 @@
 @keyframes qs-spin {
   to { transform: rotate(360deg); }
 }
-
-/* ==================== HEADER ==================== */
 
 .qs-header {
   display: flex;
@@ -85,7 +71,6 @@
   flex-wrap: wrap;
 }
 
-/* View Toggle */
 .qs-view-toggle {
   display: flex;
   background: #F3F4F6;
@@ -118,7 +103,6 @@
 
 .qs-toggle-btn:hover:not(.active) { background: #E5E7EB; color: #374151; }
 
-/* Quarter Filter */
 .qs-quarter-filter {
   display: flex;
   gap: 0.25rem;
@@ -148,8 +132,6 @@
 }
 
 .qs-qfilter-btn:hover:not(.active) { background: #E5E7EB; }
-
-/* ==================== GRAND TOTAL CARDS ==================== */
 
 .qs-grand-totals {
   display: grid;
@@ -214,7 +196,6 @@
   margin-bottom: 0.25rem;
 }
 
-/* Mini month breakdown in grand cards */
 .qs-grand-months-mini {
   display: flex;
   gap: 0.375rem;
@@ -260,7 +241,6 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Growth Badge */
 .qs-growth-badge {
   display: inline-flex;
   align-items: center;
@@ -278,8 +258,6 @@
 .qs-growth-badge.growth-negative { background: #FEE2E2; color: #DC2626; }
 .qs-growth-badge.light { background: rgba(255, 255, 255, 0.25); color: white; }
 .qs-growth-badge.light.growth-negative { background: rgba(239, 68, 68, 0.3); color: #FCA5A5; }
-
-/* ==================== CATEGORY SECTION ==================== */
 
 .qs-category-section {
   margin-bottom: 1rem;
@@ -345,8 +323,6 @@
   padding: 0;
 }
 
-/* ==================== TABLE ==================== */
-
 .qs-table-wrapper {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
@@ -358,7 +334,6 @@
   font-size: 0.8125rem;
 }
 
-/* ----- Quarter Group Header (Row 1) ----- */
 .qs-table-quarter-row th {
   padding: 0;
   border-bottom: none;
@@ -463,7 +438,6 @@
   border-bottom: 2px solid #E5E7EB !important;
 }
 
-/* ----- Month Headers (Row 2) ----- */
 .qs-table-month-row th {
   padding: 0.5rem 0.25rem;
   text-align: center;
@@ -497,9 +471,6 @@
   border-left: 1px solid rgba(0,0,0,0.06);
 }
 
-/* ==================== DATA CELLS ==================== */
-
-/* Product Row */
 .qs-product-row {
   transition: background 0.15s ease;
 }
@@ -514,7 +485,6 @@
   vertical-align: middle;
 }
 
-/* Sticky product name column */
 .qs-td-product {
   position: sticky;
   left: 0;
@@ -553,7 +523,6 @@
   font-family: 'JetBrains Mono', monospace;
 }
 
-/* Unit Cost */
 .qs-td-unit-cost {
   text-align: center;
   border-right: 1px solid #E5E7EB;
@@ -570,14 +539,12 @@
   white-space: nowrap;
 }
 
-/* ----- Month cells ----- */
 .qs-td-month {
   text-align: center;
   border-right: 1px solid #F3F4F6;
   padding: 0.5rem 0.25rem !important;
 }
 
-/* Left border on first month of each quarter */
 .qs-td-month:first-of-type {
   border-left: 2px solid var(--q-color, #E5E7EB);
 }
@@ -604,7 +571,6 @@
   line-height: 1.3;
 }
 
-/* ----- Quarter subtotal cells ----- */
 .qs-td-q-subtotal {
   text-align: center;
   background: var(--q-bg, #F9FAFB);
@@ -635,7 +601,6 @@
   line-height: 1.3;
 }
 
-/* ----- FY Total cells ----- */
 .qs-td-fy-total {
   text-align: center;
   background: #F8FAFC;
@@ -665,7 +630,6 @@
   line-height: 1.3;
 }
 
-/* ----- Growth cells ----- */
 .qs-td-growth { text-align: center; }
 
 .qs-growth-pill {
@@ -684,8 +648,6 @@
 .qs-growth-pill.growth-positive { background: #ECFDF5; color: #10B981; }
 .qs-growth-pill.growth-neutral { background: #F3F4F6; color: #6B7280; }
 .qs-growth-pill.growth-negative { background: #FEE2E2; color: #DC2626; }
-
-/* ==================== TOTAL ROW ==================== */
 
 .qs-total-row {
   background: #F8FAFC !important;
@@ -727,8 +689,6 @@
 .qs-td-total-fy {
   background: #F0F4F8 !important;
 }
-
-/* ==================== GRAND TOTAL FOOTER ==================== */
 
 .qs-grand-footer {
   margin-top: 1.5rem;
@@ -801,7 +761,6 @@
   margin-bottom: 0.5rem;
 }
 
-/* Month breakdown in footer */
 .qs-gf-months-row {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -870,8 +829,6 @@
   margin-top: 0.125rem;
 }
 
-/* ==================== RESPONSIVE ==================== */
-
 @media (max-width: 1280px) {
   .qs-grand-totals {
     grid-template-columns: repeat(3, 1fr);
@@ -899,14 +856,10 @@
   .qs-grand-footer-fy { grid-column: span 2; }
 }
 
-/* ==================== SCROLLBAR ==================== */
-
 .qs-table-wrapper::-webkit-scrollbar { height: 6px; }
 .qs-table-wrapper::-webkit-scrollbar-track { background: #F3F4F6; border-radius: 3px; }
 .qs-table-wrapper::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 3px; }
 .qs-table-wrapper::-webkit-scrollbar-thumb:hover { background: #9CA3AF; }
-
-/* ==================== PRINT ==================== */
 
 @media print {
   .qs-header-controls { display: none; }

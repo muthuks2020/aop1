@@ -1,29 +1,3 @@
-/**
- * normalizers.js — Shared Field Normalizers
- *
- * Single source of truth for backend → frontend field name mapping.
- * All service files import from here instead of duplicating inline normalizers.
- *
- * Backend v5 returns:
- *   productName, productCode, productFamily, unitCost, monthly_targets,
- *   category_id, color_class, is_revenue_only, display_order,
- *   employee_name, employee_code, territory_name, area_name, zone_name
- *
- * Frontend v4 components expect:
- *   name, code, subcategory, listPrice, monthlyTargets,
- *   categoryId, color, isRevenueOnly, displayOrder,
- *   salesRepName/tbmName/abmName/zbmName, territory, area, zone
- *
- * All normalizers use fallback chains (p.name || p.productName || '')
- * so they're safe to call on already-normalized data.
- *
- * @version 5.1.0
- */
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 1. PRODUCT / COMMITMENT  (target entry grids, product cards)
-// ═══════════════════════════════════════════════════════════════════════════
-
 export const normalizeProduct = (p) => {
   if (!p) return p;
   return {
@@ -56,10 +30,6 @@ export const normalizeProduct = (p) => {
   };
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 2. CATEGORY
-// ═══════════════════════════════════════════════════════════════════════════
-
 export const normalizeCategory = (c) => {
   if (!c) return c;
   return {
@@ -72,10 +42,6 @@ export const normalizeCategory = (c) => {
     displayOrder:  c.displayOrder  ?? c.display_order  ?? 99,
   };
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 3. SUBMISSION  (approval views)
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const normalizeSubmission = (s) => {
   if (!s) return s;
@@ -91,10 +57,6 @@ export const normalizeSubmission = (s) => {
   };
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// 4. GEOGRAPHY TARGET
-// ═══════════════════════════════════════════════════════════════════════════
-
 export const normalizeGeoTarget = (t) => {
   if (!t) return t;
   return {
@@ -103,10 +65,6 @@ export const normalizeGeoTarget = (t) => {
     zone: t.zone || t.zoneName || t.zone_name || '',
   };
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 5. ADMIN PRODUCT
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const normalizeAdminProduct = (p) => {
   if (!p) return p;
@@ -119,10 +77,6 @@ export const normalizeAdminProduct = (p) => {
     categoryId:  p.categoryId  || p.category_id    || p.productCategory || '',
   };
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 6. USER / HIERARCHY
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const normalizeUser = (u) => {
   if (!u) return u;
@@ -138,10 +92,6 @@ export const normalizeUser = (u) => {
     isActive:     u.isActive     ?? u.is_active     ?? true,
   };
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// 7. ARRAY HELPER
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const normalizeArray = (arr, normalizer) => {
   if (!Array.isArray(arr)) return [];

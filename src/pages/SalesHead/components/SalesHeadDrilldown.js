@@ -1,21 +1,3 @@
-/**
- * SalesHeadDrilldown Component
- * Full hierarchy drill-down: ZBM → ABM → TBM → Sales Rep → Product Targets
- * 
- * READ-ONLY — Sales Head can view but NOT edit targets at any level below.
- * Sales Head sets targets only for ZBMs (via Team Yearly Targets tab).
- * 
- * FOUR-LEVEL HIERARCHY:
- * Level 1: ZBM cards (expandable)
- *   Level 2: ABM cards under each ZBM (expandable)
- *     Level 3: TBM cards under each ABM (expandable)
- *       Level 4: Sales Rep cards under each TBM (with product target grid)
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * PART 3 — Item 8: Added LY Ahv, CY Ahv to drilldown cards
- * @version 2.0.0 — Part 3 Item 8
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SalesHeadApiService } from '../../../services/salesHeadApi';
 import { Utils } from '../../../utils/helpers';
@@ -35,7 +17,7 @@ function SalesHeadDrilldown({ showToast }) {
 
   useEffect(() => {
     loadHierarchy();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
   const loadHierarchy = async () => {
@@ -50,7 +32,6 @@ function SalesHeadDrilldown({ showToast }) {
     setIsLoading(false);
   };
 
-  // Toggle functions
   const toggleZBM = useCallback((id) => {
     setExpandedZBMs(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
   }, []);
@@ -89,7 +70,6 @@ function SalesHeadDrilldown({ showToast }) {
     setExpandedReps(new Set());
   };
 
-  // Search filter
   const filteredHierarchy = useMemo(() => {
     if (!searchTerm) return hierarchy;
     const term = searchTerm.toLowerCase();
@@ -108,10 +88,9 @@ function SalesHeadDrilldown({ showToast }) {
     });
   }, [hierarchy, searchTerm]);
 
-  // Totals helpers
   const getZBMTotals = (zbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
-    let totalLyAchRev = 0, totalCyAchRev = 0; // PART 3 — Item 8
+    let totalLyAchRev = 0, totalCyAchRev = 0;
     zbm.abms.forEach(abm => {
       abm.tbms.forEach(tbm => {
         tbm.salesReps.forEach(rep => {
@@ -170,7 +149,6 @@ function SalesHeadDrilldown({ showToast }) {
     return { totalCyRev, totalLyRev, growth: Utils.calcGrowth(totalLyRev, totalCyRev) };
   };
 
-  // Organization summary
   const orgSummary = useMemo(() => {
     let totalZBMs = hierarchy.length;
     let totalABMs = hierarchy.reduce((s, z) => s + z.abms.length, 0);
@@ -185,7 +163,7 @@ function SalesHeadDrilldown({ showToast }) {
 
   return (
     <div className="sh-dd-container">
-      {/* Header */}
+      {}
       <div className="sh-dd-header">
         <div className="sh-dd-header-left">
           <div className="sh-dd-icon"><i className="fas fa-sitemap"></i></div>
@@ -202,20 +180,20 @@ function SalesHeadDrilldown({ showToast }) {
         </div>
       </div>
 
-      {/* Info Banner */}
+      {}
       <div className="sh-dd-info">
         <i className="fas fa-eye"></i>
         <span>Read-only view of the full organization: <strong>ZBM → ABM → TBM → Sales Rep</strong>. To set ZBM targets, use the <strong>Team Yearly Targets</strong> tab.</span>
       </div>
 
-      {/* Search */}
+      {}
       <div className="sh-dd-search">
         <i className="fas fa-search"></i>
         <input type="text" placeholder="Search ZBMs, ABMs, TBMs, Sales Reps, or products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         {searchTerm && <button onClick={() => setSearchTerm('')}><i className="fas fa-times"></i></button>}
       </div>
 
-      {/* ZBM Cards */}
+      {}
       <div className="sh-dd-list">
         {filteredHierarchy.map(zbm => {
           const isZBMExpanded = expandedZBMs.has(zbm.id);
@@ -223,7 +201,7 @@ function SalesHeadDrilldown({ showToast }) {
 
           return (
             <div key={zbm.id} className={`sh-dd-zbm-card ${isZBMExpanded ? 'expanded' : ''}`}>
-              {/* ZBM Header */}
+              {}
               <div className="sh-dd-zbm-header" onClick={() => toggleZBM(zbm.id)}>
                 <div className="sh-dd-zbm-left">
                   <i className={`fas fa-chevron-${isZBMExpanded ? 'down' : 'right'} sh-dd-chevron`}></i>
@@ -249,7 +227,7 @@ function SalesHeadDrilldown({ showToast }) {
                 </div>
               </div>
 
-              {/* ABMs under ZBM */}
+              {}
               {isZBMExpanded && (
                 <div className="sh-dd-zbm-body">
                   {zbm.abms.map(abm => {
@@ -281,7 +259,7 @@ function SalesHeadDrilldown({ showToast }) {
                           </div>
                         </div>
 
-                        {/* TBMs under ABM */}
+                        {}
                         {isABMExpanded && (
                           <div className="sh-dd-abm-body">
                             {abm.tbms.map(tbm => {
@@ -313,7 +291,7 @@ function SalesHeadDrilldown({ showToast }) {
                                     </div>
                                   </div>
 
-                                  {/* Sales Reps under TBM */}
+                                  {}
                                   {isTBMExpanded && (
                                     <div className="sh-dd-tbm-body">
                                       {tbm.salesReps.map(rep => {
@@ -344,7 +322,7 @@ function SalesHeadDrilldown({ showToast }) {
                                               </div>
                                             </div>
 
-                                            {/* Product Target Grid */}
+                                            {}
                                             {isRepExpanded && rep.products && rep.products.length > 0 && (
                                               <div className="sh-dd-products-wrapper">
                                                 <table className="sh-dd-product-table">

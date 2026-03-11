@@ -1,19 +1,3 @@
-/**
- * Admin Dashboard Component
- * Independent admin panel for system configuration
- *
- * THREE tabs:
- * 1. Product Management — Add/edit products, set list price, toggle active/inactive
- * 2. Team Hierarchy — Assign heads and reportees across all levels
- * 3. Vacant Positions — Manage unfilled positions, fill when recruits join
- *
- * CSS Prefix: 'adm-' for Admin
- * Color Accent: #6366F1 (Indigo) — distinct from all other roles
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import Header from '../../components/common/Header';
@@ -86,7 +70,6 @@ function AdminDashboard() {
     } catch (e) { showToast('Error', 'Failed to refresh hierarchy.', 'error'); }
   };
 
-  // Stats
   const activeProducts = products.filter(p => p.isActive).length;
   const inactiveProducts = products.filter(p => !p.isActive).length;
   const vacantCount = vacantPositions.length;
@@ -110,7 +93,7 @@ function AdminDashboard() {
         </button>
       </div>
 
-      {/* Summary Stats Bar */}
+      {}
       <div className="adm-stats-bar">
         <div className="adm-stat-pill">
           <i className="fas fa-check-circle" style={{ color: '#10B981' }}></i>
@@ -126,7 +109,7 @@ function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main Content */}
+      {}
       <div className="adm-main">
         {isLoading ? (
           <div className="adm-loading">
@@ -164,7 +147,7 @@ function AdminDashboard() {
         )}
       </div>
 
-      {/* Toast & Modal */}
+      {}
       <div className="toast-container">
         {toasts.map(t => <Toast key={t.id} {...t} onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))} />)}
       </div>

@@ -1,22 +1,3 @@
-/**
- * Sales Head Dashboard Component
- * Executive-level Dashboard — Top of the hierarchy
- * 
- * FOUR tabs:
- * 1. Executive Overview — KPIs, Pie Charts, Monthly Trends, Zone Performance
- * 2. ZBM Approvals — Review/correct/approve ZBM zone-level submissions
- * 3. Team Yearly Targets — Set yearly targets for ZBMs
- * 4. Organization Drill-Down — ZBM → ABM → TBM → Sales Rep hierarchy (read-only)
- * 
- * Color Accent: Appasamy Brand Navy (#0C2340) + Teal (#0097A7)
- * CSS Prefix: 'sh-' for Sales Head
- * 
- * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { SalesHeadApiService } from '../../services/salesHeadApi';
@@ -62,7 +43,7 @@ function SalesHeadDashboard() {
     return () => { window.removeEventListener('online', onOn); window.removeEventListener('offline', onOff); };
   }, [showToast]);
 
-  useEffect(() => { loadData(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setIsLoading(true);
@@ -80,7 +61,6 @@ function SalesHeadDashboard() {
     setIsLoading(false);
   };
 
-  // ==================== COMPUTED ====================
   const uniqueZBMs = useMemo(() => {
     const map = {};
     zbmSubmissions.forEach(s => {
@@ -110,7 +90,6 @@ function SalesHeadDashboard() {
 
   const pendingSubmissions = useMemo(() => filteredSubmissions.filter(s => s.status === 'submitted'), [filteredSubmissions]);
 
-  // ==================== APPROVAL ====================
   const handleApprove = async (submissionId) => {
     const submission = zbmSubmissions.find(s => s.id === submissionId);
     const corrections = {};
@@ -180,7 +159,6 @@ function SalesHeadDashboard() {
     setEditedCells(prev => new Set(prev).add(`${submissionId}__${month}__${field}`));
   };
 
-  // ==================== RENDER ====================
   const renderApprovalTable = (submission) => {
     const isSubmitted = submission.status === 'submitted';
     const cat = categories.find(c => c.id === submission.categoryId);
@@ -227,7 +205,7 @@ function SalesHeadDashboard() {
               </tr>
             </thead>
             <tbody>
-              {/* LY Revenue Row */}
+              {}
               <tr className="sh-row-ly">
                 <td className="type-tag ly">LY Rev</td>
                 {MONTHS.map(m => (
@@ -243,7 +221,7 @@ function SalesHeadDashboard() {
                   })()}
                 </td>
               </tr>
-              {/* CY Revenue Row */}
+              {}
               <tr className={`sh-row-cy ${isSubmitted ? 'editable-row' : ''}`}>
                 <td className="type-tag cy">CY Rev</td>
                 {MONTHS.map(m => {
@@ -263,7 +241,7 @@ function SalesHeadDashboard() {
                 })}
                 <td className="td-total cy">₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyRev || 0), 0))}</td>
               </tr>
-              {/* AOP Revenue Row — Read Only */}
+              {}
               <tr className="sh-row-aop">
                 <td className="type-tag aop">AOP Rev</td>
                 {MONTHS.map(m => (
@@ -271,7 +249,7 @@ function SalesHeadDashboard() {
                 ))}
                 <td className="td-total aop">₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.aopRev || 0), 0))}</td>
               </tr>
-              {/* Qty rows (if not revenue-only) */}
+              {}
               {!isRevenueOnly && (
                 <>
                   <tr className="sh-row-ly">
@@ -308,7 +286,7 @@ function SalesHeadDashboard() {
                     })}
                     <td className="td-total cy">{Utils.formatNumber(MONTHS.reduce((s, m) => s + (submission.monthlyTargets?.[m]?.cyQty || 0), 0))}</td>
                   </tr>
-                  {/* AOP Qty Row — Read Only */}
+                  {}
                   <tr className="sh-row-aop">
                     <td className="type-tag aop">AOP Qty</td>
                     {MONTHS.map(m => (
@@ -333,7 +311,7 @@ function SalesHeadDashboard() {
         <div className="sh-offline-banner"><i className="fas fa-wifi"></i> Working offline — changes will sync when connected</div>
       )}
 
-      {/* ==================== TABS ==================== */}
+      {}
       <div className="sh-tabs">
         <button className={`sh-tab ${activeTab === 'overview' ? 'active' : ''}`} onClick={() => setActiveTab('overview')}>
           <i className="fas fa-chart-pie"></i> Executive Overview
@@ -353,13 +331,13 @@ function SalesHeadDashboard() {
         </button>
       </div>
 
-      {/* ==================== MAIN CONTENT ==================== */}
+      {}
       <div className="sh-main">
         {isLoading ? (
           <div className="sh-loading"><div className="loading-spinner"></div><p>Loading executive dashboard...</p></div>
         ) : (
           <>
-            {/* TAB: Executive Overview */}
+            {}
             {activeTab === 'overview' && (
               <SalesHeadOverview
                 zbmSubmissions={zbmSubmissions}
@@ -387,7 +365,7 @@ function SalesHeadDashboard() {
                   </div>
                 </div>
 
-                {/* Filters */}
+                {}
                 <div className="sh-filter-bar">
                   <div className="sh-filter-group">
                     <select className="sh-select" value={zbmFilter} onChange={(e) => setZbmFilter(e.target.value)}>
@@ -410,7 +388,7 @@ function SalesHeadDashboard() {
                   )}
                 </div>
 
-                {/* Approval Cards */}
+                {}
                 <div className="sh-approval-list">
                   {filteredSubmissions.length === 0 ? (
                     <div className="sh-empty-state"><i className="fas fa-inbox"></i><h3>No submissions found</h3><p>Adjust filters to see ZBM submissions.</p></div>
@@ -421,7 +399,7 @@ function SalesHeadDashboard() {
               </div>
             )}
 
-            {/* TAB: Team Yearly Targets */}
+            {}
             {activeTab === 'targets' && (
               <TeamYearlyTargets
                 role="SH"
@@ -442,7 +420,7 @@ function SalesHeadDashboard() {
               <SalesHeadDrilldown showToast={showToast} />
             )}
 
-            {/* TAB: Analytics & Compare */}
+            {}
             {activeTab === 'analytics' && (
               <SalesHeadAnalytics showToast={showToast} />
             )}
@@ -450,7 +428,7 @@ function SalesHeadDashboard() {
         )}
       </div>
 
-      {/* Toast & Modal */}
+      {}
       <div className="toast-container">{toasts.map(t => <Toast key={t.id} {...t} onClose={() => setToasts(prev => prev.filter(x => x.id !== t.id))} />)}</div>
       <Modal {...modalConfig} onClose={() => setModalConfig(prev => ({ ...prev, isOpen: false }))} />
     </div>

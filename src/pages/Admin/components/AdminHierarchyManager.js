@@ -1,18 +1,3 @@
-/**
- * AdminHierarchyManager Component
- * Visual org tree to manage: Sales Head → ZBMs → ABMs → TBMs → Sales Reps
- *
- * Features:
- * - Expandable/collapsible tree view
- * - Add reportee at any level (including vacant placeholder)
- * - Edit member details
- * - Remove member
- * - Visual distinction for vacant positions
- * - Supports "blank" entries for unknown future recruits
- *
- * @version 1.0.0
- */
-
 import React, { useState, useCallback } from 'react';
 import { AdminApiService } from '../../../services/adminApi';
 
@@ -49,7 +34,7 @@ const ROLE_COLORS = {
 
 function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
   const [expandedNodes, setExpandedNodes] = useState(new Set(['head_001']));
-  const [addingTo, setAddingTo] = useState(null); // { parentId, parentRole }
+  const [addingTo, setAddingTo] = useState(null);
   const [editingNode, setEditingNode] = useState(null);
   const [formData, setFormData] = useState({ name: '', territory: '', isVacant: false });
   const [isSaving, setIsSaving] = useState(false);
@@ -67,13 +52,11 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     return name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 2).toUpperCase();
   };
 
-  // Count total reportees recursively
   const countAll = (node) => {
     if (!node.reportees || node.reportees.length === 0) return 0;
     return node.reportees.length + node.reportees.reduce((sum, r) => sum + countAll(r), 0);
   };
 
-  // Count vacants
   const countVacants = (node) => {
     let count = 0;
     if (node.isVacant) count = 1;
@@ -83,35 +66,30 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     return count;
   };
 
-  // Open Add form
   const handleOpenAdd = (parentId, parentRole) => {
     setEditingNode(null);
     setAddingTo({ parentId, parentRole });
     setFormData({ name: '', territory: '', isVacant: false });
   };
 
-  // Open Add Vacant form
   const handleAddVacant = (parentId, parentRole) => {
     setEditingNode(null);
     setAddingTo({ parentId, parentRole });
     setFormData({ name: '', territory: '', isVacant: true });
   };
 
-  // Open Edit form
   const handleOpenEdit = (node) => {
     setAddingTo(null);
     setEditingNode(node);
     setFormData({ name: node.name, territory: node.territory, isVacant: node.isVacant });
   };
 
-  // Close form
   const handleCloseForm = () => {
     setAddingTo(null);
     setEditingNode(null);
     setFormData({ name: '', territory: '', isVacant: false });
   };
 
-  // Save add
   const handleSaveAdd = async () => {
     if (!formData.isVacant && !formData.name.trim()) {
       showToast('Validation', 'Name is required for non-vacant positions.', 'warning');
@@ -133,7 +111,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
       });
       showToast('Added', `${name} added successfully.`, 'success');
       handleCloseForm();
-      // Expand parent to show new child
+
       setExpandedNodes(prev => new Set([...prev, addingTo.parentId]));
       await onRefresh();
     } catch (error) {
@@ -142,7 +120,6 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     setIsSaving(false);
   };
 
-  // Save edit
   const handleSaveEdit = async () => {
     if (!formData.isVacant && !formData.name.trim()) {
       showToast('Validation', 'Name is required.', 'warning');
@@ -164,7 +141,6 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     setIsSaving(false);
   };
 
-  // Remove member
   const handleRemove = (node) => {
     const childCount = countAll(node);
     showModal(
@@ -183,11 +159,10 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     );
   };
 
-  // Render a node in the tree
   const renderNode = (node, depth = 0) => {
     const isExpanded = expandedNodes.has(node.id);
     const hasChildren = node.reportees && node.reportees.length > 0;
-    const canAddChild = CHILD_ROLE[node.role]; // Can add if there's a child role
+    const canAddChild = CHILD_ROLE[node.role];
     const totalReportees = countAll(node);
     const vacants = countVacants(node);
     const color = ROLE_COLORS[node.role] || '#6B7280';
@@ -195,7 +170,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
     return (
       <div key={node.id} className="adm-tree-node" style={{ '--node-depth': depth }}>
         <div className={`adm-tree-card ${node.isVacant ? 'adm-tree-vacant' : ''}`}>
-          {/* Expand/Collapse */}
+          {}
           <div className="adm-tree-expand" onClick={() => hasChildren && toggleNode(node.id)}>
             {hasChildren ? (
               <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} adm-tree-chevron`}></i>
@@ -204,12 +179,12 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
             )}
           </div>
 
-          {/* Avatar */}
+          {}
           <div className={`adm-tree-avatar ${node.isVacant ? 'vacant' : ''}`} style={{ background: node.isVacant ? '#F3F4F6' : color + '15', color: node.isVacant ? '#9CA3AF' : color, border: `2px solid ${node.isVacant ? '#D1D5DB' : color}40` }}>
             {node.isVacant ? <i className="fas fa-user-plus"></i> : getInitials(node.name)}
           </div>
 
-          {/* Info */}
+          {}
           <div className="adm-tree-info" onClick={() => hasChildren && toggleNode(node.id)}>
             <div className="adm-tree-name">
               {node.name}
@@ -226,7 +201,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
             </div>
           </div>
 
-          {/* Actions */}
+          {}
           <div className="adm-tree-actions">
             {canAddChild && (
               <>
@@ -249,7 +224,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
           </div>
         </div>
 
-        {/* Children */}
+        {}
         {hasChildren && isExpanded && (
           <div className="adm-tree-children">
             {node.reportees.map(child => renderNode(child, depth + 1))}
@@ -261,7 +236,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
 
   return (
     <div className="adm-hierarchy-section">
-      {/* Actions bar */}
+      {}
       <div className="adm-hierarchy-toolbar">
         <div className="adm-hierarchy-info">
           <i className="fas fa-info-circle"></i>
@@ -282,12 +257,12 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
         </div>
       </div>
 
-      {/* Tree */}
+      {}
       <div className="adm-tree">
         {hierarchy.map(node => renderNode(node))}
       </div>
 
-      {/* Add/Edit Panel */}
+      {}
       {(addingTo || editingNode) && (
         <div className="adm-panel-overlay" onClick={handleCloseForm}>
           <div className="adm-panel adm-panel-sm" onClick={(e) => e.stopPropagation()}>
@@ -304,7 +279,7 @@ function AdminHierarchyManager({ hierarchy, onRefresh, showToast, showModal }) {
             <div className="adm-panel-body">
               <div className="adm-form-group">
                 <label>
-                  {formData.isVacant ? 'Position Label' : 'Full Name'} 
+                  {formData.isVacant ? 'Position Label' : 'Full Name'}
                   {!formData.isVacant && <span className="adm-required">*</span>}
                 </label>
                 <input

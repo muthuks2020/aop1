@@ -1,14 +1,3 @@
-/**
- * SalesHeadOverview Component
- * Executive-level dashboard with graphical analytics
- * 
- * Colors: Appasamy Brand Navy (#0C2340) + Teal (#0097A7)
- * Pure CSS + SVG charts (no external chart library)
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0 — Brand-aligned colors
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 import { SalesHeadApiService } from '../../../services/salesHeadApi';
@@ -17,7 +6,6 @@ import '../../../styles/saleshead/shOverview.css';
 const MONTHS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
 const MONTH_LABELS = ['APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC','JAN','FEB','MAR'];
 
-// Appasamy-aligned professional palette
 const PIE_COLORS = ['#0C2340', '#0097A7', '#4F46E5', '#D97706', '#2E7D32', '#7C3AED'];
 const REGION_COLORS = { 'zbm1': '#0C2340', 'zbm2': '#0097A7', 'zbm3': '#4F46E5', 'zbm4': '#D97706' };
 
@@ -194,7 +182,7 @@ function SalesHeadOverview({ zbmSubmissions = [], categories = [], approvalStats
 
   return (
     <div className={`sh-overview ${animateIn ? 'sh-ov-animate-in' : ''}`}>
-      {/* KPIs */}
+      {}
       <div className="sh-ov-kpi-grid">
         <div className="sh-ov-kpi-card sh-ov-kpi-revenue">
           <div className="sh-ov-kpi-icon"><i className="fas fa-rupee-sign"></i></div>
@@ -235,7 +223,7 @@ function SalesHeadOverview({ zbmSubmissions = [], categories = [], approvalStats
         </div>
       </div>
 
-      {/* PIE CHARTS */}
+      {}
       <div className="sh-ov-charts-row">
         <div className="sh-ov-chart-card">
           <div className="sh-ov-chart-header"><h3><i className="fas fa-chart-pie"></i> Revenue by Region</h3></div>
@@ -247,7 +235,7 @@ function SalesHeadOverview({ zbmSubmissions = [], categories = [], approvalStats
         </div>
       </div>
 
-      {/* MONTHLY TREND */}
+      {}
       <div className="sh-ov-section">
         <h3 className="sh-ov-section-title"><i className="fas fa-chart-bar"></i> Monthly Revenue Trend — LY vs CY</h3>
         <div className="sh-ov-trend-card">
@@ -255,7 +243,7 @@ function SalesHeadOverview({ zbmSubmissions = [], categories = [], approvalStats
         </div>
       </div>
 
-      {/* ZBM PERFORMANCE */}
+      {}
       <div className="sh-ov-section">
         <h3 className="sh-ov-section-title"><i className="fas fa-user-tie"></i> Zone Performance</h3>
         <div className="sh-ov-zbm-grid">
@@ -283,7 +271,7 @@ function SalesHeadOverview({ zbmSubmissions = [], categories = [], approvalStats
         </div>
       </div>
 
-      {/* CATEGORY PERFORMANCE */}
+      {}
       <div className="sh-ov-section">
         <h3 className="sh-ov-section-title"><i className="fas fa-th-large"></i> Category Performance</h3>
         <div className="sh-ov-category-grid">

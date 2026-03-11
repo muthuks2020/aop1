@@ -1,34 +1,15 @@
-/**
- * Utility functions for Product Commitment PWA — v5
- *
- * CHANGES:
- * - Added formatGeography() for zone > area > territory display
- * - Added formatTimestamp() for ISO date display
- * - All existing helpers preserved
- *
- * @version 5.0.0
- */
-
 export const Utils = {
-  /**
-   * Format number with comma separators (Indian)
-   */
+
   formatNumber: (num) => {
     if (num === null || num === undefined) return '-';
     return num.toLocaleString('en-IN');
   },
 
-  /**
-   * Format currency in Indian Rupees
-   */
   formatCurrency: (amount) => {
     if (amount === null || amount === undefined) return '-';
     return '₹' + amount.toLocaleString('en-IN');
   },
 
-  /**
-   * Format large currency values (Lakhs/Crores)
-   */
   formatShortCurrency: (amount) => {
     if (amount === null || amount === undefined) return '-';
     if (amount >= 10000000) return '₹' + (amount / 10000000).toFixed(2) + ' Cr';
@@ -37,9 +18,6 @@ export const Utils = {
     return '₹' + amount.toLocaleString('en-IN');
   },
 
-  /**
-   * Format large numbers compactly (K, L, Cr) — without currency symbol
-   */
   formatCompact: (num) => {
     if (num === null || num === undefined || num === 0) return '0';
     if (num >= 10000000) return (num / 10000000).toFixed(1) + 'Cr';
@@ -48,34 +26,22 @@ export const Utils = {
     return num.toLocaleString('en-IN');
   },
 
-  /**
-   * Calculate growth percentage
-   */
   calcGrowth: (ly, cy) => {
     if (!ly || ly === 0) return cy > 0 ? 100 : 0;
     return ((cy - ly) / ly) * 100;
   },
 
-  /**
-   * Format growth percentage
-   */
   formatGrowth: (growth) => {
     if (growth === null || growth === undefined || isNaN(growth)) return '-';
     const sign = growth >= 0 ? '+' : '';
     return sign + growth.toFixed(1) + '%';
   },
 
-  /**
-   * Get initials from name (supports user.name OR user.fullName)
-   */
   getInitials: (name) => {
     if (!name) return '?';
     return name.split(' ').map((word) => word[0]).join('').toUpperCase().slice(0, 2);
   },
 
-  /**
-   * Calculate yearly totals from monthly targets
-   */
   calculateYearlyTotals: (monthlyTargets) => {
     if (!monthlyTargets) return { lyQty: 0, cyQty: 0, lyRev: 0, cyRev: 0, aopQty: 0, aopRev: 0 };
     return Object.values(monthlyTargets).reduce(
@@ -92,9 +58,6 @@ export const Utils = {
     );
   },
 
-  /**
-   * Format date to locale string
-   */
   formatDate: (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleDateString('en-IN', {
@@ -104,9 +67,6 @@ export const Utils = {
     });
   },
 
-  /**
-   * Format date with time
-   */
   formatDateTime: (dateString) => {
     if (!dateString) return '-';
     return new Date(dateString).toLocaleString('en-IN', {
@@ -118,9 +78,6 @@ export const Utils = {
     });
   },
 
-  /**
-   * Debounce function
-   */
   debounce: (func, wait) => {
     let timeout;
     return function executedFunction(...args) {
@@ -133,9 +90,6 @@ export const Utils = {
     };
   },
 
-  /**
-   * Get status color class
-   */
   getStatusColor: (status) => {
     const colors = {
       draft: 'status-draft',
@@ -146,9 +100,6 @@ export const Utils = {
     return colors[status] || 'status-draft';
   },
 
-  /**
-   * Get quarter from month
-   */
   getQuarter: (month) => {
     const quarters = {
       apr: 'Q1', may: 'Q1', jun: 'Q1',
@@ -159,23 +110,11 @@ export const Utils = {
     return quarters[month.toLowerCase()] || 'Q1';
   },
 
-  // ═══════════════════════════════════════════════════════════════
-  // NEW v5 helpers — Geography, Timestamps
-  // ═══════════════════════════════════════════════════════════════
-
-  /**
-   * Format geography breadcrumb from user or commitment object
-   * @param {object} obj — any object with zoneName, areaName, territoryName
-   * @returns {string} "North Zone > Delhi NCR > Central Delhi" or "Not Assigned"
-   */
   formatGeography: (obj) => {
     const parts = [obj?.zoneName, obj?.areaName, obj?.territoryName].filter(Boolean);
     return parts.join(' > ') || 'Not Assigned';
   },
 
-  /**
-   * Format ISO timestamp for display (submittedAt, approvedAt)
-   */
   formatTimestamp: (isoString) => {
     if (!isoString) return '-';
     return new Date(isoString).toLocaleString('en-IN', {
@@ -187,10 +126,6 @@ export const Utils = {
     });
   },
 
-  /**
-   * Calculate revenue from qty and unitCost
-   * Replaces old ProductPricingService.getUnitCost() lookup
-   */
   calculateRevenue: (qty, unitCost) => {
     return (qty || 0) * (unitCost || 0);
   },

@@ -1,11 +1,3 @@
-/**
- * Admin API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest } from './apiClient';
 import {
   normalizeAdminProduct, normalizeCategory, normalizeUser,
@@ -13,8 +5,6 @@ import {
 } from './normalizers';
 
 export const AdminApiService = {
-
-  // ==================== PRODUCT MANAGEMENT ====================
 
   async getProducts() {
     const raw = await apiRequest('/admin/products');
@@ -51,8 +41,6 @@ export const AdminApiService = {
       method: 'DELETE',
     });
   },
-
-  // ==================== HIERARCHY MANAGEMENT ====================
 
   async getHierarchy() {
     return apiRequest('/admin/hierarchy');
@@ -94,8 +82,6 @@ export const AdminApiService = {
     });
   },
 
-  // ==================== VACANT POSITIONS ====================
-
   async getVacantPositions() {
     return apiRequest('/admin/vacant-positions');
   },
@@ -107,8 +93,6 @@ export const AdminApiService = {
     });
   },
 
-  // ==================== FISCAL YEAR ====================
-
   async getFiscalYears() {
     return apiRequest('/admin/fiscal-years');
   },
@@ -118,8 +102,6 @@ export const AdminApiService = {
       method: 'POST',
     });
   },
-
-  // ==================== DASHBOARD ====================
 
   async getDashboardStats() {
     return apiRequest('/admin/dashboard-stats');

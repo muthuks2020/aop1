@@ -1,12 +1,3 @@
-/**
- * TBMTeamTargets Component
- * TBM enters targets for all sales team members under them.
- * These targets get reflected as the assigned targets for each sales rep.
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { TBMApiService } from '../../../services/tbmApi';
 import { Utils } from '../../../utils/helpers';
@@ -55,7 +46,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
     try {
       const summary = await TBMApiService.getTeamTargetsSummary();
       setAllRepsSummary(summary);
-    } catch (error) { /* silently handle */ }
+    } catch (error) {  }
   };
 
   const handleUpdateTarget = useCallback((productId, month, value) => {
@@ -138,7 +129,6 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
     return rep?.name || '';
   }, [selectedRepId, salesReps]);
 
-  // Group products by category
   const productsByCategory = useMemo(() => {
     const grouped = {};
     categories.forEach(cat => {
@@ -147,11 +137,9 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
     return grouped;
   }, [repTargets, categories]);
 
-  // ==================== RENDER ====================
-
   return (
     <div style={{ padding: '0' }}>
-      {/* Header */}
+      {}
       <div style={{
         background: 'linear-gradient(135deg, #1B365D 0%, #2A5298 100%)',
         color: '#fff', padding: '1.25rem 1.5rem', borderRadius: '12px',
@@ -179,7 +167,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
         </div>
       </div>
 
-      {/* Summary View */}
+      {}
       {summaryView ? (
         <div style={{ padding: '0 1rem 1rem' }}>
           <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #E5E7EB', overflow: 'auto' }}>
@@ -227,7 +215,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
         </div>
       ) : (
         <>
-          {/* Rep Selector & Actions */}
+          {}
           <div style={{
             padding: '1rem 1.5rem', background: '#F9FAFB', borderBottom: '1px solid #E5E7EB',
             display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap'
@@ -275,7 +263,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
             )}
           </div>
 
-          {/* Target Entry Grid */}
+          {}
           {!selectedRepId ? (
             <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#9CA3AF' }}>
               <i className="fas fa-user-plus" style={{ fontSize: '3rem', opacity: 0.3, marginBottom: '1rem', display: 'block' }}></i>
@@ -289,7 +277,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
             </div>
           ) : (
             <div style={{ padding: '0 1rem 1rem', overflow: 'auto' }}>
-              <div style={{ 
+              <div style={{
                 background: '#fff', borderRadius: '12px', border: '1px solid #E5E7EB',
                 overflow: 'auto', minWidth: '100%'
               }}>
@@ -327,7 +315,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
 
                       return (
                         <React.Fragment key={category.id}>
-                          {/* Category Header */}
+                          {}
                           <tr onClick={() => toggleCategory(category.id)} style={{ cursor: 'pointer' }}>
                             <td colSpan={14} style={{
                               padding: '0.75rem 1.25rem', background: '#F8FAFC',
@@ -343,7 +331,7 @@ function TBMTeamTargets({ categories = [], salesReps = [], showToast }) {
                             </td>
                           </tr>
 
-                          {/* Product Rows */}
+                          {}
                           {isExpanded && catProducts.map(product => (
                             <tr key={product.id} style={{ borderBottom: '1px solid #F3F4F6' }}>
                               <td style={{

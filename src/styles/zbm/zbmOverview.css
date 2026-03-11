@@ -1,15 +1,7 @@
-/**
- * ZBM Overview Stats Styles — 'zbm-ov-' prefix
- * Purple/Violet accent (#7C3AED)
- * Mirrors ABM Overview layout for zone-level KPIs
- * @version 1.0.0
- */
-
 .zbm-overview { padding: 0.5rem 0; }
 .zbm-ov-animate-in { animation: zbmOvFadeIn 0.4s ease; }
 @keyframes zbmOvFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* KPI Grid */
 .zbm-ov-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .zbm-ov-kpi-card { background: #fff; border-radius: 12px; padding: 1.25rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); display: flex; align-items: flex-start; gap: 1rem; transition: all 0.2s; }
 .zbm-ov-kpi-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); transform: translateY(-2px); }
@@ -33,12 +25,10 @@
 @media (max-width: 1024px) { .zbm-ov-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .zbm-ov-kpi-grid { grid-template-columns: 1fr; } }
 
-/* Sections */
 .zbm-ov-section { margin-bottom: 1.5rem; }
 .zbm-ov-section-title { font-size: 1rem; font-weight: 700; color: #1F2937; display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem; }
 .zbm-ov-section-title i { color: #7C3AED; }
 
-/* ABM Grid */
 .zbm-ov-abm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1rem; }
 .zbm-ov-abm-card { background: #fff; border-radius: 12px; padding: 1rem 1.25rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); transition: all 0.2s; }
 .zbm-ov-abm-card:hover { box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); }
@@ -58,7 +48,6 @@
 .zbm-ov-abm-metric-value.positive { color: #059669; }
 .zbm-ov-abm-metric-value.negative { color: #DC2626; }
 
-/* Category Grid */
 .zbm-ov-category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
 .zbm-ov-cat-card { background: #fff; border-radius: 12px; padding: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06); }
 .zbm-ov-cat-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }

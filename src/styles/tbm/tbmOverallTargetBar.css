@@ -1,11 +1,3 @@
-/* ============================================================
-   TBM Overall Target Bar Styles
-   Product Commitment PWA - Appasamy Associates
-   Version: 1.0.0
-   ============================================================ */
-
-/* ==================== OVERALL TARGET BAR ==================== */
-
 .tbm-overall-target-bar {
   background: var(--white, #FFFFFF);
   border-radius: var(--radius-xl, 16px);
@@ -45,7 +37,6 @@
   font-weight: 700;
 }
 
-/* Cards Row */
 .tbm-otb-cards {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -117,7 +108,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Progress Bar */
 .tbm-otb-progress {
   display: flex;
   align-items: center;
@@ -166,7 +156,6 @@
   white-space: nowrap;
 }
 
-/* Quarter Chips */
 .tbm-otb-quarters {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -203,7 +192,6 @@
   font-family: var(--font-mono, monospace);
 }
 
-/* Month-wise Row */
 .tbm-otb-month-row {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -256,22 +244,20 @@
   font-family: var(--font-mono, monospace);
 }
 
-/* ==================== RESPONSIVE ==================== */
-
 @media (max-width: 768px) {
   .tbm-otb-cards {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
-  
+
   .tbm-otb-quarters {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .tbm-otb-month-row {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .tbm-otb-card-value {
     font-size: 1.125rem;
   }
@@ -281,7 +267,7 @@
   .tbm-otb-quarters {
     grid-template-columns: 1fr;
   }
-  
+
   .tbm-otb-month-row {
     grid-template-columns: 1fr;
   }

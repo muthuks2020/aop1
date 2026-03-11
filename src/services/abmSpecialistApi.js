@@ -1,18 +1,7 @@
-/**
- * ABM Specialist API Service — v5 Live Backend
- *
- * Specialist submissions flow: Specialist → ABM → ZBM → Sales Head
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest } from './apiClient';
 import { normalizeSubmission, normalizeArray } from './normalizers';
 
 const ABMSpecialistApiService = {
-
-  // ==================== SPECIALIST SUBMISSIONS ====================
 
   async getSpecialistSubmissions(filters = {}) {
     const params = new URLSearchParams();
@@ -23,8 +12,6 @@ const ABMSpecialistApiService = {
     const raw = await apiRequest(`/abm/specialist-submissions${query ? '?' + query : ''}`);
     return normalizeArray(raw, normalizeSubmission);
   },
-
-  // ==================== APPROVALS ====================
 
   async approveSpecialistTarget(submissionId, corrections = null) {
     return apiRequest(`/abm/approve-specialist/${submissionId}`, {
@@ -47,8 +34,6 @@ const ABMSpecialistApiService = {
     });
   },
 
-  // ==================== SPECIALIST YEARLY TARGETS ====================
-
   async getSpecialists() {
     return apiRequest('/abm/specialists');
   },
@@ -63,8 +48,6 @@ const ABMSpecialistApiService = {
       body: JSON.stringify({ targets }),
     });
   },
-
-  // ==================== DASHBOARD ====================
 
   async getSpecialistDashboardStats() {
     return apiRequest('/abm/specialist-dashboard-stats');

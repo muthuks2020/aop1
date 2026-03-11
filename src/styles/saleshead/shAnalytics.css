@@ -1,14 +1,6 @@
-/**
- * Sales Head Analytics Styles — 'sh-an-' prefix
- * Appasamy Brand: Navy (#0C2340) + Teal (#0097A7)
- * Executive target distribution & comparison analytics
- * @version 1.0.0
- */
-
 .sh-an-container { }
 .sh-an-loading { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 300px; color: #9CA3AF; gap: 1rem; }
 
-/* ==================== CONTROL BAR ==================== */
 .sh-an-control-bar {
   display: flex; align-items: flex-end; justify-content: space-between; gap: 1.25rem;
   padding: 1.25rem 1.5rem; background: #fff; border-radius: 14px;
@@ -19,7 +11,6 @@
 .sh-an-control-group { display: flex; flex-direction: column; gap: 0.375rem; }
 .sh-an-label { font-size: 0.625rem; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.08em; }
 
-/* Toggle Buttons */
 .sh-an-toggle-group { display: flex; border: 1px solid #E2E8F0; border-radius: 8px; overflow: hidden; }
 .sh-an-toggle-group.mini .sh-an-toggle-btn { padding: 0.4rem 0.75rem; font-size: 0.75rem; }
 .sh-an-toggle-btn {
@@ -47,7 +38,6 @@
 .sh-an-compare-toggle:hover { border-color: #0097A7; color: #0097A7; }
 .sh-an-compare-toggle.active { background: #0097A7; border-color: #0097A7; color: #fff; box-shadow: 0 4px 12px rgba(0,151,167,0.25); }
 
-/* ==================== CATEGORY CHIPS ==================== */
 .sh-an-cat-chips {
   display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem;
   background: #fff; border-radius: 10px; border: 1px solid #E2E8F0;
@@ -71,7 +61,6 @@
 }
 .sh-an-chip-reset:hover { border-color: #0097A7; color: #0097A7; }
 
-/* ==================== SUMMARY STRIP ==================== */
 .sh-an-summary-strip {
   display: flex; align-items: center; gap: 1.5rem; padding: 0.875rem 1.5rem;
   background: linear-gradient(135deg, #0C2340, #1B2A4A);
@@ -85,7 +74,6 @@
 .sh-an-summary-value.negative { color: #FCA5A5; }
 .sh-an-summary-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.12); flex-shrink: 0; }
 
-/* ==================== CARDS ==================== */
 .sh-an-card {
   background: #fff; border-radius: 14px; border: 1px solid #E2E8F0;
   box-shadow: 0 2px 8px rgba(12,35,64,0.06); margin-bottom: 1.25rem; overflow: hidden;
@@ -102,7 +90,6 @@
 .sh-an-card-subtitle { font-size: 0.75rem; color: #94A3B8; font-weight: 500; }
 .sh-an-empty { display: flex; align-items: center; justify-content: center; min-height: 100px; color: #94A3B8; font-size: 0.875rem; padding: 2rem; }
 
-/* ==================== HORIZONTAL BAR CHART (3-row) ==================== */
 .sh-an-hbar-list { padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; }
 .sh-an-hbar-row { display: flex; gap: 0.75rem; }
 .sh-an-hbar-label { width: 130px; flex-shrink: 0; display: flex; flex-direction: column; justify-content: center; }
@@ -118,7 +105,7 @@
 .sh-an-hbar-fill { height: 100%; border-radius: 4px; display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; transition: width 0.5s ease; min-width: 3px; }
 .sh-an-hbar-fill.ly { background: #CBD5E1; }
 .sh-an-hbar-fill.ach { background: linear-gradient(90deg, #6EE7B7, #34D399); }
-.sh-an-hbar-fill.cy { /* color set inline */ }
+.sh-an-hbar-fill.cy {  }
 .sh-an-hbar-inner { font-size: 0.5625rem; font-weight: 700; color: #fff; white-space: nowrap; }
 .sh-an-hbar-end { width: 60px; flex-shrink: 0; text-align: right; font-size: 0.6875rem; font-weight: 600; color: #475569; }
 .sh-an-hbar-end.growth { font-weight: 700; }
@@ -131,7 +118,6 @@
   .sh-an-hbar-val { width: auto; }
 }
 
-/* ==================== STACKED BAR CHART ==================== */
 .sh-an-stacked-chart { padding: 1.25rem 1.5rem; }
 .sh-an-stacked-bars { display: flex; align-items: flex-end; gap: 0.75rem; height: 220px; padding-bottom: 0.5rem; }
 .sh-an-stacked-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; height: 100%; }
@@ -144,7 +130,6 @@
 .sh-an-stacked-legend-item { display: flex; align-items: center; gap: 0.375rem; font-size: 0.75rem; color: #475569; font-weight: 500; }
 .sh-an-legend-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-/* ==================== TARGET SHARE GRID ==================== */
 .sh-an-share-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 0.75rem; padding: 1.25rem 1.5rem; }
 .sh-an-share-tile {
   position: relative; padding: 1.25rem 1rem; border-radius: 10px;
@@ -163,7 +148,6 @@
 .sh-an-share-growth.pos { color: #059669; }
 .sh-an-share-growth.neg { color: #DC2626; }
 
-/* ==================== COMPARE MODE ==================== */
 .sh-an-compare-selectors { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; justify-content: center; }
 .sh-an-compare-select-card { flex: 1; min-width: 200px; display: flex; align-items: center; gap: 0.75rem; padding: 0.875rem 1rem; background: #fff; border-radius: 10px; border: 2px solid #E2E8F0; }
 .sh-an-compare-select-card.a { border-color: #0C2340; }
@@ -174,7 +158,6 @@
 .sh-an-compare-badge.b { background: #0097A7; }
 .sh-an-compare-vs { font-size: 1rem; font-weight: 800; color: #CBD5E1; flex-shrink: 0; }
 
-/* Compare KPIs */
 .sh-an-compare-kpis { display: flex; align-items: stretch; gap: 1rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
 .sh-an-compare-kpi-card { flex: 1; min-width: 180px; padding: 1.25rem 1.5rem; background: #fff; border-radius: 12px; border: 2px solid #E2E8F0; text-align: center; }
 .sh-an-compare-kpi-card.a { border-color: #0C2340; border-top: 4px solid #0C2340; }
@@ -199,17 +182,14 @@
 .sh-an-compare-diff-val { font-size: 1.125rem; font-weight: 800; color: #1E293B; margin: 4px 0; }
 .sh-an-compare-diff-pct { font-size: 0.875rem; font-weight: 700; color: #64748B; }
 
-/* Compare Charts Grid */
 .sh-an-compare-charts { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem; }
 @media (max-width: 900px) { .sh-an-compare-charts { grid-template-columns: 1fr; } }
 
-/* Radar */
 .sh-an-radar-wrap { display: flex; align-items: center; justify-content: center; padding: 1rem; }
 .sh-an-radar-svg { }
 .sh-an-radar-label { font-size: 9px; font-weight: 600; fill: #64748B; }
 .sh-an-radar-legend-text { font-size: 9px; font-weight: 600; fill: #475569; }
 
-/* Monthly Comparison */
 .sh-an-monthly-compare { padding: 1rem 1.5rem; }
 .sh-an-monthly-bars { display: flex; align-items: flex-end; gap: 0.375rem; height: 180px; padding-bottom: 1.25rem; border-bottom: 1px solid #F1F5F9; }
 .sh-an-monthly-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 0.25rem; height: 100%; }
@@ -225,7 +205,6 @@
 .sh-an-ml-dot.a { background: #0C2340; }
 .sh-an-ml-dot.b { background: #0097A7; }
 
-/* Compare Table */
 .sh-an-compare-table-wrap { overflow-x: auto; }
 .sh-an-compare-table { width: 100%; border-collapse: collapse; font-size: 0.8125rem; }
 .sh-an-compare-table th {
@@ -251,7 +230,6 @@
 .sh-an-ct-cat { display: flex; align-items: center; gap: 0.5rem; }
 .sh-an-ct-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
 
-/* Placeholder */
 .sh-an-compare-placeholder {
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   min-height: 280px; color: #94A3B8; gap: 0.75rem; padding: 3rem; text-align: center;
@@ -261,7 +239,6 @@
 .sh-an-compare-placeholder h3 { color: #64748B; font-size: 1.125rem; margin: 0; }
 .sh-an-compare-placeholder p { color: #94A3B8; font-size: 0.875rem; margin: 0; max-width: 340px; }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 768px) {
   .sh-an-control-bar { flex-direction: column; align-items: stretch; }
   .sh-an-control-left, .sh-an-control-right { flex-direction: column; align-items: stretch; }
@@ -273,22 +250,11 @@
   .sh-an-compare-kpi-diff { flex: 0 0 auto; }
 }
 
-/* ==========================================================================
-   PART 1 ADDITIONS — Items 1, 4, 6, 7
-   Appended to existing shAnalytics.css without modifying original rules.
-   ========================================================================== */
-
-/* ==================== SUMMARY BAR (alias for summary-strip) ====================
-   Item 4 & 6: sh-an-summary-bar is used in the updated SalesHeadAnalytics.js.
-   Mirrors existing .sh-an-summary-strip styles so both class names work. */
-
 .sh-an-summary-bar {
   display: flex; align-items: center; gap: 1.5rem; padding: 0.875rem 1.5rem;
   background: linear-gradient(135deg, #0C2340, #1B2A4A);
   border-radius: 10px; margin-bottom: 1.25rem; flex-wrap: wrap;
 }
-
-/* ==================== ITEM 4: Summary % sub-label ==================== */
 
 .sh-an-summary-pct {
   font-size: 0.6875rem;
@@ -297,9 +263,6 @@
   display: block;
   opacity: 0.85;
 }
-
-/* ==================== CATEGORY FILTER CHIPS (in control bar) ====================
-   .sh-an-cat-filters / .sh-an-cat-chip used in updated JS (replaces old chip panel) */
 
 .sh-an-cat-filters {
   display: flex; align-items: center; gap: 0.375rem; flex-wrap: wrap;
@@ -314,11 +277,6 @@
 .sh-an-cat-chip:hover { border-color: #94A3B8; background: #F1F5F9; }
 .sh-an-cat-chip.active { color: #fff; border-color: transparent; }
 
-/* ==================== ITEM 7: CategoryBarChart ====================
-   Replaces the old .sh-an-compare-table in compare mode.
-   Shows grouped horizontal bars (LY Tgt / LY Ahv / CY Tgt) per category
-   for Entity A and Entity B side-by-side. */
-
 .sh-an-cat-barchart {
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -326,7 +284,6 @@
   gap: 1.5rem;
 }
 
-/* One row per category */
 .sh-an-cbc-row {
   display: grid;
   grid-template-columns: 110px 1fr 1fr;
@@ -340,7 +297,6 @@
   padding-bottom: 0;
 }
 
-/* Category label column */
 .sh-an-cbc-cat {
   display: flex;
   align-items: flex-start;
@@ -361,7 +317,6 @@
   line-height: 1.3;
 }
 
-/* Entity column (A or B) */
 .sh-an-cbc-entity {
   display: flex;
   flex-direction: column;
@@ -379,7 +334,6 @@
 .sh-an-cbc-entity-label.a { background: rgba(12,35,64,0.1); color: #0C2340; }
 .sh-an-cbc-entity-label.b { background: rgba(0,151,167,0.1); color: #0097A7; }
 
-/* Bar rows within each entity column */
 .sh-an-cbc-bars {
   display: flex;
   flex-direction: column;
@@ -391,7 +345,6 @@
   gap: 0.5rem;
 }
 
-/* Item 1: label tags ("LY Tgt", "LY Ahv", "CY Tgt") */
 .sh-an-cbc-tag {
   width: 38px;
   flex-shrink: 0;
@@ -410,7 +363,6 @@
   overflow: hidden;
 }
 
-/* Value label at end of bar */
 .sh-an-cbc-val {
   width: 90px;
   flex-shrink: 0;
@@ -420,14 +372,12 @@
   text-align: right;
 }
 
-/* Item 4: % of LY Tgt achieved (small inline label) */
 .sh-an-cbc-pct {
   font-size: 0.625rem;
   color: #94A3B8;
   font-weight: 500;
 }
 
-/* Item 4: growth % next to CY target value */
 .sh-an-cbc-growth {
   font-size: 0.625rem;
   font-weight: 700;
@@ -435,7 +385,6 @@
 .sh-an-cbc-growth.pos { color: #059669; }
 .sh-an-cbc-growth.neg { color: #DC2626; }
 
-/* ==================== ITEM 7: Responsive ==================== */
 @media (max-width: 900px) {
   .sh-an-cbc-row {
     grid-template-columns: 1fr 1fr;

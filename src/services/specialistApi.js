@@ -1,11 +1,3 @@
-/**
- * Specialist API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest, API_URL } from './apiClient';
 import { normalizeProduct, normalizeCategory, normalizeArray } from './normalizers';
 
@@ -27,21 +19,15 @@ export const SPECIALIST_API_CONFIG = {
 
 export const SpecialistApiService = {
 
-  // ==================== CATEGORIES ====================
-
   async getCategories() {
     const raw = await apiRequest('/categories');
     return normalizeArray(raw, normalizeCategory);
   },
 
-  // ==================== PRODUCTS ====================
-
   async getProducts() {
     const raw = await apiRequest('/specialist/products');
     return normalizeArray(raw, normalizeProduct);
   },
-
-  // ==================== TARGET ENTRY ====================
 
   async saveProduct(productId, monthlyTargets) {
     return apiRequest(`/specialist/products/${productId}/save`, {
@@ -57,8 +43,6 @@ export const SpecialistApiService = {
     });
   },
 
-  // ==================== SUBMIT ====================
-
   async submitProduct(productId) {
     return apiRequest(`/specialist/products/${productId}/submit`, {
       method: 'POST',
@@ -71,8 +55,6 @@ export const SpecialistApiService = {
       body: JSON.stringify({ productIds }),
     });
   },
-
-  // ==================== DASHBOARD ====================
 
   async getDashboardSummary() {
     return apiRequest('/specialist/dashboard-summary');

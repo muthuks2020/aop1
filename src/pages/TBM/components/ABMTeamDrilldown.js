@@ -1,13 +1,3 @@
-/**
- * ABMTeamDrilldown Component
- * Provides ABM with drill-down visibility: TBM → Sales Reps → Product Targets
- * 
- * READ-ONLY — ABM can view but NOT edit Sales Rep targets set by TBMs.
- * ABM sets targets only for TBMs (via Team Yearly Targets tab).
- * 
- * @version 1.0.0
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { ABMApiService } from '../../../services/abmApi';
 import { Utils } from '../../../utils/helpers';
@@ -62,7 +52,6 @@ function ABMTeamDrilldown({ showToast }) {
 
   const collapseAll = () => { setExpandedTBMs(new Set()); setExpandedReps(new Set()); };
 
-  // Filter by search
   const filteredHierarchy = useMemo(() => {
     if (!searchTerm.trim()) return hierarchy;
     const term = searchTerm.toLowerCase();
@@ -80,7 +69,6 @@ function ABMTeamDrilldown({ showToast }) {
     );
   }, [hierarchy, searchTerm]);
 
-  // Compute TBM-level totals
   const getTBMTotals = (tbm) => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0, totalLyQty = 0;
     tbm.salesReps.forEach(rep => {
@@ -115,7 +103,7 @@ function ABMTeamDrilldown({ showToast }) {
 
   return (
     <div className="abm-dd-container">
-      {/* Header */}
+      {}
       <div className="abm-dd-header">
         <div className="abm-dd-header-left">
           <div className="abm-dd-icon"><i className="fas fa-sitemap"></i></div>
@@ -132,20 +120,20 @@ function ABMTeamDrilldown({ showToast }) {
         </div>
       </div>
 
-      {/* Info Banner */}
+      {}
       <div className="abm-dd-info">
         <i className="fas fa-eye"></i>
         <span>Read-only view of targets set by TBMs for their Sales Reps. To set TBM targets, use the <strong>Team Yearly Targets</strong> tab.</span>
       </div>
 
-      {/* Search */}
+      {}
       <div className="abm-dd-search">
         <i className="fas fa-search"></i>
         <input type="text" placeholder="Search TBMs, Sales Reps, or products..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         {searchTerm && <button onClick={() => setSearchTerm('')}><i className="fas fa-times"></i></button>}
       </div>
 
-      {/* TBM Cards */}
+      {}
       <div className="abm-dd-list">
         {filteredHierarchy.map(tbm => {
           const isExpanded = expandedTBMs.has(tbm.id);
@@ -153,7 +141,7 @@ function ABMTeamDrilldown({ showToast }) {
 
           return (
             <div key={tbm.id} className={`abm-dd-tbm-card ${isExpanded ? 'expanded' : ''}`}>
-              {/* TBM Header */}
+              {}
               <div className="abm-dd-tbm-header" onClick={() => toggleTBM(tbm.id)}>
                 <div className="abm-dd-tbm-left">
                   <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} abm-dd-chevron`}></i>
@@ -185,7 +173,7 @@ function ABMTeamDrilldown({ showToast }) {
                 </div>
               </div>
 
-              {/* Sales Reps Under TBM */}
+              {}
               {isExpanded && (
                 <div className="abm-dd-reps-container">
                   {tbm.salesReps.map(rep => {
@@ -194,7 +182,7 @@ function ABMTeamDrilldown({ showToast }) {
 
                     return (
                       <div key={rep.id} className={`abm-dd-rep-card ${repExpanded ? 'expanded' : ''}`}>
-                        {/* Rep Header */}
+                        {}
                         <div className="abm-dd-rep-header" onClick={() => toggleRep(rep.id)}>
                           <div className="abm-dd-rep-left">
                             <i className={`fas fa-chevron-${repExpanded ? 'down' : 'right'} abm-dd-chevron-sm`}></i>
@@ -213,7 +201,7 @@ function ABMTeamDrilldown({ showToast }) {
                           </div>
                         </div>
 
-                        {/* Product Targets Table (Read-Only) */}
+                        {}
                         {repExpanded && rep.products && (
                           <div className="abm-dd-products-table">
                             <table>

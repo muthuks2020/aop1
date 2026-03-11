@@ -1,13 +1,3 @@
-/**
- * ProtectedRoute — v5
- *
- * CHANGES:
- * - Attempts token refresh if user becomes null after loading
- * - Redirects to /login with return path on auth failure
- *
- * @version 5.0.0
- */
-
 import React, { useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -17,7 +7,6 @@ function ProtectedRoute({ children, allowedRoles }) {
   const location = useLocation();
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // If user is null after loading, attempt one token refresh
   useEffect(() => {
     if (!loading && !user && !isRefreshing) {
       const token = localStorage.getItem('appasamy_token');

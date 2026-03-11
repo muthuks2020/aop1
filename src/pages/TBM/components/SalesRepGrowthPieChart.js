@@ -1,26 +1,3 @@
-/**
- * SalesRepGrowthPieChart Component
- * 
- * Reusable pie chart that shows the cumulative CY Revenue contribution 
- * and growth % of each Sales Rep under a TBM.
- * Reuses the Sales Rep OverviewStats pie chart design pattern.
- * 
- * Used in: TBM Dashboard → Approvals Tab (replaces abm-approval-stats)
- * 
- * PROPS:
- *   salesRepSubmissions - Array of sales rep product submissions with monthlyTargets
- *   approvalStats       - { total, pending, approved, rejected }
- * 
- * API INTEGRATION NOTES:
- * - Currently computes data from salesRepSubmissions prop
- * - Replace with API call when backend is ready:
- *   GET /api/v1/tbm/sales-rep-growth-summary
- *   Response: { salesReps: [{ id, name, territory, cyRev, lyRev, cyQty, lyQty, growthPct, contributionPct }] }
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useMemo } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer
@@ -28,17 +5,14 @@ import {
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/salesRepGrowthPie.css';
 
-// Color palette for sales rep slices
 const REP_COLORS = [
   '#1B4D7A', '#00A19B', '#F59E0B', '#EF4444', '#8B5CF6',
   '#EC4899', '#14B8A6', '#F97316', '#3B82F6', '#10B981',
   '#6366F1', '#E11D48', '#0EA5E9', '#84CC16', '#D946EF'
 ];
 
-// Months for iterating
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 
-// ==================== CUSTOM TOOLTIP ====================
 const RepPieTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
@@ -61,9 +35,8 @@ const RepPieTooltip = ({ active, payload }) => {
   return null;
 };
 
-// ==================== CUSTOM LABEL ON PIE SLICES ====================
 const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-  if (percent < 0.05) return null; // Don't label slices < 5%
+  if (percent < 0.05) return null;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -75,12 +48,9 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   );
 };
 
-// ==================== MAIN COMPONENT ====================
 function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }) {
-  const [viewMode, setViewMode] = useState('revenue'); // 'revenue' | 'quantity'
+  const [viewMode, setViewMode] = useState('revenue');
 
-  // ==================== AGGREGATE DATA BY SALES REP ====================
-  // TODO: Replace with GET /api/v1/tbm/sales-rep-growth-summary
   const salesRepSummary = useMemo(() => {
     const repMap = {};
 
@@ -113,7 +83,6 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
       }
     });
 
-    // Compute growth & contribution
     const reps = Object.values(repMap);
     const totalCyRev = reps.reduce((sum, r) => sum + r.cyRev, 0);
     const totalCyQty = reps.reduce((sum, r) => sum + r.cyQty, 0);
@@ -127,7 +96,6 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
     })).sort((a, b) => b.cyRev - a.cyRev);
   }, [salesRepSubmissions]);
 
-  // Prepare pie chart data
   const chartData = useMemo(() => {
     const isRev = viewMode === 'revenue';
     return salesRepSummary.map((rep, idx) => ({
@@ -154,7 +122,6 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
     return chartData.reduce((sum, d) => sum + d.value, 0);
   }, [chartData]);
 
-  // Overall team growth
   const overallGrowth = useMemo(() => {
     const totalLy = salesRepSummary.reduce((s, r) => s + (viewMode === 'revenue' ? r.lyRev : r.lyQty), 0);
     const totalCy = salesRepSummary.reduce((s, r) => s + (viewMode === 'revenue' ? r.cyRev : r.cyQty), 0);
@@ -166,7 +133,7 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
   return (
     <div className="srg-container">
       <div className="srg-pie-card">
-        {/* ---- Card Header ---- */}
+        {}
         <div className="srg-pie-card-header">
           <div className="srg-pie-card-title-row">
             <div className="srg-pie-card-icon">
@@ -201,10 +168,10 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
           </div>
         </div>
 
-        {/* ---- Side-by-side body: Pie Left | Breakdown Right ---- */}
+        {}
         {hasData ? (
           <div className="srg-pie-body">
-            {/* LEFT — Pie Chart */}
+            {}
             <div className="srg-pie-body-left">
               <div className="srg-pie-chart-wrap">
                 <ResponsiveContainer width="100%" height={300}>
@@ -231,7 +198,7 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
                     <Tooltip content={<RepPieTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
-                {/* Center label */}
+                {}
                 <div className="srg-pie-center-label">
                   <span className="srg-pie-center-count">{salesRepSummary.length}</span>
                   <span className="srg-pie-center-text">REPS</span>
@@ -239,9 +206,9 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
               </div>
             </div>
 
-            {/* RIGHT — Dropdown + Breakdown List */}
+            {}
             <div className="srg-pie-body-right">
-              {/* View mode selector */}
+              {}
               <div className="srg-pie-dropdown-row">
                 <select
                   className="srg-pie-dropdown"
@@ -253,7 +220,7 @@ function SalesRepGrowthPieChart({ salesRepSubmissions = [], approvalStats = {} }
                 </select>
               </div>
 
-              {/* Breakdown list */}
+              {}
               <div className="srg-pie-breakdown">
                 <div className="srg-pie-breakdown-header">
                   <span>SALES REP</span>

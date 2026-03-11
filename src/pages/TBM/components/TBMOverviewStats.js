@@ -1,24 +1,7 @@
-/**
- * TBM Overview Dashboard
- * Territory-level KPIs for TBM performance tracking
- * Mirrors Sales Rep OverviewStats design but with TBM-specific metrics
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0 - Removed Monthly Territory Trend chart
- * 
- * API INTEGRATION NOTES:
- * - All data currently computed from props (tbmTargets, categories, salesRepSubmissions)
- * - Replace with API calls when backend is ready:
- *   GET /api/v1/tbm/dashboard-summary
- *   GET /api/v1/tbm/category-performance
- *   GET /api/v1/tbm/top-products
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/tbmOverview.css';
 
-// Fiscal year months in order
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 
 function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmissions = [], approvalStats = {} }) {
@@ -28,9 +11,6 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
     const timer = setTimeout(() => setAnimateIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
-  // ==================== COMPUTED DATA ====================
-  // TODO: Replace with GET /api/v1/tbm/dashboard-summary
 
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
@@ -51,8 +31,6 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
     };
   }, [tbmTargets]);
 
-  // Category performance
-  // TODO: GET /api/v1/tbm/category-performance?fy=2026-27
   const categoryPerformance = useMemo(() => {
     return categories.map(cat => {
       const catProducts = tbmTargets.filter(p => p.categoryId === cat.id);
@@ -73,8 +51,6 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
     }).sort((a, b) => b.cyQty - a.cyQty);
   }, [categories, tbmTargets, overallTotals]);
 
-  // Top territory products
-  // TODO: GET /api/v1/tbm/top-products?fy=2026-27&limit=5
   const topProducts = useMemo(() => {
     return tbmTargets
       .map(p => {
@@ -100,7 +76,7 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
   return (
     <div className={`tbm-ov-dashboard ${animateIn ? 'tbm-ov-animate-in' : ''}`}>
 
-      {/* ==================== HERO KPI STRIP ==================== */}
+      {}
       <div className="tbm-ov-hero-strip">
         <div className="tbm-ov-hero-card tbm-ov-hero-target" style={{ '--delay': '0.05s' }}>
           <div className="tbm-ov-hero-icon-wrap">
@@ -167,7 +143,7 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
         </div>
       </div>
 
-      {/* ==================== TEAM STATS BAR ==================== */}
+      {}
       <div className="tbm-ov-team-bar" style={{ '--delay': '0.22s' }}>
         <div className="tbm-ov-team-title">
           <i className="fas fa-users"></i>
@@ -193,12 +169,12 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
         </div>
         <div className="tbm-ov-team-progress">
           <div className="tbm-ov-tp-bar">
-            <div 
-              className="tbm-ov-tp-fill approved" 
+            <div
+              className="tbm-ov-tp-fill approved"
               style={{ width: `${approvalStats.total ? (approvalStats.approved / approvalStats.total) * 100 : 0}%` }}
             ></div>
-            <div 
-              className="tbm-ov-tp-fill rejected" 
+            <div
+              className="tbm-ov-tp-fill rejected"
               style={{ width: `${approvalStats.total ? (approvalStats.rejected / approvalStats.total) * 100 : 0}%` }}
             ></div>
           </div>
@@ -208,12 +184,12 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
         </div>
       </div>
 
-      {/* ==================== MONTHLY TREND REMOVED ==================== */}
-      {/* Monthly Territory Trend bar chart + Quarterly Chips removed per requirement */}
+      {}
+      {}
 
-      {/* ==================== CATEGORY + TOP PRODUCTS ==================== */}
+      {}
       <div className="tbm-ov-twin-section">
-        {/* Category Breakdown */}
+        {}
         <div className="tbm-ov-panel tbm-ov-category-panel" style={{ '--delay': '0.35s' }}>
           <div className="tbm-ov-panel-header">
             <h3><i className="fas fa-layer-group"></i> Category Performance</h3>
@@ -257,7 +233,7 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
           </div>
         </div>
 
-        {/* Top Territory Products */}
+        {}
         <div className="tbm-ov-panel tbm-ov-top-panel" style={{ '--delay': '0.4s' }}>
           <div className="tbm-ov-panel-header">
             <h3><i className="fas fa-trophy"></i> Top Territory Targets</h3>
@@ -292,7 +268,7 @@ function TBMOverviewStats({ tbmTargets = [], categories = [], salesRepSubmission
         </div>
       </div>
 
-      {/* ==================== REVENUE SNAPSHOT FOOTER ==================== */}
+      {}
       <div className="tbm-ov-revenue-footer" style={{ '--delay': '0.45s' }}>
         <div className="tbm-ov-rev-block">
           <div className="tbm-ov-rev-icon"><i className="fas fa-wallet"></i></div>

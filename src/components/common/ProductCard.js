@@ -35,7 +35,7 @@ function ProductCard({ product, onOpen, onSubmit }) {
           {status.label}
         </span>
       </div>
-      
+
       <div className="card-body">
         <div className="qty-row">
           <div className="qty-item">
@@ -51,7 +51,7 @@ function ProductCard({ product, onOpen, onSubmit }) {
           </div>
         </div>
       </div>
-      
+
       <div className="card-footer">
         {product.status === 'draft' && (
           <button className="card-action" onClick={(e) => { e.stopPropagation(); onSubmit(product.id); }}>

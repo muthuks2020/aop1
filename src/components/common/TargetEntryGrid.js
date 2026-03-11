@@ -1,31 +1,3 @@
-/**
- * TargetEntryGrid Component
- * Enhanced Excel-like grid for Monthly Target Entry
- *
- * WORKFLOW (v4.2.0):
- * - Sales Rep enters targets → submits to TBM
- * - TBM reviews → either approves as-is OR edits/corrects and approves
- * - NO reject cycle. Once approved, it's LOCKED for Sales Rep.
- *
- * STATES (Sales Rep perspective):
- *   Draft     → editable (teal borders)
- *   Submitted → locked, pending TBM review (amber)
- *   Approved  → locked, TBM has finalized (green)
- *
- * PART 2 CHANGES (v5.0.0):
- *   Item 2  — Abnormal entry warnings: cell-level ⚠ badge when CY is
- *             suspiciously high (>250% LY) or low (<25% LY). Comment
- *             box required at submit if any warnings are active.
- *   Item 3  — CY < LY warning banner: shown in target summary bar when
- *             total CY yearly falls below total LY yearly (warn-only,
- *             user can still submit after acknowledging).
- *   Item 13 — Monthly unit cap warning: flags cells that exceed the
- *             per-category monthly cap from targetThresholds.js.
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 5.1.0 — TOTAL ENTERED VALUE now shows TBM-assigned cy_target_value (tbmAssignedTargetValue prop)
- */
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../utils/helpers';
 import { TARGET_THRESHOLDS } from '../../config/targetThresholds';
@@ -40,19 +12,11 @@ const QUARTERS = [
   { id: 'Q4', label: 'Q4', fullLabel: 'Q4 (Jan-Mar)', months: ['jan', 'feb', 'mar'], color: 'q4' },
 ];
 
-// ─── PART 2 helpers ───────────────────────────────────────────────────────────
-
-/**
- * Validate a single (product, month, newQty) entry.
- * Returns an array of warning objects: { type, message }
- * type: 'high' | 'low' | 'cap'
- */
 function validateEntry(product, month, newQty) {
   const warnings = [];
   const lyQty = product.monthlyTargets?.[month]?.lyQty || 0;
   const catId  = (product.categoryId || '').toLowerCase();
 
-  // Item 2 — benchmark vs LY
   if (newQty > 0 && lyQty > 0) {
     const ratio = newQty / lyQty;
     if (ratio > TARGET_THRESHOLDS.ABNORMAL_HIGH_MULTIPLIER) {
@@ -68,7 +32,6 @@ function validateEntry(product, month, newQty) {
     }
   }
 
-  // Item 13 — category monthly cap
   const cap = TARGET_THRESHOLDS.CATEGORY_MONTHLY_CAPS[catId] ?? TARGET_THRESHOLDS.DEFAULT_MAX_MONTHLY_QTY;
   if (newQty > cap) {
     warnings.push({
@@ -79,8 +42,6 @@ function validateEntry(product, month, newQty) {
 
   return warnings;
 }
-
-// ─── Inline comment / warning modal ─────────────────────────────────────────
 
 function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
   const [comment, setComment] = useState('');
@@ -95,7 +56,7 @@ function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
         background: '#fff', borderRadius: '12px', width: '100%', maxWidth: '520px',
         boxShadow: '0 20px 60px rgba(0,0,0,0.25)', overflow: 'hidden',
       }}>
-        {/* Header */}
+        {}
         <div style={{
           background: '#FEF3C7', borderBottom: '1px solid #FDE68A',
           padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -111,7 +72,7 @@ function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
           </div>
         </div>
 
-        {/* Warnings list */}
+        {}
         <div style={{ maxHeight: '220px', overflowY: 'auto', padding: '0.75rem 1.25rem' }}>
           {warnings.map((w, i) => (
             <div key={i} style={{
@@ -126,7 +87,7 @@ function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
           ))}
         </div>
 
-        {/* Comment box */}
+        {}
         <div style={{ padding: '0.75rem 1.25rem', borderTop: '1px solid #F3F4F6' }}>
           <label style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '0.375rem' }}>
             Reason for abnormal entries <span style={{ color: '#DC2626' }}>*</span>
@@ -152,7 +113,7 @@ function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
           </p>
         </div>
 
-        {/* Actions */}
+        {}
         <div style={{
           padding: '0.75rem 1.25rem', background: '#F9FAFB',
           display: 'flex', justifyContent: 'flex-end', gap: '0.625rem',
@@ -188,8 +149,6 @@ function SubmitWarningModal({ warnings, onConfirm, onCancel }) {
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
-
 function TargetEntryGrid({
   categories = [],
   products = [],
@@ -199,7 +158,7 @@ function TargetEntryGrid({
   userRole = 'salesrep',
   fiscalYear = '2025-26',
   overallYearlyTargetValue = null,
-  tbmAssignedTargetValue = 0,   // TBM's cy_target_value → shown in TOTAL ENTERED VALUE card
+  tbmAssignedTargetValue = 0,
 }) {
   const [activeCell, setActiveCell]                 = useState(null);
   const [editValue, setEditValue]                   = useState('');
@@ -211,11 +170,8 @@ function TargetEntryGrid({
   const [showOnlyEntered, setShowOnlyEntered]       = useState(false);
   const [showOnlyLYData, setShowOnlyLYData]         = useState(false);
 
-  // ── PART 2: validation state ─────────────────────────────────────
-  // cellWarnings: { [productId]: { [month]: [{ type, message }] } }
   const [cellWarnings, setCellWarnings]             = useState({});
   const [showSubmitModal, setShowSubmitModal]        = useState(false);
-  // ─────────────────────────────────────────────────────────────────
 
   const inputRef      = useRef(null);
   const searchInputRef = useRef(null);
@@ -228,7 +184,6 @@ function TargetEntryGrid({
     }
   }, [activeCell]);
 
-  // ==================== HELPERS (declared first — used by useMemos below) ====================
   const hasAnyCYValue = useCallback((product) => {
     if (!product.monthlyTargets) return false;
     return MONTHS.some(month => {
@@ -250,7 +205,6 @@ function TargetEntryGrid({
     return status === 'draft';
   }, []);
 
-  // ── PART 2: derive all active warnings as a flat list ───────────
   const allWarnings = useMemo(() => {
     const list = [];
     products.forEach(product => {
@@ -264,9 +218,8 @@ function TargetEntryGrid({
       });
     });
     return list;
-  }, [cellWarnings, products]); // eslint-disable-line
+  }, [cellWarnings, products]);
 
-  // ── PART 2: Item 3 — CY vs LY yearly totals ─────────────────────
   const cyLyWarning = useMemo(() => {
     let totalCY = 0, totalLY = 0;
     products.forEach(p => {
@@ -299,7 +252,6 @@ function TargetEntryGrid({
     }
   }, []);
 
-  // ==================== FILTERED DATA ====================
   const filteredProducts = useMemo(() => {
     let result = products;
     if (searchTerm.trim()) {
@@ -339,7 +291,6 @@ function TargetEntryGrid({
     return Array.from(groups);
   }, [filteredProducts]);
 
-  // ==================== CALCULATIONS ====================
   const calculateCategoryTotal = useCallback((categoryId, month, year) => {
     return products.filter(p => p.categoryId === categoryId).reduce((sum, p) => {
       const monthData = p.monthlyTargets?.[month] || {};
@@ -362,7 +313,6 @@ function TargetEntryGrid({
     return Utils.calcGrowth(ly, cy);
   }, [calculateYearlyTotal]);
 
-  // ==================== OVERALL TARGET SUMMARY ====================
   const overallTargetSummary = useMemo(() => {
     let totalCYQty = 0, totalLYQty = 0, totalCYRev = 0, totalLYRev = 0;
     let enteredCount = 0, approvedCount = 0, submittedCount = 0, draftCount = 0;
@@ -380,7 +330,7 @@ function TargetEntryGrid({
           totalLYQty += md.lyQty || 0;
           totalCYRev += md.cyRev || 0;
           totalLYRev += md.lyRev || 0;
-          // Live value: for revenue-only products use cyRev, else qty × price
+
           if (p.isRevenueOnly) {
             liveEnteredValue += md.cyRev || 0;
           } else {
@@ -389,11 +339,10 @@ function TargetEntryGrid({
         });
       }
     });
-    // TOTAL ENTERED VALUE = TBM's assigned cy_target_value (e.g. ₹5 Cr).
-    // Falls back to totalCYRev (qty × unit_cost) once SR has entered monthly quantities.
+
     const totalEnteredValue  = tbmAssignedTargetValue > 0 ? tbmAssignedTargetValue : totalCYRev;
     const yearlyTargetValue  = overallYearlyTargetValue || 0;
-    // Completion % always based on SR's actual qty entries (totalCYRev) vs LY target
+
     const completionPercent  = yearlyTargetValue > 0
       ? Math.min(100, Math.round((totalCYRev / yearlyTargetValue) * 100)) : 0;
     return {
@@ -406,7 +355,6 @@ function TargetEntryGrid({
     };
   }, [products, overallYearlyTargetValue, tbmAssignedTargetValue, hasAnyCYValue]);
 
-  // ==================== EVENT HANDLERS ====================
   const toggleCategory    = (categoryId) => {
     setExpandedCategories(prev => {
       const next = new Set(prev);
@@ -433,12 +381,10 @@ function TargetEntryGrid({
     setEditValue(value);
   };
 
-  // ── PART 2: validate on blur ─────────────────────────────────────
   const handleCellBlur = () => {
     if (activeCell) {
       const numValue = parseInt(editValue) || 0;
 
-      // Run validation
       const product = products.find(p => p.id === activeCell.productId);
       if (product) {
         const warns = validateEntry(product, activeCell.month, numValue);
@@ -460,7 +406,6 @@ function TargetEntryGrid({
       setEditValue('');
     }
   };
-  // ─────────────────────────────────────────────────────────────────
 
   const handleCellKeyDown = (e) => {
     if (e.key === 'Enter') {
@@ -495,7 +440,6 @@ function TargetEntryGrid({
     setIsLoading(false);
   };
 
-  // ── PART 2: intercept submit if warnings exist ───────────────────
   const handleSubmitAll = async () => {
     if (allWarnings.length > 0) {
       setShowSubmitModal(true);
@@ -516,14 +460,12 @@ function TargetEntryGrid({
     } catch (error) { console.error('Submit failed:', error); }
     setIsLoading(false);
   };
-  // ─────────────────────────────────────────────────────────────────
 
   const handleSearchKeyDown = (e) => {
     if (e.key === 'Escape') { setSearchTerm(''); searchInputRef.current?.blur(); }
   };
   const clearSearch = () => { setSearchTerm(''); searchInputRef.current?.focus(); };
 
-  // ==================== RENDER HELPERS ====================
   const highlightMatch = (text, search) => {
     if (!search || !search.trim()) return text;
     const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -533,7 +475,6 @@ function TargetEntryGrid({
     );
   };
 
-  // ── PART 2: warning badge for a cell ───────────────────────────
   const getCellWarning = (productId, month) => {
     const pw = cellWarnings[productId];
     if (!pw) return null;
@@ -541,9 +482,7 @@ function TargetEntryGrid({
     if (!mw || mw.length === 0) return null;
     return mw;
   };
-  // ─────────────────────────────────────────────────────────────────
 
-  // ==================== REVENUE ONLY CATEGORY RENDERER ====================
   const renderRevenueOnlyCategory = (category) => {
     const isExpanded  = expandedCategories.has(category.id);
     const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
@@ -622,24 +561,21 @@ function TargetEntryGrid({
     );
   };
 
-  // ==================== PRODUCT ROWS RENDERER ====================
   const renderProductRows = (product) => {
     const canEdit         = isEditable(product);
     const productHasValues = hasAnyCYValue(product);
     const productHasLYData = hasAnyLYValue(product);
     const statusInfo      = getStatusInfo(product.status);
 
-    // ── PART 2: count warnings for this product ──────────────────
     const productWarnings = cellWarnings[product.id] || {};
     const productWarnCount = Object.values(productWarnings).reduce((s, arr) => s + arr.length, 0);
-    // ─────────────────────────────────────────────────────────────
 
     return (
       <div
         key={product.id}
         className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'} ${!productHasValues ? 'no-values-entered' : ''} ${!productHasLYData ? 'no-ly-data' : ''}`}
       >
-        {/* CY Row */}
+        {}
         <div className="product-row cy-row">
           <div className="product-name-cell">
             <span className="product-name" title={product.name}>
@@ -666,7 +602,7 @@ function TargetEntryGrid({
               {product.status === 'approved' ? 'Locked' : product.status === 'submitted' ? 'Pending' : 'Draft'}
             </span>
 
-            {/* PART 2: warning badge per product */}
+            {}
             {productWarnCount > 0 && canEdit && (
               <span title={`${productWarnCount} warning${productWarnCount > 1 ? 's' : ''} — abnormal entries detected`} style={{
                 display: 'inline-flex', alignItems: 'center', gap: '3px',
@@ -687,7 +623,6 @@ function TargetEntryGrid({
             const hasCellWarn = cellWarn && cellWarn.length > 0;
             const warnType    = hasCellWarn ? cellWarn[0].type : null;
 
-            // Cell border colour: red for cap violations, amber for high/low
             const warnBorder  = warnType === 'cap' ? '#DC2626' : '#D97706';
             const warnBg      = warnType === 'cap' ? 'rgba(220,38,38,0.06)' : 'rgba(217,119,6,0.06)';
 
@@ -736,7 +671,7 @@ function TargetEntryGrid({
           <div className="total-cell cy-total">{Utils.formatNumber(calculateYearlyTotal(product.id, 'CY'))}</div>
         </div>
 
-        {/* LY Row */}
+        {}
         <div className="product-row ly-row">
           <div className="product-name-cell"><span className="year-label ly">LY</span></div>
           {MONTHS.map(month => {
@@ -746,7 +681,7 @@ function TargetEntryGrid({
           <div className="total-cell ly-value">{Utils.formatNumber(calculateYearlyTotal(product.id, 'LY'))}</div>
         </div>
 
-        {/* AOP Row */}
+        {}
         <div className="product-row aop-row">
           <div className="product-name-cell"><span className="year-label aop">AOP</span></div>
           {MONTHS.map(month => {
@@ -761,7 +696,6 @@ function TargetEntryGrid({
     );
   };
 
-  // ==================== PRODUCT CATEGORY RENDERER ====================
   const renderProductCategory = (category) => {
     const isExpanded   = expandedCategories.has(category.id);
     const subcategories = getSubcategories(category.id);
@@ -851,11 +785,10 @@ function TargetEntryGrid({
     );
   };
 
-  // ==================== MAIN RENDER ====================
   return (
     <div className="target-entry-container" ref={gridRef}>
 
-      {/* PART 2: submit warning modal */}
+      {}
       {showSubmitModal && (
         <SubmitWarningModal
           warnings={allWarnings}
@@ -888,7 +821,7 @@ function TargetEntryGrid({
           >
             {isLoading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-paper-plane"></i>}
             Submit to TBM
-            {/* PART 2: warning counter on button */}
+            {}
             {allWarnings.length > 0 && (
               <span style={{
                 marginLeft: '5px', background: '#D97706', color: '#fff',
@@ -901,7 +834,7 @@ function TargetEntryGrid({
         </div>
       </div>
 
-      {/* Overall Target Summary Bar */}
+      {}
       <div className="overall-target-bar">
         <div className="otb-main-section">
           <div className="otb-card otb-yearly-target">
@@ -937,10 +870,10 @@ function TargetEntryGrid({
           </div>
 
         </div>
-        
+
       </div>
 
-      {/* ── PART 2: Item 3 — CY < LY warning banner ─────────────────────── */}
+      {}
       {cyLyWarning && (
         <div style={{
           margin: '0 0 0 0', padding: '0.625rem 1.25rem',
@@ -974,9 +907,9 @@ function TargetEntryGrid({
           </span>
         </div>
       )}
-      {/* ─────────────────────────────────────────────────────────────────── */}
+      {}
 
-      {/* Search & Filter Bar */}
+      {}
       <div className="grid-search-bar" style={{
         display: 'flex', flexWrap: 'wrap', gap: '8px',
         padding: '0.625rem 1rem', borderBottom: '1px solid #E5E7EB',
@@ -1052,7 +985,7 @@ function TargetEntryGrid({
             <span style={{ width: 9, height: 9, borderRadius: 2, background: '#FEF3C7', border: '1px solid #D97706', display: 'inline-block' }}></span>
             Pending
           </span>
-          {/* PART 2: legend entry for warning cells */}
+          {}
           <span style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
             <span style={{ width: 9, height: 9, borderRadius: 2, border: '1.5px solid #D97706', background: 'rgba(217,119,6,0.06)', display: 'inline-block' }}></span>
             Abnormal
@@ -1060,7 +993,7 @@ function TargetEntryGrid({
         </div>
       </div>
 
-      {/* Excel Grid */}
+      {}
       <div className="excel-grid">
         <div className="grid-header-row">
           <div className="header-cell product-header">Product</div>
@@ -1070,7 +1003,7 @@ function TargetEntryGrid({
             </div>
           ))}
           <div className="header-cell total-header">TOTAL</div>
-         
+
         </div>
 
         {categories.map(category =>
@@ -1118,7 +1051,7 @@ function TargetEntryGrid({
         <span><i className="fas fa-lock" style={{ marginRight: '0.375rem', color: '#059669' }}></i> Green rows = Approved by TBM (locked)</span>
         <span><i className="fas fa-clock" style={{ marginRight: '0.375rem', color: '#D97706' }}></i> Yellow rows = Pending TBM approval (locked)</span>
         <span><i className="fas fa-keyboard" style={{ marginRight: '0.375rem' }}></i> Tab to move between cells, Enter to confirm</span>
-        {/* PART 2 */}
+        {}
         <span><i className="fas fa-exclamation-triangle" style={{ marginRight: '0.375rem', color: '#D97706' }}></i> Orange border = abnormal entry — hover for details</span>
       </div>
     </div>

@@ -1,15 +1,3 @@
-/**
- * api.js — Sales Rep API Service (v5 Live Backend)
- *
- * ★ v5.1.0 CHANGES:
- *   - Imports shared normalizers from normalizers.js
- *   - getProducts() → normalizeArray(raw, normalizeProduct)
- *   - getCategories() → normalizeArray(raw, normalizeCategory)
- *   - getProductsByCategory() → normalizeArray(raw, normalizeProduct)
- *
- * @version 5.1.0
- */
-
 import { apiRequest, API_URL } from './apiClient';
 import { normalizeProduct, normalizeCategory, normalizeArray } from './normalizers';
 
@@ -32,14 +20,10 @@ export const API_CONFIG = {
 
 export const ApiService = {
 
-  // ==================== CATEGORIES ====================
-
   async getCategories() {
     const raw = await apiRequest('/categories');
     return normalizeArray(raw, normalizeCategory);
   },
-
-  // ==================== PRODUCTS ====================
 
   async getProducts() {
     const raw = await apiRequest('/products');
@@ -50,8 +34,6 @@ export const ApiService = {
     const raw = await apiRequest(`/products?category=${categoryId}`);
     return normalizeArray(raw, normalizeProduct);
   },
-
-  // ==================== TARGET ENTRY ====================
 
   async updateMonthlyTarget(productId, month, data) {
     return apiRequest(`/products/${productId}/targets/${month}`, {
@@ -74,8 +56,6 @@ export const ApiService = {
     });
   },
 
-  // ==================== SUBMIT ====================
-
   async submitProduct(productId) {
     return apiRequest(`/products/${productId}/submit`, {
       method: 'POST',
@@ -88,8 +68,6 @@ export const ApiService = {
       body: JSON.stringify({ productIds }),
     });
   },
-
-  // ==================== APPROVALS ====================
 
   async approveProduct(productId, comments = '') {
     return apiRequest(`/products/${productId}/approve`, {
@@ -105,8 +83,6 @@ export const ApiService = {
     });
   },
 
-  // ==================== DASHBOARD / ANALYTICS ====================
-
   async getAOPTargets(userId, fiscalYear) {
     return apiRequest(`/aop-targets?userId=${userId}&fy=${fiscalYear}`);
   },
@@ -115,7 +91,6 @@ export const ApiService = {
     return apiRequest('/salesrep/dashboard-summary');
   },
 
-  // Alias — used by SalesRepDashboard.js
   async getDashboardSummary() {
     return apiRequest('/salesrep/dashboard-summary');
   },

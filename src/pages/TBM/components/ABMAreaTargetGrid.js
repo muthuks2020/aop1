@@ -1,30 +1,7 @@
-/**
- * ABMAreaTargetGrid Component (TBM's "Area Target" Tab)
- *
- * FULL STANDALONE replica of the Sales Rep TargetEntryGrid for TBM's "Area Target" tab.
- * Reuses existing 'tgt-' CSS classes from tbmTerritoryTargetGrid.css — same grid layout,
- * only labels/branding differ (Area instead of Territory, Submit to ABM).
- *
- * REPLACES the old simple wrapper that just imported TargetEntryGrid.
- * Now fully standalone with its own state — API-ready for later integration.
- *
- * FLOW: TBM enters area targets → Save Draft → Submit to ABM → ABM approves
- *
- * FILE PATH: src/pages/TBM/components/ABMAreaTargetGrid.js
- * CSS PATH:  src/styles/tbm/tbmTerritoryTargetGrid.css (reuses tgt-* classes)
- *
- * USED BY: TBM Dashboard → "Area Target" tab
- *   {activeTab==='targets' && <ABMAreaTargetGrid ... />}
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 2.0.0 — Full standalone grid (replaces old wrapper v1)
- */
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/tbm/tbmTerritoryTargetGrid.css';
 
-// ==================== CONSTANTS ====================
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const MONTH_LABELS = ['APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'JAN', 'FEB', 'MAR'];
 
@@ -37,8 +14,6 @@ const QUARTERS = [
 
 const REVENUE_ONLY_CATEGORIES = ['mis', 'others'];
 
-// ==================== COMPONENT ====================
-
 function ABMAreaTargetGrid({
   categories = [],
   products = [],
@@ -49,7 +24,7 @@ function ABMAreaTargetGrid({
   overallYearlyTargetValue = null,
   areaName = 'South Chennai Area'
 }) {
-  // ==================== STATE ====================
+
   const [activeCell, setActiveCell] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [expandedCategories, setExpandedCategories] = useState(new Set(['equipment', 'iol', 'ovd']));
@@ -57,20 +32,16 @@ function ABMAreaTargetGrid({
   const [isLoading, setIsLoading] = useState(false);
   const [lastSaved, setLastSaved] = useState(null);
 
-  // ==================== REFS ====================
   const inputRef = useRef(null);
   const searchInputRef = useRef(null);
   const gridRef = useRef(null);
 
-  // Focus input when active cell changes
   useEffect(() => {
     if (activeCell && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();
     }
   }, [activeCell]);
-
-  // ==================== FILTERED DATA ====================
 
   const filteredProducts = useMemo(() => {
     if (!searchTerm.trim()) return products;
@@ -81,8 +52,6 @@ function ABMAreaTargetGrid({
       p.subcategory?.toLowerCase().includes(term)
     );
   }, [products, searchTerm]);
-
-  // ==================== CALCULATIONS ====================
 
   const calculateYearlyTotal = useCallback((productId, type = 'CY') => {
     const product = products.find(p => p.id === productId);
@@ -117,7 +86,6 @@ function ABMAreaTargetGrid({
       }, 0);
   }, [products]);
 
-  // Overall target summary bar data
   const overallTargetSummary = useMemo(() => {
     let totalCyRev = 0, totalLyRev = 0, totalCyQty = 0;
     products.forEach(product => {
@@ -135,7 +103,6 @@ function ABMAreaTargetGrid({
     return { totalCyRev, totalLyRev, totalCyQty, revGrowth, completionPercent };
   }, [products, overallYearlyTargetValue]);
 
-  // Monthly totals for footer
   const monthlyTotals = useMemo(() => {
     const totals = {};
     MONTHS.forEach(month => {
@@ -144,8 +111,6 @@ function ABMAreaTargetGrid({
     totals.yearly = Object.values(totals).reduce((a, b) => a + b, 0);
     return totals;
   }, [products]);
-
-  // ==================== EVENT HANDLERS ====================
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
@@ -233,8 +198,6 @@ function ABMAreaTargetGrid({
     searchInputRef.current?.focus();
   };
 
-  // ==================== RENDER HELPERS ====================
-
   const highlightMatch = (text, search) => {
     if (!search || !search.trim()) return text;
     const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
@@ -252,8 +215,6 @@ function ABMAreaTargetGrid({
     };
     return icons[catId] || 'fa-box';
   };
-
-  // ==================== REVENUE ONLY CATEGORY RENDERER ====================
 
   const renderRevenueOnlyCategory = (category) => {
     const isExpanded = expandedCategories.has(category.id);
@@ -285,7 +246,7 @@ function ABMAreaTargetGrid({
         {isExpanded && firstProduct && (
           <div className="tgt-products-container">
             <div className="tgt-product-rows">
-              {/* CY Revenue Row */}
+              {}
               <div className="tgt-product-row tgt-cy-row">
                 <div className="tgt-product-name-cell">
                   <span className="tgt-year-label tgt-cy">CY Revenue</span>
@@ -323,7 +284,7 @@ function ABMAreaTargetGrid({
                 <div className="tgt-growth-cell">&mdash;</div>
               </div>
 
-              {/* LY Revenue Row */}
+              {}
               <div className="tgt-product-row tgt-ly-row">
                 <div className="tgt-product-name-cell">
                   <span className="tgt-year-label tgt-ly">LY Revenue</span>
@@ -344,7 +305,7 @@ function ABMAreaTargetGrid({
                 <div className="tgt-growth-cell"></div>
               </div>
 
-              {/* AOP Revenue Row — Read Only */}
+              {}
               <div className="tgt-product-row tgt-aop-row">
                 <div className="tgt-product-name-cell">
                   <span className="tgt-year-label tgt-aop">AOP Rev</span>
@@ -371,8 +332,6 @@ function ABMAreaTargetGrid({
     );
   };
 
-  // ==================== CATEGORY RENDERER ====================
-
   function renderCategory(category) {
     const isExpanded = expandedCategories.has(category.id);
     const catProducts = filteredProducts.filter(p => p.categoryId === category.id);
@@ -384,7 +343,7 @@ function ABMAreaTargetGrid({
 
     return (
       <div key={category.id} className="tgt-category-section">
-        {/* Category Header */}
+        {}
         <div className="tgt-category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="tgt-category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} tgt-chevron-icon`}></i>
@@ -397,7 +356,7 @@ function ABMAreaTargetGrid({
             </div>
           </div>
 
-          {/* Category Month Totals */}
+          {}
           {MONTHS.map(month => (
             <div key={month} className="tgt-month-cell tgt-category-total-cell">
               {Utils.formatNumber(calculateCategoryMonthTotal(category.id, month, 'CY'))}
@@ -413,12 +372,12 @@ function ABMAreaTargetGrid({
           </div>
         </div>
 
-        {/* Expanded Product Rows */}
+        {}
         {isExpanded && (
           <div className="tgt-products-container">
             {catProducts.map(product => (
               <div key={product.id} className="tgt-product-rows">
-                {/* CY Row — Editable */}
+                {}
                 <div className="tgt-product-row tgt-cy-row">
                   <div className="tgt-product-name-cell">
                     <div className="tgt-product-info">
@@ -472,7 +431,7 @@ function ABMAreaTargetGrid({
                   </div>
                 </div>
 
-                {/* LY Row — Read Only */}
+                {}
                 <div className="tgt-product-row tgt-ly-row">
                   <div className="tgt-product-name-cell">
                     <span className="tgt-year-label tgt-ly">LY</span>
@@ -493,7 +452,7 @@ function ABMAreaTargetGrid({
                   <div className="tgt-growth-cell"></div>
                 </div>
 
-                {/* AOP Row — Read Only (Annual Operating Plan) */}
+                {}
                 <div className="tgt-product-row tgt-aop-row">
                   <div className="tgt-product-name-cell">
                     <span className="tgt-year-label tgt-aop">AOP</span>
@@ -531,12 +490,10 @@ function ABMAreaTargetGrid({
     );
   }
 
-  // ==================== MAIN RENDER ====================
-
   return (
     <div className="tgt-territory-container" ref={gridRef}>
 
-      {/* ===== AREA HEADER ===== */}
+      {}
       <div className="tgt-grid-header">
         <div className="tgt-grid-title">
           <div className="tgt-title-left">
@@ -551,7 +508,7 @@ function ABMAreaTargetGrid({
           <span className="tgt-fiscal-year">FY {fiscalYear}</span>
         </div>
 
-        {/* Area Info Banner */}
+        {}
         <div className="tgt-info-banner">
           <i className="fas fa-info-circle"></i>
           <span>
@@ -582,10 +539,10 @@ function ABMAreaTargetGrid({
         </div>
       </div>
 
-      {/* ===== OVERALL AREA TARGET SUMMARY BAR ===== */}
+      {}
       <div className="tgt-overall-target-bar">
         <div className="tgt-otb-main-section">
-          {/* Yearly Target Card */}
+          {}
           <div className="tgt-otb-card tgt-otb-yearly-target">
             <div className="tgt-otb-card-icon">
               <i className="fas fa-flag-checkered"></i>
@@ -601,7 +558,7 @@ function ABMAreaTargetGrid({
             </div>
           </div>
 
-          {/* Committed Value */}
+          {}
           <div className="tgt-otb-card tgt-otb-committed">
             <div className="tgt-otb-card-icon tgt-committed-icon">
               <i className="fas fa-hand-holding-usd"></i>
@@ -619,7 +576,7 @@ function ABMAreaTargetGrid({
             </div>
           </div>
 
-          {/* Total Units */}
+          {}
           <div className="tgt-otb-card tgt-otb-qty">
             <div className="tgt-otb-card-icon tgt-qty-icon">
               <i className="fas fa-boxes"></i>
@@ -630,7 +587,7 @@ function ABMAreaTargetGrid({
             </div>
           </div>
 
-          {/* Revenue Growth */}
+          {}
           <div className="tgt-otb-card tgt-otb-growth">
             <div className="tgt-otb-card-icon tgt-growth-icon">
               <i className="fas fa-chart-line"></i>
@@ -644,7 +601,7 @@ function ABMAreaTargetGrid({
           </div>
         </div>
 
-        {/* Progress bar — only if yearly target value is set */}
+        {}
         {overallYearlyTargetValue && (
           <div className="tgt-otb-progress-section">
             <div className="tgt-otb-progress-header">
@@ -658,7 +615,7 @@ function ABMAreaTargetGrid({
         )}
       </div>
 
-      {/* ===== SEARCH BAR ===== */}
+      {}
       <div className="tgt-grid-search-bar">
         <div className="tgt-search-input-wrapper">
           <i className="fas fa-search tgt-search-icon"></i>
@@ -682,11 +639,11 @@ function ABMAreaTargetGrid({
         </span>
       </div>
 
-      {/* ===== MONTHLY COLUMN TOTALS ROW ===== */}
+      {}
       <div className="tgt-grid-body" style={{ overflowX: 'auto' }}>
         <div className="tgt-excel-grid">
 
-          {/* Monthly Totals Row */}
+          {}
           <div className="tgt-monthly-totals-row">
             <div className="tgt-monthly-totals-label-cell">
               <i className="fas fa-sigma"></i> Area Totals
@@ -702,7 +659,7 @@ function ABMAreaTargetGrid({
             <div className="tgt-monthly-totals-cell tgt-growth-spacer"></div>
           </div>
 
-          {/* Header Row */}
+          {}
           <div className="tgt-grid-header-row">
             <div className="tgt-header-cell tgt-product-header">
               <span>Product / Category</span>
@@ -716,7 +673,7 @@ function ABMAreaTargetGrid({
             <div className="tgt-header-cell tgt-growth-header">YoY</div>
           </div>
 
-          {/* No Data State */}
+          {}
           {categories.length === 0 && (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#9CA3AF' }}>
               <i className="fas fa-inbox" style={{ fontSize: '2rem', marginBottom: '0.75rem', display: 'block' }}></i>
@@ -724,7 +681,7 @@ function ABMAreaTargetGrid({
             </div>
           )}
 
-          {/* No Search Results */}
+          {}
           {filteredProducts.length === 0 && categories.length > 0 && searchTerm && (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#9CA3AF' }}>
               <i className="fas fa-search" style={{ fontSize: '2rem', marginBottom: '0.75rem', display: 'block' }}></i>
@@ -735,7 +692,7 @@ function ABMAreaTargetGrid({
             </div>
           )}
 
-          {/* Category Sections */}
+          {}
           {categories.map(category =>
             REVENUE_ONLY_CATEGORIES.includes(category.id) || category.isRevenueOnly
               ? renderRevenueOnlyCategory(category)
@@ -744,7 +701,7 @@ function ABMAreaTargetGrid({
         </div>
       </div>
 
-      {/* ===== FOOTER ===== */}
+      {}
       <div className="tgt-grid-footer">
         <div className="tgt-footer-info">
           <i className="fas fa-keyboard"></i>

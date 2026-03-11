@@ -1,18 +1,3 @@
-/**
- * ABM Overview Dashboard
- * Area-level KPIs for ABM performance tracking
- * Mirrors TBM OverviewStats design but with ABM-specific metrics
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- * 
- * API INTEGRATION NOTES:
- * - All data currently computed from props
- * - Replace with API calls when backend is ready:
- *   GET /api/v1/abm/dashboard-summary
- *   GET /api/v1/abm/category-performance
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/abm/abmOverview.css';
@@ -26,8 +11,6 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
     const timer = setTimeout(() => setAnimateIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
-  // ==================== COMPUTED DATA ====================
 
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, aopQty = 0, lyRev = 0, cyRev = 0, aopRev = 0;
@@ -52,7 +35,6 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
     };
   }, [abmTargets]);
 
-  // Category performance
   const categoryPerformance = useMemo(() => {
     return categories.map(cat => {
       const catProducts = abmTargets.filter(p => p.categoryId === cat.id);
@@ -82,7 +64,6 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
     }).filter(c => c.productCount > 0);
   }, [abmTargets, categories, overallTotals]);
 
-  // Top products by CY revenue
   const topProducts = useMemo(() => {
     return [...abmTargets]
       .map(p => {
@@ -99,7 +80,6 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
       .slice(0, 5);
   }, [abmTargets]);
 
-  // TBM-level summary
   const tbmSummary = useMemo(() => {
     const tbmMap = {};
     tbmSubmissions.forEach(sub => {
@@ -139,8 +119,8 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
 
   return (
     <div className={`abm-overview ${animateIn ? 'abm-ov-animate-in' : ''}`}>
-      
-      {/* ===== KPI CARDS ===== */}
+
+      {}
       <div className="abm-ov-kpi-grid">
         <div className="abm-ov-kpi-card abm-ov-kpi-revenue">
           <div className="abm-ov-kpi-icon"><i className="fas fa-rupee-sign"></i></div>
@@ -185,8 +165,8 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
               {approvalStats.total > 0 ? Math.round((approvalStats.approved / approvalStats.total) * 100) : 0}%
             </span>
             <div className="abm-ov-kpi-progress-bar">
-              <div 
-                className="abm-ov-kpi-progress-fill" 
+              <div
+                className="abm-ov-kpi-progress-fill"
                 style={{ width: `${approvalStats.total > 0 ? (approvalStats.approved / approvalStats.total) * 100 : 0}%` }}
               ></div>
             </div>
@@ -207,7 +187,7 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
         </div>
       </div>
 
-      {/* ===== TBM PERFORMANCE SUMMARY ===== */}
+      {}
       <div className="abm-ov-section">
         <h3 className="abm-ov-section-title">
           <i className="fas fa-user-tie"></i> TBM Performance Summary
@@ -251,7 +231,7 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
         </div>
       </div>
 
-      {/* ===== CATEGORY PERFORMANCE ===== */}
+      {}
       <div className="abm-ov-section">
         <h3 className="abm-ov-section-title">
           <i className="fas fa-th-large"></i> Category Performance
@@ -295,8 +275,8 @@ function ABMOverviewStats({ abmTargets = [], categories = [], tbmSubmissions = [
         </div>
       </div>
 
-      {/* ===== TOP PRODUCTS ===== */}
-      
+      {}
+
     </div>
   );
 }

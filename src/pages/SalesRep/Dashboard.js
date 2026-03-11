@@ -1,21 +1,3 @@
-/**
- * Sales Representative Dashboard
- * Main dashboard with three tabs:
- * 1. Overview & Summary
- * 2. Target Entry Grid (with Overall Target Bar — VALUE-based)
- * 3. Quarterly Summary - Unit Wise
- *
- * UPDATED FLOW:
- * - Sales Rep enters targets and submits to TBM
- * - TBM will either approve or correct and approve
- * - No more reject/re-enter cycle
- * - No status badges shown on products
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 3.4.1 - handleUpdateTarget now computes cyRev = cyQty × unitCost on every keystroke
- *                  so TOTAL ENTERED VALUE card updates live as rep types quantities.
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ApiService } from '../../services/api';
@@ -27,16 +9,11 @@ import QuarterlySummary from '../../components/common/QuarterlySummary';
 import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 
-// ==================== REMOVED ====================
-// OVERALL_YEARLY_TARGET_VALUE hardcoded constant removed.
-// TARGET VALUE is now fetched from GET /salesrep/dashboard-summary → totalLY
-// =================================================
-
 function SalesRepDashboard() {
   const { user } = useAuth();
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [dashboardSummary, setDashboardSummary] = useState(null); // ← NEW: holds totalLY, totalCY from DB
+  const [dashboardSummary, setDashboardSummary] = useState(null);
   const [activeTab, setActiveTab] = useState('entry');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [toasts, setToasts] = useState([]);
@@ -48,11 +25,11 @@ function SalesRepDashboard() {
         const [cats, prods, summary] = await Promise.all([
           ApiService.getCategories(),
           ApiService.getProducts(),
-          ApiService.getDashboardSummary(), // ← NEW: fetches totalLY from DB
+          ApiService.getDashboardSummary(),
         ]);
         setCategories(cats);
         setProducts(prods);
-        setDashboardSummary(summary);       // ← NEW
+        setDashboardSummary(summary);
       } catch (error) {
         showToast('Error', 'Failed to load data', 'error');
       }
@@ -80,8 +57,7 @@ function SalesRepDashboard() {
   const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
-        // Compute live revenue: qty × unitCost (from product_master.quota_price__c)
-        // This drives TOTAL ENTERED VALUE card in TargetEntryGrid in real-time
+
         const unitCost = p.unitCost || 0;
         const cyRev = value * unitCost;
         const updatedMonthlyTargets = {
@@ -153,7 +129,7 @@ function SalesRepDashboard() {
             userRole="salesrep"
             fiscalYear={dashboardSummary?.fiscalYear ?? "2025-26"}
             overallYearlyTargetValue={dashboardSummary?.lyRev ?? 0}          // TARGET VALUE card  = LY target (₹4.25 Cr from ly_target_value)
-            tbmAssignedTargetValue={dashboardSummary?.targetValue ?? 0}    // TOTAL ENTERED VALUE = TBM's CY target (₹5 Cr from cy_target_value)
+            tbmAssignedTargetValue={dashboardSummary?.targetValue ?? 0}
           />
         );
       case 'quarterly':

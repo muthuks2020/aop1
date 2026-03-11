@@ -1,22 +1,3 @@
-/**
- * Sales Rep Overview Dashboard
- * Pie chart visualizations showing product & category contribution breakdowns
- * - Full Year pie chart (by Category + by Product)
- * - Quarterly pie charts (Q1–Q4) with same breakdowns
- * 
- * Uses Recharts for professional, PWA-friendly charts.
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 4.0.0 - Pie Chart redesign
- * 
- * API INTEGRATION NOTES:
- * - All data currently computed from props (products, categories)
- * - Replace with API calls when backend is ready:
- *   GET /api/v1/salesrep/dashboard-summary
- *   GET /api/v1/salesrep/contribution-breakdown?scope=yearly
- *   GET /api/v1/salesrep/contribution-breakdown?scope=quarterly&quarter=Q1
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import {
   PieChart, Pie, Cell, Tooltip, ResponsiveContainer
@@ -24,7 +5,6 @@ import {
 import { Utils } from '../../utils/helpers';
 import '../../styles/overviewDashboard.css';
 
-// Fiscal year months in order
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
 const QUARTER_CONFIG = {
   Q1: { months: ['apr', 'may', 'jun'], label: 'Q1', fullLabel: 'Apr — Jun', color: '#4285F4', bg: 'rgba(66,133,244,0.08)' },
@@ -33,7 +13,6 @@ const QUARTER_CONFIG = {
   Q4: { months: ['jan', 'feb', 'mar'], label: 'Q4', fullLabel: 'Jan — Mar', color: '#EA4335', bg: 'rgba(234,67,53,0.08)' }
 };
 
-// Professional color palette for pie slices
 const CATEGORY_COLORS = ['#1B4D7A', '#00A19B', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899', '#14B8A6', '#F97316'];
 const PRODUCT_COLORS = [
   '#1B4D7A', '#00A19B', '#3B82F6', '#10B981', '#F59E0B',
@@ -42,7 +21,6 @@ const PRODUCT_COLORS = [
   '#84CC16', '#D946EF', '#FB923C', '#22D3EE', '#A3E635'
 ];
 
-// ==================== CUSTOM TOOLTIP ====================
 const CustomTooltip = ({ active, payload }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
@@ -60,7 +38,6 @@ const CustomTooltip = ({ active, payload }) => {
   return null;
 };
 
-// ==================== CUSTOM LEGEND (scrollable for many items) ====================
 const CustomLegend = ({ payload, maxItems = 8 }) => {
   const [showAll, setShowAll] = useState(false);
   const items = showAll ? payload : payload.slice(0, maxItems);
@@ -83,9 +60,8 @@ const CustomLegend = ({ payload, maxItems = 8 }) => {
   );
 };
 
-// ==================== CUSTOM ACTIVE SHAPE LABEL ====================
 const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-  if (percent < 0.04) return null; // Don't label slices < 4%
+  if (percent < 0.04) return null;
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
@@ -97,28 +73,24 @@ const renderCustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent
   );
 };
 
-// ==================== PIE CHART CARD COMPONENT ====================
-// Side-by-side layout: Pie chart (left) | Dropdown + Breakdown list (right)
 const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, icon, accentColor, delay, isCompact }) => {
-  const [viewMode, setViewMode] = useState('product'); // 'category' | 'product'
+  const [viewMode, setViewMode] = useState('product');
   const data = viewMode === 'category' ? categoryData : productData;
   const colors = viewMode === 'category' ? CATEGORY_COLORS : PRODUCT_COLORS;
 
-  // Add fill color and percent to data
   const chartData = data.map((item, idx) => ({
     ...item,
     fill: colors[idx % colors.length],
     percent: totalValue > 0 ? item.value / totalValue : 0
   }));
 
-  // Dynamic pie sizing based on compact mode (quarterly cards vs full year)
   const pieHeight = isCompact ? 260 : 360;
   const innerR = isCompact ? 50 : 75;
   const outerR = isCompact ? 100 : 145;
 
   return (
     <div className={`ov-pie-card ${isCompact ? 'ov-pie-card--compact' : ''}`} style={{ '--delay': delay, '--accent': accentColor || '#1B4D7A' }}>
-      {/* ---- Card Header ---- */}
+      {}
       <div className="ov-pie-card-header">
         <div className="ov-pie-card-title-row">
           <div className="ov-pie-card-icon">
@@ -135,10 +107,10 @@ const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, 
         </div>
       </div>
 
-      {/* ---- Side-by-side body: Pie Left | List Right ---- */}
+      {}
       {totalValue > 0 ? (
         <div className="ov-pie-body">
-          {/* LEFT — Pie Chart */}
+          {}
           <div className="ov-pie-body-left">
             <div className="ov-pie-chart-wrap">
               <ResponsiveContainer width="100%" height={pieHeight}>
@@ -165,7 +137,7 @@ const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, 
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
               </ResponsiveContainer>
-              {/* Center label */}
+              {}
               <div className="ov-pie-center-label">
                 <span className="ov-pie-center-count">{data.length}</span>
                 <span className="ov-pie-center-text">{viewMode === 'category' ? 'CATEGORIES' : 'PRODUCTS'}</span>
@@ -173,9 +145,9 @@ const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, 
             </div>
           </div>
 
-          {/* RIGHT — Dropdown + Breakdown List */}
+          {}
           <div className="ov-pie-body-right">
-            {/* Dropdown selector */}
+            {}
             <div className="ov-pie-dropdown-row">
               <select
                 className="ov-pie-dropdown"
@@ -191,7 +163,7 @@ const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, 
               </select>
             </div>
 
-            {/* Breakdown list */}
+            {}
             <div className="ov-pie-breakdown">
               <div className="ov-pie-breakdown-header">
                 <span>NAME</span>
@@ -224,7 +196,6 @@ const PieChartCard = ({ title, subtitle, categoryData, productData, totalValue, 
   );
 };
 
-// ==================== MAIN COMPONENT ====================
 function OverviewStats({ products, categories }) {
   const [animateIn, setAnimateIn] = useState(false);
   const [activeQuarter, setActiveQuarter] = useState(null);
@@ -233,8 +204,6 @@ function OverviewStats({ products, categories }) {
     const timer = setTimeout(() => setAnimateIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
-  // ==================== COMPUTED DATA ====================
 
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, aopQty = 0, lyRev = 0, cyRev = 0, aopRev = 0;
@@ -263,8 +232,6 @@ function OverviewStats({ products, categories }) {
     ? Math.round((overallTotals.cyQty / overallTotals.lyQty) * 100)
     : 0;
 
-  // ==================== YEARLY PIE DATA ====================
-  // Category breakdown for full year
   const yearlyCategoryData = useMemo(() => {
     return categories.map(cat => {
       const catProducts = products.filter(p => p.categoryId === cat.id);
@@ -280,7 +247,6 @@ function OverviewStats({ products, categories }) {
     }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
   }, [categories, products]);
 
-  // Product breakdown for full year
   const yearlyProductData = useMemo(() => {
     return products.map(p => {
       let cyRev = 0;
@@ -297,10 +263,9 @@ function OverviewStats({ products, categories }) {
     return yearlyProductData.reduce((sum, d) => sum + d.value, 0);
   }, [yearlyProductData]);
 
-  // ==================== QUARTERLY PIE DATA ====================
   const quarterlyPieData = useMemo(() => {
     return Object.entries(QUARTER_CONFIG).map(([qId, qConfig]) => {
-      // Category breakdown for this quarter
+
       const categoryData = categories.map(cat => {
         const catProducts = products.filter(p => p.categoryId === cat.id);
         let cyRev = 0;
@@ -314,7 +279,6 @@ function OverviewStats({ products, categories }) {
         return { name: cat.name, value: cyRev, id: cat.id };
       }).filter(d => d.value > 0).sort((a, b) => b.value - a.value);
 
-      // Product breakdown for this quarter
       const productData = products.map(p => {
         let cyRev = 0;
         if (p.monthlyTargets) {
@@ -334,7 +298,7 @@ function OverviewStats({ products, categories }) {
   return (
     <div className={`ov-dashboard ${animateIn ? 'ov-animate-in' : ''}`}>
 
-      {/* ==================== HERO KPI STRIP ==================== */}
+      {}
       <div className="ov-hero-strip">
         <div className="ov-hero-card ov-hero-target" style={{ '--delay': '0.05s' }}>
           <div className="ov-hero-icon-wrap">
@@ -408,7 +372,7 @@ function OverviewStats({ products, categories }) {
         </div>
       </div>
 
-      {/* ==================== FULL YEAR PIE CHART ==================== */}
+      {}
       <div className="ov-section-header" style={{ '--delay': '0.25s' }}>
         <div className="ov-section-title-wrap">
           <i className="fas fa-calendar-alt"></i>
@@ -430,7 +394,7 @@ function OverviewStats({ products, categories }) {
         />
       </div>
 
-      {/* ==================== QUARTERLY PIE CHARTS ==================== */}
+      {}
       <div className="ov-section-header" style={{ '--delay': '0.4s' }}>
         <div className="ov-section-title-wrap">
           <i className="fas fa-calendar-week"></i>

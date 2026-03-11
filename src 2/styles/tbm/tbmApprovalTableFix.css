@@ -1,0 +1,451 @@
+/* ============================================================================ */
+/* TBM APPROVAL TABLE FIX                                                       */
+/* Restores Sales Rep Approvals tab styling for the v4.0 Dashboard              */
+/*                                                                              */
+/* HOW TO USE:                                                                  */
+/* Add this import in your tbmDashboard.css (at the bottom):                    */
+/*   @import './tbmApprovalTableFix.css';                                       */
+/* OR import in Dashboard.js:                                                   */
+/*   import '../../styles/tbm/tbmApprovalTableFix.css';                         */
+/*                                                                              */
+/* This maps the v4.0 class names to the original approval-table styles.        */
+/* ============================================================================ */
+
+/* ==================== TABLE CONTAINER ==================== */
+.tbm-submissions-section {
+  overflow-x: auto;
+  max-height: calc(100vh - 400px);
+  overflow-y: auto;
+  background: var(--white, #FFFFFF);
+  border-radius: var(--radius-lg, 12px);
+  box-shadow: var(--shadow-sm, 0 1px 3px rgba(0, 0, 0, 0.1));
+  border: 1px solid var(--gray-200, #E5E7EB);
+}
+
+/* ==================== SUBMISSIONS TABLE = APPROVAL TABLE ==================== */
+.submissions-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  min-width: 1400px;
+}
+
+/* Table Header */
+.submissions-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.submissions-table th {
+  background: var(--gray-100, #F3F4F6);
+  padding: 0.875rem 0.5rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--gray-600, #4B5563);
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid var(--gray-200, #E5E7EB);
+  white-space: nowrap;
+}
+
+.submissions-table th.th-product,
+.submissions-table th.th-rep {
+  text-align: left;
+  padding-left: 1.25rem;
+  position: sticky;
+  background: var(--gray-100, #F3F4F6);
+}
+
+.submissions-table th.th-product {
+  left: 0;
+  min-width: 200px;
+  z-index: 12;
+}
+
+.submissions-table th.th-rep {
+  left: 200px;
+  min-width: 180px;
+  z-index: 11;
+  border-left: 1px solid var(--gray-200, #E5E7EB);
+}
+
+/* Month Headers with Quarter Colors */
+.submissions-table th.th-month {
+  min-width: 58px;
+}
+
+.submissions-table th.th-month.q1 {
+  border-top: 3px solid var(--q1-border, #3B82F6);
+  background: var(--q1-bg, #EFF6FF);
+  color: var(--q1-color, #1D4ED8);
+}
+
+.submissions-table th.th-month.q2 {
+  border-top: 3px solid var(--q2-border, #22C55E);
+  background: var(--q2-bg, #F0FDF4);
+  color: var(--q2-color, #15803D);
+}
+
+.submissions-table th.th-month.q3 {
+  border-top: 3px solid var(--q3-border, #F59E0B);
+  background: var(--q3-bg, #FFFBEB);
+  color: var(--q3-color, #B45309);
+}
+
+.submissions-table th.th-month.q4 {
+  border-top: 3px solid var(--q4-border, #EF4444);
+  background: var(--q4-bg, #FEF2F2);
+  color: var(--q4-color, #B91C1C);
+}
+
+/* Total Column Header */
+.submissions-table th.th-total {
+  background: linear-gradient(180deg, var(--success-light, #E8F5E9) 0%, #C8E6C9 100%);
+  color: var(--success, #2E7D32);
+  min-width: 75px;
+  border-left: 2px solid var(--success, #2E7D32);
+}
+
+/* Growth Column Header */
+.submissions-table th.th-growth {
+  background: linear-gradient(180deg, var(--warning-light, #FFF3E0) 0%, #FFE0B2 100%);
+  color: #E65100;
+  min-width: 80px;
+}
+
+/* Actions Column Header */
+.submissions-table th.th-actions {
+  min-width: 120px;
+  background: var(--gray-100, #F3F4F6);
+}
+
+/* ==================== TABLE BODY ==================== */
+.submissions-table tbody tr {
+  border-bottom: 1px solid var(--gray-100, #F3F4F6);
+  transition: all 0.15s ease;
+}
+
+.submissions-table tbody tr:hover {
+  background: var(--accent-glow, rgba(0, 161, 155, 0.05));
+}
+
+/* Status-based Row Colors */
+.submissions-table tbody tr.status-approved {
+  background: rgba(46, 125, 50, 0.04);
+}
+
+.submissions-table tbody tr.status-approved:hover {
+  background: rgba(46, 125, 50, 0.08);
+}
+
+.submissions-table tbody tr.status-rejected {
+  background: rgba(198, 40, 40, 0.04);
+}
+
+.submissions-table tbody tr.status-rejected:hover {
+  background: rgba(198, 40, 40, 0.08);
+}
+
+.submissions-table tbody tr.status-submitted {
+  background: rgba(245, 158, 11, 0.04);
+}
+
+.submissions-table tbody tr.status-submitted:hover {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+/* ==================== TABLE CELLS ==================== */
+.submissions-table td {
+  padding: 0.625rem 0.5rem;
+  text-align: center;
+  color: var(--gray-700, #374151);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+/* Product & Rep Cells - Sticky */
+.submissions-table td.td-product,
+.submissions-table td.td-rep {
+  text-align: left;
+  padding-left: 1.25rem;
+  font-family: 'Inter', sans-serif;
+  position: sticky;
+  background: var(--white, #FFFFFF);
+  transition: all 0.15s ease;
+}
+
+.submissions-table tbody tr:hover td.td-product,
+.submissions-table tbody tr:hover td.td-rep {
+  background: var(--accent-glow, rgba(0, 161, 155, 0.05));
+}
+
+.submissions-table td.td-product {
+  left: 0;
+  z-index: 2;
+}
+
+.submissions-table td.td-rep {
+  left: 200px;
+  z-index: 1;
+  border-left: 1px solid var(--gray-100, #F3F4F6);
+}
+
+/* ==================== PRODUCT CELL ==================== */
+/* Maps .product-info to match original .product-cell styling */
+.submissions-table .product-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.submissions-table .product-info .product-name {
+  font-weight: 600;
+  color: var(--primary, #1B365D);
+  font-size: 0.875rem;
+  line-height: 1.3;
+}
+
+.submissions-table .product-info .product-code {
+  font-size: 0.6875rem;
+  color: var(--gray-500, #6B7280);
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+}
+
+/* ==================== REP CELL ==================== */
+/* Maps .rep-info to match original .rep-cell styling */
+.submissions-table .rep-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.submissions-table .rep-info .rep-name {
+  font-weight: 600;
+  color: var(--gray-800, #1F2937);
+  font-size: 0.875rem;
+}
+
+.submissions-table .rep-info .rep-territory {
+  font-size: 0.75rem;
+  color: var(--gray-500, #6B7280);
+}
+
+/* ==================== MONTH CELLS WITH QUARTER COLORS ==================== */
+.submissions-table td.td-month {
+  font-variant-numeric: tabular-nums;
+}
+
+.submissions-table td.td-month.q1 {
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.submissions-table td.td-month.q2 {
+  background: rgba(34, 197, 94, 0.03);
+}
+
+.submissions-table td.td-month.q3 {
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.submissions-table td.td-month.q4 {
+  background: rgba(239, 68, 68, 0.03);
+}
+
+/* ==================== TOTAL CELL ==================== */
+.submissions-table td.td-total {
+  font-weight: 700;
+  color: var(--success, #2E7D32);
+  background: rgba(46, 125, 50, 0.04);
+  border-left: 2px solid var(--success, #2E7D32);
+  font-size: 0.875rem;
+}
+
+/* ==================== GROWTH CELL ==================== */
+.submissions-table td.td-growth {
+  padding: 0.625rem 0.375rem;
+}
+
+.submissions-table .growth-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.125rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  white-space: nowrap;
+}
+
+.submissions-table .growth-pill.positive {
+  background: var(--success-light, #E8F5E9);
+  color: var(--success, #2E7D32);
+}
+
+.submissions-table .growth-pill.negative {
+  background: var(--danger-light, #FFEBEE);
+  color: var(--danger, #C62828);
+}
+
+/* ==================== ACTIONS CELL ==================== */
+.submissions-table td.td-actions {
+  padding: 0.5rem;
+}
+
+.submissions-table .action-buttons {
+  display: flex;
+  gap: 0.375rem;
+  justify-content: center;
+}
+
+.submissions-table .action-btn-sm {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.875rem;
+}
+
+.submissions-table .action-btn-sm.approve {
+  background: var(--success-light, #E8F5E9);
+  color: var(--success, #2E7D32);
+}
+
+.submissions-table .action-btn-sm.approve:hover {
+  background: var(--success, #2E7D32);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+}
+
+.submissions-table .action-btn-sm.reject {
+  background: var(--danger-light, #FFEBEE);
+  color: var(--danger, #C62828);
+}
+
+.submissions-table .action-btn-sm.reject:hover {
+  background: var(--danger, #C62828);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(198, 40, 40, 0.3);
+}
+
+/* Status Tags in Actions Column */
+.submissions-table .status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.submissions-table .status-tag.approved {
+  background: var(--success-light, #E8F5E9);
+  color: var(--success, #2E7D32);
+}
+
+.submissions-table .status-tag.rejected {
+  background: var(--danger-light, #FFEBEE);
+  color: var(--danger, #C62828);
+}
+
+/* ==================== BULK APPROVE BUTTON ==================== */
+.bulk-approve-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  background: var(--success, #2E7D32);
+  color: white;
+  border: none;
+  border-radius: var(--radius, 8px);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(46, 125, 50, 0.3);
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.bulk-approve-btn:hover {
+  background: #1B5E20;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.4);
+}
+
+.bulk-approve-btn i {
+  font-size: 0.875rem;
+}
+
+/* ==================== EMPTY STATE ==================== */
+.tbm-submissions-section .empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  text-align: center;
+  color: var(--gray-500, #6B7280);
+}
+
+.tbm-submissions-section .empty-state h3 {
+  margin: 0.5rem 0 0.25rem;
+  color: var(--gray-700, #374151);
+  font-size: 1rem;
+}
+
+.tbm-submissions-section .empty-state p {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--gray-400, #9CA3AF);
+}
+
+/* ==================== SCROLLBAR ==================== */
+.tbm-submissions-section::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.tbm-submissions-section::-webkit-scrollbar-track {
+  background: var(--gray-100, #F3F4F6);
+  border-radius: 4px;
+}
+
+.tbm-submissions-section::-webkit-scrollbar-thumb {
+  background: var(--gray-300, #D1D5DB);
+  border-radius: 4px;
+}
+
+.tbm-submissions-section::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400, #9CA3AF);
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+  .submissions-table th.th-product {
+    min-width: 160px;
+  }
+  .submissions-table th.th-rep {
+    min-width: 140px;
+  }
+  .submissions-table td.td-rep {
+    left: 160px;
+  }
+  .submissions-table th.th-rep {
+    left: 160px;
+  }
+}

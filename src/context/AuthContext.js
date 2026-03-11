@@ -1,20 +1,8 @@
-/**
- * AuthContext.js — Email + Password Auth
- *
- * @version 6.1.0 - Added frontend role normalizer in mapUserFromBackend
- *                  Fixes raw DB designations like "Sales Head (Surgical)"
- *                  not being recognized by App.js router
- */
-
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const AuthContext = createContext(null);
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
-
-// ═══════════════════════════════════════════════════════════════════════════
-// ROLE CONSTANTS
-// ═══════════════════════════════════════════════════════════════════════════
 
 export const USER_ROLES = {
   SALES_REP: 'sales_rep',
@@ -48,16 +36,8 @@ export const ROLE_LABELS = {
   eq_mgr_surgical: 'Equipment Manager (Surgical)',
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// FRONTEND ROLE NORMALIZER
-// Mirrors authenticate.js ROLE_MAP exactly.
-// Needed because /me endpoint returns the raw DB designation string,
-// not the middleware-normalized value. Without this, App.js routing breaks
-// for users with designations like "Sales Head (Surgical)".
-// ═══════════════════════════════════════════════════════════════════════════
-
 const FRONTEND_ROLE_MAP = {
-  // sales_rep
+
   'sales_rep'                         : 'sales_rep',
   'sales rep'                         : 'sales_rep',
   'salesrep'                          : 'sales_rep',
@@ -66,7 +46,6 @@ const FRONTEND_ROLE_MAP = {
   'salesrepresentative'               : 'sales_rep',
   'sr'                                : 'sales_rep',
 
-  // tbm
   'tbm'                               : 'tbm',
   'territory business manager'        : 'tbm',
   'territory_business_manager'        : 'tbm',
@@ -74,7 +53,6 @@ const FRONTEND_ROLE_MAP = {
   'territory manager'                 : 'tbm',
   'territory_manager'                 : 'tbm',
 
-  // abm
   'abm'                               : 'abm',
   'area business manager'             : 'abm',
   'area_business_manager'             : 'abm',
@@ -82,7 +60,6 @@ const FRONTEND_ROLE_MAP = {
   'area manager'                      : 'abm',
   'area_manager'                      : 'abm',
 
-  // zbm
   'zbm'                               : 'zbm',
   'zonal business manager'            : 'zbm',
   'zonal_business_manager'            : 'zbm',
@@ -90,7 +67,6 @@ const FRONTEND_ROLE_MAP = {
   'zonal manager'                     : 'zbm',
   'zonal_manager'                     : 'zbm',
 
-  // sales_head — all DB designation variants bucketed here
   'sales_head'                        : 'sales_head',
   'sales head'                        : 'sales_head',
   'saleshead'                         : 'sales_head',
@@ -105,49 +81,42 @@ const FRONTEND_ROLE_MAP = {
   'sales_head_surgical'               : 'sales_head',
   'sales_head_diagnostic'             : 'sales_head',
 
-  // at_iol_specialist
   'at_iol_specialist'                 : 'at_iol_specialist',
   'at iol specialist'                 : 'at_iol_specialist',
   'iol specialist'                    : 'at_iol_specialist',
   'iol_specialist'                    : 'at_iol_specialist',
   'at/iol specialist'                 : 'at_iol_specialist',
 
-  // eq_spec_diagnostic
   'eq_spec_diagnostic'                : 'eq_spec_diagnostic',
   'eq spec diagnostic'                : 'eq_spec_diagnostic',
   'equipment specialist diagnostic'   : 'eq_spec_diagnostic',
   'equipment_specialist_diagnostic'   : 'eq_spec_diagnostic',
   'equipment specialist (diagnostic)' : 'eq_spec_diagnostic',
 
-  // eq_spec_surgical
   'eq_spec_surgical'                  : 'eq_spec_surgical',
   'eq spec surgical'                  : 'eq_spec_surgical',
   'equipment specialist surgical'     : 'eq_spec_surgical',
   'equipment_specialist_surgical'     : 'eq_spec_surgical',
   'equipment specialist (surgical)'   : 'eq_spec_surgical',
 
-  // at_iol_manager
   'at_iol_manager'                    : 'at_iol_manager',
   'at iol manager'                    : 'at_iol_manager',
   'iol manager'                       : 'at_iol_manager',
   'iol_manager'                       : 'at_iol_manager',
   'at/iol manager'                    : 'at_iol_manager',
 
-  // eq_mgr_diagnostic
   'eq_mgr_diagnostic'                 : 'eq_mgr_diagnostic',
   'eq mgr diagnostic'                 : 'eq_mgr_diagnostic',
   'equipment manager diagnostic'      : 'eq_mgr_diagnostic',
   'equipment_manager_diagnostic'      : 'eq_mgr_diagnostic',
   'equipment manager (diagnostic)'    : 'eq_mgr_diagnostic',
 
-  // eq_mgr_surgical
   'eq_mgr_surgical'                   : 'eq_mgr_surgical',
   'eq mgr surgical'                   : 'eq_mgr_surgical',
   'equipment manager surgical'        : 'eq_mgr_surgical',
   'equipment_manager_surgical'        : 'eq_mgr_surgical',
   'equipment manager (surgical)'      : 'eq_mgr_surgical',
 
-  // admin
   'admin'                             : 'admin',
   'administrator'                     : 'admin',
   'system administrator'              : 'admin',
@@ -157,9 +126,9 @@ const FRONTEND_ROLE_MAP = {
 
 function normalizeRole(rawRole) {
   if (!rawRole) return rawRole;
-  // Already a clean known code — pass through immediately
+
   if (FRONTEND_ROLE_MAP[rawRole]) return FRONTEND_ROLE_MAP[rawRole];
-  // Case-insensitive lookup for raw DB strings like "Sales Head (Surgical)"
+
   const key = rawRole.trim().toLowerCase();
   const mapped = FRONTEND_ROLE_MAP[key];
   if (!mapped) {
@@ -168,13 +137,9 @@ function normalizeRole(rawRole) {
   return mapped || rawRole;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// HELPER: Map backend user → frontend shape
-// ═══════════════════════════════════════════════════════════════════════════
-
 const mapUserFromBackend = (backendUser) => {
   if (!backendUser) return null;
-  // Normalize raw DB role → clean application role code before storing
+
   const normalizedRole = normalizeRole(backendUser.role);
   return {
     id: backendUser.id,
@@ -202,15 +167,10 @@ const mapUserFromBackend = (backendUser) => {
   };
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// AUTH PROVIDER
-// ═══════════════════════════════════════════════════════════════════════════
-
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ─── Logout ─────────────────────────────────────────────────────────
   const logout = useCallback(async () => {
     const token = localStorage.getItem('appasamy_token');
     try {
@@ -221,14 +181,13 @@ export function AuthProvider({ children }) {
           ...(token && { Authorization: `Bearer ${token}` }),
         },
       });
-    } catch { /* ignore */ }
+    } catch {  }
     localStorage.removeItem('appasamy_token');
     localStorage.removeItem('appasamy_refresh_token');
     localStorage.removeItem('appasamy_user');
     setUser(null);
   }, []);
 
-  // ─── Session Restore on Mount ───────────────────────────────────────
   useEffect(() => {
     const restoreSession = async () => {
       const token     = localStorage.getItem('appasamy_token');
@@ -246,11 +205,11 @@ export function AuthProvider({ children }) {
             setUser(mappedUser);
             localStorage.setItem('appasamy_user', JSON.stringify(mappedUser));
           } else {
-            // Token invalid or expired — force re-login
+
             logout();
           }
         } catch {
-          // Network error — use cached user for offline support
+
           try { setUser(JSON.parse(savedUser)); } catch { logout(); }
         }
       }
@@ -258,11 +217,9 @@ export function AuthProvider({ children }) {
     };
 
     restoreSession();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+
   }, []);
 
-
-  // ─── Login (email + password) ────────────────────────────────────────
   const login = async (email, password) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
@@ -277,7 +234,7 @@ export function AuthProvider({ children }) {
       const data       = await response.json();
       const mappedUser = mapUserFromBackend(data.user);
       localStorage.setItem('appasamy_token', data.token);
-      localStorage.removeItem('appasamy_refresh_token'); // no longer used
+      localStorage.removeItem('appasamy_refresh_token');
       localStorage.setItem('appasamy_user',  JSON.stringify(mappedUser));
       setUser(mappedUser);
       console.log('[Auth] Login success — role:', mappedUser?.role);
@@ -287,7 +244,6 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // ─── Context Value ──────────────────────────────────────────────────
   return (
     <AuthContext.Provider value={{ user, login, logout, loading, isAuthenticated: !!user }}>
       {children}

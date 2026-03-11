@@ -1,15 +1,3 @@
-/**
- * ZBM Overview Dashboard
- * Zone-level KPIs for ZBM performance tracking
- * Mirrors ABM OverviewStats design but with zone-specific metrics
- * 
- * Shows: Zone Revenue, Zone Qty, ABMs Under Zone, Approval Progress,
- *        ABM Performance cards, Category Performance grid
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.0.0
- */
-
 import React, { useState, useEffect, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 import '../../../styles/zbm/zbmOverview.css';
@@ -23,8 +11,6 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     const timer = setTimeout(() => setAnimateIn(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
-  // ==================== COMPUTED DATA ====================
 
   const overallTotals = useMemo(() => {
     let lyQty = 0, cyQty = 0, lyRev = 0, cyRev = 0;
@@ -45,7 +31,6 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     };
   }, [abmSubmissions]);
 
-  // Category performance
   const categoryPerformance = useMemo(() => {
     return categories.map(cat => {
       const catProducts = abmSubmissions.filter(p => p.categoryId === cat.id);
@@ -66,7 +51,6 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
     }).filter(c => c.cyQty > 0 || c.cyRev > 0);
   }, [abmSubmissions, categories, overallTotals]);
 
-  // ABM summary
   const abmSummary = useMemo(() => {
     const map = {};
     abmSubmissions.forEach(sub => {
@@ -90,7 +74,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
   return (
     <div className={`zbm-overview ${animateIn ? 'zbm-ov-animate-in' : ''}`}>
 
-      {/* KPI Cards */}
+      {}
       <div className="zbm-ov-kpi-grid">
         <div className="zbm-ov-kpi-card zbm-ov-kpi-revenue">
           <div className="zbm-ov-kpi-icon"><i className="fas fa-rupee-sign"></i></div>
@@ -146,7 +130,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         </div>
       </div>
 
-      {/* ABM Performance */}
+      {}
       <div className="zbm-ov-section">
         <h3 className="zbm-ov-section-title"><i className="fas fa-user-shield"></i> ABM Performance</h3>
         <div className="zbm-ov-abm-grid">
@@ -184,7 +168,7 @@ function ZBMOverviewStats({ abmSubmissions = [], categories = [], approvalStats 
         </div>
       </div>
 
-      {/* Category Performance */}
+      {}
       <div className="zbm-ov-section">
         <h3 className="zbm-ov-section-title"><i className="fas fa-th-large"></i> Category Performance</h3>
         <div className="zbm-ov-category-grid">

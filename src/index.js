@@ -1,8 +1,3 @@
-/**
- * index.js — Updated with admin CSS import
- * CHANGE: Added adminDashboard.css import. No other changes.
- */
-
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -11,7 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import './styles/index.css';
 import './styles/login.css';
 import './styles/targetEntryGrid.css';
-import './styles/admin/adminDashboard.css';  // ← NEW
+import './styles/admin/adminDashboard.css';
 import * as serviceWorkerRegistration from './serviceWorkerRegistration';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

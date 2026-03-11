@@ -1,29 +1,3 @@
-/**
- * ZBM Dashboard Component
- * Zonal Business Manager Dashboard
- *
- * FOUR tabs (PART 1 — Item 17: reordered):
- * 1. Team Yearly Targets  — Set yearly targets for ABMs          [was tab 3]
- * 2. ABM Approvals        — Review/correct/approve ABM submissions [was tab 1]
- * 3. Overview & Summary   — Zone-level KPIs                      [was tab 2]
- * 4. Team Drill-Down      — ABM → TBM → Sales Rep (read-only)    [unchanged]
- *
- * NO Target Entry screen (ZBM does not enter targets directly)
- *
- * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
- *
- * PART 2 CHANGES (v2.0.0):
- *   Item 10 — ABM Approvals tab now highlights ABMs whose total submitted
- *             CY qty is below their assigned yearly guidance target.
- * PART 3 — Item 11: Added CY Revenue column alongside Qty in ABM Approval table.
- *             A "Below Guidance" badge and summary banner make this
- *             immediately visible to the ZBM without any product-wise
- *             breakdown (guidance is shown only at ABM level).
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 2.0.0 — Part 2: Item 10
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ZBMApiService } from '../../services/zbmApi';
@@ -42,8 +16,6 @@ const MONTH_LABELS = ['APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC','JAN
 function ZBMDashboard() {
   const { user } = useAuth();
 
-  // ==================== STATE ====================
-  // PART 1 — Item 17: default tab changed from 'approvals' → 'yearlyTargets'
   const [activeTab, setActiveTab] = useState('yearlyTargets');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isLoading, setIsLoading] = useState(true);
@@ -56,20 +28,16 @@ function ZBMDashboard() {
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'warning', onConfirm: null });
   const [editedCells, setEditedCells] = useState(new Set());
 
-  // ── PART 2 Item 10: yearly guidance targets per ABM (employeeCode → target value) ──
   const [abmYearlyGuidance, setAbmYearlyGuidance] = useState({});
-  // Direct reports of this ZBM — from API, NOT derived from submissions
-  const [zbmDirectReports, setZbmDirectReports] = useState([]);
-  // ─────────────────────────────────────────────────────────────────────────────────
 
-  // ==================== TOAST ====================
+  const [zbmDirectReports, setZbmDirectReports] = useState([]);
+
   const showToast = useCallback((title, message, type = 'info') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, title, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }, []);
 
-  // ==================== ONLINE/OFFLINE ====================
   useEffect(() => {
     const onOn  = () => { setIsOnline(true);  showToast('Online',  'Connection restored.',      'success'); };
     const onOff = () => { setIsOnline(false); showToast('Offline', 'Working in offline mode.',  'warning'); };
@@ -78,27 +46,23 @@ function ZBMDashboard() {
     return () => { window.removeEventListener('online', onOn); window.removeEventListener('offline', onOff); };
   }, [showToast]);
 
-  // ==================== DATA LOADING ====================
-  useEffect(() => { loadData(); }, []); // eslint-disable-line
+  useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
     setIsLoading(true);
     try {
-      // Load categories, submissions, yearly targets, and direct reports in parallel
+
       const [cats, subs, guidanceData, directReports] = await Promise.all([
         ZBMApiService.getCategories(),
         ZBMApiService.getABMSubmissions(),
         ZBMApiService.getTeamYearlyTargets().catch(() => ({ members: [] })),
-        ZBMApiService.getUniqueABMs().catch(() => []),         // actual direct reports
+        ZBMApiService.getUniqueABMs().catch(() => []),
       ]);
       setCategories(cats);
       setAbmSubmissions(subs);
 
-      // Store actual direct reports (people whose reports_to = this ZBM's employee_code)
       setZbmDirectReports(Array.isArray(directReports) ? directReports : []);
 
-      // Build employeeCode → guidanceValue map from yearly targets
-      // API returns: { fiscalYear, members: [{ employeeCode, targets: [{yearlyTarget,...}] }] }
       const membersArray = guidanceData?.members || (Array.isArray(guidanceData) ? guidanceData : []);
       if (membersArray.length > 0) {
         const guidanceMap = {};
@@ -117,7 +81,6 @@ function ZBMDashboard() {
     setIsLoading(false);
   };
 
-  // ==================== DERIVED STATE ====================
   const approvalStats = useMemo(() => {
     const total    = abmSubmissions.length;
     const approved = abmSubmissions.filter(s => s.status === 'approved').length;
@@ -146,8 +109,6 @@ function ZBMDashboard() {
     return result;
   }, [abmSubmissions, abmFilter, categoryFilter, searchTerm]);
 
-  // ── PART 2 Item 10: compute per-ABM submitted CY totals ──────────────────────
-  // Groups ALL submissions (not filtered) by employeeCode to get true total CY qty.
   const abmCYTotals = useMemo(() => {
     const totals = {};
     abmSubmissions.forEach(sub => {
@@ -159,13 +120,9 @@ function ZBMDashboard() {
     return totals;
   }, [abmSubmissions]);
 
-  /**
-   * Returns whether an ABM is below their guidance threshold.
-   * Returns null if no guidance has been set for this ABM.
-   */
   const getAbmGuidanceStatus = useCallback((employeeCode) => {
     const guidance = abmYearlyGuidance[employeeCode];
-    if (!guidance || guidance === 0) return null; // no guidance set — don't flag
+    if (!guidance || guidance === 0) return null;
 
     const cyTotal   = abmCYTotals[employeeCode] || 0;
     const minTarget = guidance * TARGET_THRESHOLDS.GUIDANCE_MIN_PCT;
@@ -179,16 +136,13 @@ function ZBMDashboard() {
     };
   }, [abmYearlyGuidance, abmCYTotals]);
 
-  // Count of ABMs below guidance (for summary banner)
   const abmsBelowGuidance = useMemo(() => {
     return uniqueABMs.filter(abm => {
       const gs = getAbmGuidanceStatus(abm.id);
       return gs && gs.isBelowGuidance;
     });
   }, [uniqueABMs, getAbmGuidanceStatus]);
-  // ─────────────────────────────────────────────────────────────────────────────
 
-  // ==================== HANDLERS ====================
   const handleApproveABM = useCallback(async (submissionId) => {
     const sub = abmSubmissions.find(s => s.id === submissionId);
     if (!sub || sub.status === 'approved') return;
@@ -243,7 +197,6 @@ function ZBMDashboard() {
 
   const closeModal = () => setModalConfig(prev => ({ ...prev, isOpen: false }));
 
-  // ==================== HELPER FUNCTIONS ====================
   const getQC = (monthIndex) => {
     if (monthIndex < 3) return 'q1';
     if (monthIndex < 6) return 'q2';
@@ -251,15 +204,12 @@ function ZBMDashboard() {
     return 'q4';
   };
 
-  // ==================== TAB CONFIG ====================
-  // PART 1 — Item 17: new order: Targets → ABM Approvals → Overview → Drilldown
   const tabs = [
     { id: 'yearlyTargets', label: 'Team Yearly Targets', icon: 'fa-bullseye' },
     { id: 'approvals',     label: 'ABM Approvals',       icon: 'fa-clipboard-check', badge: approvalStats.pending },
     { id: 'drilldown',     label: 'Team Drill-Down',     icon: 'fa-sitemap' },
   ];
 
-  // ==================== RENDER ====================
   return (
     <div className="zbm-dashboard">
       <Header />
@@ -270,7 +220,7 @@ function ZBMDashboard() {
         </div>
       )}
 
-      {/* Tab Navigation */}
+      {}
       <div className="zbm-tabs">
         {tabs.map(tab => (
           <button
@@ -287,9 +237,9 @@ function ZBMDashboard() {
 
       <main className="zbm-main">
 
-        {/* ==================== TAB 1: TEAM YEARLY TARGETS ==================== */}
+        {}
         {activeTab === 'yearlyTargets' && (() => {
-          // Adapter: maps ZBM API → shape expected by TeamYearlyTargets component
+
           const zbmTargetApiService = {
             async getYearlyTargets(fy) {
               const data = await ZBMApiService.getTeamYearlyTargets();
@@ -299,7 +249,7 @@ function ZBMDashboard() {
                 territory:        m.area || m.territory || '—',
                 designation:      'Area Business Manager',
                 lyTargetValue:    (m.targets || []).reduce((s, t) => s + (t.lyTarget || 0), 0),
-                lyAchievedValue:  0, // not stored in this DB
+                lyAchievedValue:  0,
                 lyTarget:         0,
                 lyAchieved:       0,
                 cyTargetValue:    (m.targets || []).reduce((s, t) => s + (t.yearlyTarget || 0), 0),
@@ -318,7 +268,6 @@ function ZBMDashboard() {
                 })),
               }));
 
-              // No saved targets yet — seed list from direct reports with zeroed values
               if (members.length === 0 && zbmDirectReports.length > 0) {
                 return {
                   members: zbmDirectReports.map(r => ({
@@ -351,7 +300,7 @@ function ZBMDashboard() {
             },
 
             async publishYearlyTargets(fy, memberIds) {
-              // No separate publish endpoint yet — save covers it
+
               return { success: true };
             },
           };
@@ -394,7 +343,7 @@ function ZBMDashboard() {
                   <span className="zbm-stat-label">Approved</span>
                 </div>
               </div>
-              {/* ── PART 2 Item 10: below-guidance stat card ─────────────────── */}
+              {}
               {abmsBelowGuidance.length > 0 && (
                 <div className="zbm-stat-card" style={{
                   borderLeft: '3px solid #F59E0B',
@@ -409,10 +358,10 @@ function ZBMDashboard() {
                   </div>
                 </div>
               )}
-              {/* ─────────────────────────────────────────────────────────────── */}
+              {}
             </div>
 
-            {/* ── PART 2 Item 10: guidance summary banner ──────────────────────── */}
+            {}
             {abmsBelowGuidance.length > 0 && (
               <div style={{
                 margin: '0 0 0 0',
@@ -450,15 +399,15 @@ function ZBMDashboard() {
                 </div>
               </div>
             )}
-            {/* ─────────────────────────────────────────────────────────────────── */}
+            {}
 
-            {/* Filters */}
+            {}
             <div className="zbm-filter-bar">
               <div className="zbm-filter-group">
                 <select value={abmFilter} onChange={e => setAbmFilter(e.target.value)} className="zbm-select">
                   <option value="all">All ABMs</option>
                   {uniqueABMs.map(abm => {
-                    // ── PART 2 Item 10: append guidance warning to dropdown option ──
+
                     const gs = getAbmGuidanceStatus(abm.id);
                     const label = `${abm.name} — ${abm.territory}${gs?.isBelowGuidance ? ' ⚠' : ''}`;
                     return <option key={abm.id} value={abm.id}>{label}</option>;
@@ -487,7 +436,7 @@ function ZBMDashboard() {
               )}
             </div>
 
-            {/* Approval Table */}
+            {}
             {isLoading ? (
               <div className="zbm-loading"><div className="loading-spinner"></div><p>Loading...</p></div>
             ) : filteredSubmissions.length === 0 ? (
@@ -507,7 +456,7 @@ function ZBMDashboard() {
                         <th key={ml} className={`th-month th-${getQC(i)}`}>{ml}</th>
                       ))}
                       <th className="th-total">Total Qty</th>
-                      {/* PART 3 — Item 11: show value alongside qty */}
+                      {}
                       <th className="th-total th-value">CY Value</th>
                       <th className="th-action">Action</th>
                     </tr>
@@ -518,17 +467,15 @@ function ZBMDashboard() {
                       const ly    = MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.lyQty || 0), 0);
                       const cy    = MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.cyQty || 0), 0);
 
-                      // ── PART 2 Item 10: guidance status for this ABM ──────────────
                       const gs = getAbmGuidanceStatus(sub.employeeCode);
                       const showGuidanceBadge = gs?.isBelowGuidance;
-                      // ─────────────────────────────────────────────────────────────
 
                       return (
                         <React.Fragment key={sub.id}>
-                          {/* LY Row */}
+                          {}
                           <tr
                             className={isSub ? 'zbm-row-pending' : 'zbm-row-approved'}
-                            // ── PART 2 Item 10: highlight entire row group for below-guidance ABMs ──
+
                             style={showGuidanceBadge ? { background: 'rgba(245,158,11,0.06)' } : {}}
                           >
                             <td className="td-sticky" rowSpan={2} style={showGuidanceBadge ? {
@@ -537,7 +484,7 @@ function ZBMDashboard() {
                               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                                 <span className="td-abm-name">{sub.employeeName || sub.abmName || '—'}</span>
 
-                                {/* PART 2 Item 10: below-guidance badge — ABM level only, no product detail */}
+                                {}
                                 {showGuidanceBadge && (
                                   <span
                                     title={`Submitted ${Utils.formatNumber(gs.cyTotal)} of ${Utils.formatNumber(gs.guidance)} guidance target (${gs.pct}%)`}
@@ -557,7 +504,7 @@ function ZBMDashboard() {
                               </div>
                               <div className="td-product-name">{sub.name || sub.productName}</div>
                             </td>
-                            {/* PART 1 — Item 1: consistent label "LY Tgt" */}
+                            {}
                             <td className="td-type"><span className="type-tag ly">LY Tgt</span></td>
                             {MONTHS.map((m, i) => (
                               <td key={m} className={`td-month td-${getQC(i)} td-readonly`}>
@@ -565,7 +512,7 @@ function ZBMDashboard() {
                               </td>
                             ))}
                             <td className="td-total">{Utils.formatNumber(ly)}</td>
-                            {/* PART 3 — Item 11: LY Revenue */}
+                            {}
                             <td className="td-total td-value">
                               ₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.lyRev || 0), 0))}
                             </td>
@@ -586,7 +533,7 @@ function ZBMDashboard() {
                             </td>
                           </tr>
 
-                          {/* CY Row */}
+                          {}
                           <tr
                             className={isSub ? 'zbm-row-pending' : 'zbm-row-approved'}
                             style={showGuidanceBadge ? { background: 'rgba(245,158,11,0.06)' } : {}}
@@ -608,7 +555,7 @@ function ZBMDashboard() {
                               );
                             })}
                             <td className="td-total"><strong>{Utils.formatNumber(cy)}</strong></td>
-                            {/* PART 3 — Item 11: CY Revenue */}
+                            {}
                             <td className="td-total td-value">
                               <strong>₹{Utils.formatCompact(MONTHS.reduce((s, m) => s + (sub.monthlyTargets?.[m]?.cyRev || 0), 0))}</strong>
                             </td>
@@ -623,16 +570,11 @@ function ZBMDashboard() {
           </>
         )}
 
-        {/* ==================== TAB 3: OVERVIEW & SUMMARY ==================== 
-        {activeTab === 'overview' && (
-          <ZBMOverviewStats
-            abmSubmissions={abmSubmissions}
-            categories={categories}
-            approvalStats={approvalStats}
-          />
-        )}*/}
+        {
 
-        {/* ==================== TAB 4: TEAM DRILL-DOWN ==================== */}
+}
+
+        {}
         {activeTab === 'drilldown' && (
           <ZBMTeamDrilldown showToast={showToast} />
         )}

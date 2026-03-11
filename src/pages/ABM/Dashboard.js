@@ -1,26 +1,3 @@
-/**
- * ABM Dashboard Component
- * Area Business Manager Dashboard
- * 
- * SIX tabs:
- * 1. TBM Targets — Review/correct/approve TBM territory submissions
- * 2. Overview & Summary — Area-level KPIs
- * 3. Area Target — Area-level target entry grid (same as Sales Rep grid)
- * 4. Team Yearly Targets — Set yearly targets for all TBMs
- * 5. Specialist Approvals — Review/correct/approve Specialist submissions (NEW)
- * 6. Specialist Yearly Targets — Set yearly value targets for Specialists (NEW)
- * 
- * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
- *            Specialist → ABM → ZBM → Sales Head
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * PART 3 — Item 14: Verified — Equipment Specialists DO have targets.
- *   Specialist Approvals (Tab 5) and Specialist Yearly Targets (Tab 6)
- *   are already implemented via ABMSpecialistApiService.
- *   No code changes needed for Item 14 — this component already handles it.
- * @version 2.1.0 — Part 3 Item 14 verified
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { ABMApiService } from '../../services/abmApi';
@@ -31,11 +8,11 @@ import Modal from '../../components/common/Modal';
 import ABMOverviewStats from './components/ABMOverviewStats';
 import ABMAreaTargetGrid from './components/ABMAreaTargetGrid';
 import TeamYearlyTargets from '../TBM/components/TeamYearlyTargets';
-// ─── STEP 1: Specialist imports ───────────────────────────────────
+
 import ABMSpecialistApprovals from './components/ABMSpecialistApprovals';
 import ABMSpecialistYearlyTargets from './components/ABMSpecialistYearlyTargets';
 import ABMSpecialistApiService from '../../services/abmSpecialistApi';
-// ──────────────────────────────────────────────────────────────────
+
 import '../../styles/abm/abmDashboard.css';
 
 const MONTHS = ['apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec', 'jan', 'feb', 'mar'];
@@ -57,21 +34,17 @@ function ABMDashboard() {
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'warning', onConfirm: null });
   const [editedCells, setEditedCells] = useState(new Set());
 
-  // ─── STEP 2: Specialist state variables ─────────────────────────
   const [specialistSubmissions, setSpecialistSubmissions] = useState([]);
   const [specialists, setSpecialists] = useState([]);
   const [specialistYearlyTargets, setSpecialistYearlyTargets] = useState([]);
   const [specialistEditedCells, setSpecialistEditedCells] = useState(new Set());
-  // ────────────────────────────────────────────────────────────────
 
-  // ==================== TOAST ====================
   const showToast = useCallback((title, message, type = 'info') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, title, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }, []);
 
-  // ==================== ONLINE/OFFLINE ====================
   useEffect(() => {
     const onOn = () => { setIsOnline(true); showToast('Online', 'Connection restored.', 'success'); };
     const onOff = () => { setIsOnline(false); showToast('Offline', 'Working in offline mode.', 'warning'); };
@@ -80,7 +53,6 @@ function ABMDashboard() {
     return () => { window.removeEventListener('online', onOn); window.removeEventListener('offline', onOff); };
   }, [showToast]);
 
-  // ==================== DATA LOADING ====================
   const loadInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -93,7 +65,6 @@ function ABMDashboard() {
       setTbmSubmissions(tbmSubs);
       setAbmTargets(areaTargets);
 
-      // ─── STEP 3: Load specialist data ─────────────────────────
       const [specSubs, specList, specYearly] = await Promise.all([
         ABMSpecialistApiService.getSpecialistSubmissions(),
         ABMSpecialistApiService.getSpecialists(),
@@ -102,7 +73,6 @@ function ABMDashboard() {
       setSpecialistSubmissions(specSubs);
       setSpecialists(specList);
       setSpecialistYearlyTargets(specYearly);
-      // ──────────────────────────────────────────────────────────
 
     } catch (error) {
       console.error('Failed to load ABM data:', error);
@@ -113,7 +83,6 @@ function ABMDashboard() {
 
   useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
-  // ==================== COMPUTED VALUES ====================
   const approvalStats = useMemo(() => {
     const total = tbmSubmissions.length;
     const pending = tbmSubmissions.filter(s => s.status === 'submitted').length;
@@ -121,13 +90,11 @@ function ABMDashboard() {
     return { total, pending, approved };
   }, [tbmSubmissions]);
 
-  // ─── STEP 5: Specialist approval stats ──────────────────────────
   const specialistApprovalStats = useMemo(() => ({
     total: specialistSubmissions.length,
     pending: specialistSubmissions.filter(s => s.status === 'submitted').length,
     approved: specialistSubmissions.filter(s => s.status === 'approved').length
   }), [specialistSubmissions]);
-  // ────────────────────────────────────────────────────────────────
 
   const uniqueTBMs = useMemo(() => {
     const tbmMap = {};
@@ -148,7 +115,6 @@ function ABMDashboard() {
     return filtered;
   }, [tbmSubmissions, tbmFilter, categoryFilter, searchTerm]);
 
-  // ==================== APPROVAL HANDLERS ====================
   const handleApproveTBMSubmission = useCallback(async (submissionId) => {
     try {
       const sub = tbmSubmissions.find(s => s.id === submissionId);
@@ -196,7 +162,6 @@ function ABMDashboard() {
     setEditedCells(prev => new Set([...prev, `${submissionId}-${month}`]));
   }, []);
 
-  // ==================== ABM AREA TARGET HANDLERS ====================
   const handleUpdateABMTarget = useCallback((productId, month, value) => {
     const numValue = parseInt(value) || 0;
     setAbmTargets(prev => prev.map(t => {
@@ -225,8 +190,6 @@ function ABMDashboard() {
       }
     });
   }, [abmTargets, showToast]);
-
-  // ─── STEP 4: Specialist handlers ────────────────────────────────
 
   const handleApproveSpecialistSubmission = useCallback(async (submissionId) => {
     try {
@@ -303,9 +266,6 @@ function ABMDashboard() {
     setSpecialistYearlyTargets(targets.map(t => ({ ...t, status: 'published' })));
   }, []);
 
-  // ────────────────────────────────────────────────────────────────
-
-  // ==================== MISC ====================
   const handleRefresh = useCallback(async () => {
     showToast('Refreshing', 'Updating...', 'info');
     await loadInitialData();
@@ -315,12 +275,10 @@ function ABMDashboard() {
   const closeModal = useCallback(() => { setModalConfig(prev => ({ ...prev, isOpen: false })); }, []);
   const getQuarterClass = (idx) => idx < 3 ? 'q1' : idx < 6 ? 'q2' : idx < 9 ? 'q3' : 'q4';
 
-  // ==================== LOADING ====================
   if (isLoading) {
     return (<div className="abm-dashboard"><div className="loading-overlay"><div className="loading-spinner"></div></div></div>);
   }
 
-  // ==================== RENDER ====================
   return (
     <div className="abm-dashboard">
       {!isOnline && (<div className="offline-banner show"><i className="fas fa-wifi-slash"></i><span>You're offline.</span></div>)}

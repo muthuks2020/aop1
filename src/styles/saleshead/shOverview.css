@@ -1,15 +1,7 @@
-/**
- * Sales Head Overview Styles — 'sh-ov-' prefix
- * Appasamy Brand: Navy (#0C2340) + Teal (#0097A7)
- * Executive analytics with premium professional feel
- * @version 1.1.0 — Brand-aligned
- */
-
 .sh-overview { padding: 0.5rem 0; }
 .sh-ov-animate-in { animation: shOvFadeIn 0.4s ease; }
 @keyframes shOvFadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ==================== KPI GRID ==================== */
 .sh-ov-kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .sh-ov-kpi-card { background: #fff; border-radius: 14px; padding: 1.25rem; border: 1px solid #E5E7EB; box-shadow: 0 2px 8px rgba(0,0,0,0.06); display: flex; align-items: flex-start; gap: 1rem; transition: all 0.25s; }
 .sh-ov-kpi-card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.1); transform: translateY(-3px); }
@@ -34,7 +26,6 @@
 @media (max-width: 1100px) { .sh-ov-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
 @media (max-width: 600px) { .sh-ov-kpi-grid { grid-template-columns: 1fr; } }
 
-/* ==================== PIE CHARTS ROW ==================== */
 .sh-ov-charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.5rem; }
 @media (max-width: 900px) { .sh-ov-charts-row { grid-template-columns: 1fr; } }
 
@@ -43,7 +34,6 @@
 .sh-ov-chart-header h3 { font-size: 1rem; font-weight: 700; color: #1F2937; display: flex; align-items: center; gap: 0.5rem; margin: 0; }
 .sh-ov-chart-header h3 i { color: #0097A7; font-size: 0.9375rem; }
 
-/* Pie Chart */
 .sh-ov-pie-wrapper { display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap; justify-content: center; }
 .sh-ov-pie-wrapper svg { flex-shrink: 0; }
 .sh-ov-pie-slice { transition: opacity 0.2s; cursor: pointer; }
@@ -58,7 +48,6 @@
 .sh-ov-pie-legend-label { flex: 1; color: #374151; font-weight: 500; }
 .sh-ov-pie-legend-pct { font-weight: 700; color: #1F2937; }
 
-/* ==================== MONTHLY TREND ==================== */
 .sh-ov-section { margin-bottom: 1.5rem; }
 .sh-ov-section-title { font-size: 1rem; font-weight: 700; color: #1F2937; display: flex; align-items: center; gap: 0.5rem; margin: 0 0 1rem; }
 .sh-ov-section-title i { color: #0097A7; }
@@ -83,7 +72,6 @@
 
 @media (max-width: 600px) { .sh-ov-trend-bar { width: 8px; } .sh-ov-trend-bars { gap: 0.25rem; } }
 
-/* ==================== ZBM PERFORMANCE CARDS ==================== */
 .sh-ov-zbm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
 .sh-ov-zbm-card { background: #fff; border-radius: 12px; padding: 1.25rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.2s; }
 .sh-ov-zbm-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-2px); }
@@ -100,7 +88,6 @@
 .sh-ov-zbm-metric-value.positive { color: #059669; }
 .sh-ov-zbm-metric-value.negative { color: #DC2626; }
 
-/* ==================== CATEGORY PERFORMANCE ==================== */
 .sh-ov-category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
 .sh-ov-cat-card { background: #fff; border-radius: 12px; padding: 1rem; border: 1px solid #E5E7EB; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 .sh-ov-cat-header { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; }

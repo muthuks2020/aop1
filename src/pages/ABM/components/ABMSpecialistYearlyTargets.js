@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Utils } from '../../../utils/helpers';
 
@@ -12,14 +11,13 @@ function ABMSpecialistYearlyTargets({
 }) {
   const [targets, setTargets] = useState([]);
   const [isDirty, setIsDirty] = useState(false);
-  const [cyBelowLyAlert, setCyBelowLyAlert] = useState(null); // { specialistName, cyValue, lyAchievedValue, onProceed }
+  const [cyBelowLyAlert, setCyBelowLyAlert] = useState(null);
 
-  // Initialize targets from props or create empty ones
   useEffect(() => {
     if (yearlyTargets.length > 0) {
       setTargets(yearlyTargets.map(t => ({ ...t })));
     } else {
-      // Create default target entries for each specialist
+
       setTargets(specialists.map(sp => ({
         id: sp.id,
         assigneeCode: sp.employeeCode || sp.id,
@@ -33,9 +31,6 @@ function ABMSpecialistYearlyTargets({
     }
   }, [specialists, yearlyTargets]);
 
-  // ==================== HANDLERS ====================
-
-  // Tracks the raw input value while typing (before validation)
   const [editingValues, setEditingValues] = useState({});
 
   const handleTargetInputChange = useCallback((index, value) => {
@@ -48,7 +43,6 @@ function ABMSpecialistYearlyTargets({
     const specialist = targets[index];
     if (!specialist) return;
 
-    // ── CY < LY Ahv validation ───────────────────────────────────────────
     if (numValue > 0 && specialist.lyAchievedValue > 0 && numValue < specialist.lyAchievedValue) {
       setCyBelowLyAlert({
         specialistName: specialist.assigneeName,
@@ -62,9 +56,8 @@ function ABMSpecialistYearlyTargets({
           setCyBelowLyAlert(null);
         },
       });
-      return; // block save until user decides
+      return;
     }
-    // ─────────────────────────────────────────────────────────────────────
 
     setTargets(prev => prev.map((t, i) =>
       i === index ? { ...t, cyTargetValue: numValue, status: t.status === 'not_set' ? 'draft' : t.status } : t
@@ -93,8 +86,6 @@ function ABMSpecialistYearlyTargets({
     }
   }, [targets, onPublishTargets, showToast]);
 
-  // ==================== COMPUTED ====================
-
   const totalLY = useMemo(() => targets.reduce((s, t) => s + (t.lyTargetValue || 0), 0), [targets]);
   const totalCY = useMemo(() => targets.reduce((s, t) => s + (t.cyTargetValue || 0), 0), [targets]);
   const totalLYAchieved = useMemo(() => targets.reduce((s, t) => s + (t.lyAchievedValue || 0), 0), [targets]);
@@ -107,11 +98,9 @@ function ABMSpecialistYearlyTargets({
     published: targets.filter(t => t.status === 'published').length,
   }), [targets]);
 
-  // ==================== RENDER ====================
-
   return (
     <div className="specialist-yearly-targets">
-      {/* Section Header */}
+      {}
       <div className="yearly-targets-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.75rem' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: '1.1rem', color: '#1e293b' }}>
@@ -150,7 +139,7 @@ function ABMSpecialistYearlyTargets({
         </div>
       </div>
 
-      {/* Summary Row */}
+      {}
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
         <div style={{ flex: '1', minWidth: '150px', padding: '12px 16px', background: '#f0f9ff', borderRadius: '8px', borderLeft: '4px solid #0ea5e9' }}>
           <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '4px' }}>Total Specialists</div>
@@ -172,7 +161,7 @@ function ABMSpecialistYearlyTargets({
         </div>
       </div>
 
-      {/* Targets Table */}
+      {}
       {targets.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>
           <i className="fas fa-user-tie" style={{ fontSize: '2rem', marginBottom: '0.75rem', display: 'block' }}></i>
@@ -258,7 +247,7 @@ function ABMSpecialistYearlyTargets({
                 );
               })}
             </tbody>
-            {/* Footer Totals */}
+            {}
             <tfoot>
               <tr style={{ background: '#f8fafc', borderTop: '2px solid #e2e8f0', fontWeight: 700 }}>
                 <td colSpan="3" style={{ padding: '10px 12px', color: '#1e293b' }}>TOTAL</td>
@@ -280,7 +269,7 @@ function ABMSpecialistYearlyTargets({
           </table>
         </div>
       )}
-      {/* ========== CY BELOW LY AHV WARNING MODAL ========== */}
+      {}
       {cyBelowLyAlert && (
         <div
           onClick={() => setCyBelowLyAlert(null)}
@@ -297,7 +286,7 @@ function ABMSpecialistYearlyTargets({
               boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden',
             }}
           >
-            {/* Header */}
+            {}
             <div style={{
               background: '#FFFBEB', borderBottom: '1px solid #FDE68A',
               padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem',
@@ -307,7 +296,7 @@ function ABMSpecialistYearlyTargets({
                 CY Target Below LY Achievement
               </h3>
             </div>
-            {/* Body */}
+            {}
             <div style={{ padding: '1.25rem' }}>
               <p style={{ margin: '0 0 1rem', color: '#374151', lineHeight: 1.6, fontSize: '0.9rem' }}>
                 The CY Target for{' '}
@@ -343,7 +332,7 @@ function ABMSpecialistYearlyTargets({
                 </p>
               </div>
             </div>
-            {/* Actions */}
+            {}
             <div style={{
               padding: '1rem 1.25rem', borderTop: '1px solid #F3F4F6',
               display: 'flex', gap: '0.75rem',

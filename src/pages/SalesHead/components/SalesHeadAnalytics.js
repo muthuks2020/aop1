@@ -1,21 +1,3 @@
-/**
- * SalesHeadAnalytics Component
- * Executive Target Distribution & Comparison Analytics
- *
- * PART 1 CHANGES:
- *   Item 1 — "LY Ach" → "LY Ahv" in all bar tags and KPI labels
- *   Item 4 — Added % metrics: growth (target), growth (achievement),
- *             contribution %, % of target achievement in summary bar
- *   Item 6 — Removed "Entities" count from the summary stats bar
- *   Item 7 — Category breakdown TABLE in compare mode replaced with
- *             a CategoryBarChart (grouped horizontal bars per category)
- *
- * All existing data-aggregation logic, chart components, and API calls
- * are preserved without modification.
- *
- * @version 1.1.0 — Part 1 Items 1, 4, 6, 7
- */
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { SalesHeadApiService } from '../../../services/salesHeadApi';
 import { Utils } from '../../../utils/helpers';
@@ -30,9 +12,6 @@ const CAT_COLORS = {
 };
 
 const ZONE_COLORS = ['#0C2340', '#0097A7', '#4F46E5', '#D97706', '#2E7D32', '#7C3AED'];
-
-// ==================== HORIZONTAL BAR CHART ====================
-// PART 1 — Item 1: "LY Ach" tag renamed → "LY Ahv"
 
 function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {} }) {
   if (!items.length) return <div className="sh-an-empty">No data available</div>;
@@ -52,7 +31,7 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
               {item.subtitle && <span className="sh-an-hbar-sub">{item.subtitle}</span>}
             </div>
             <div className="sh-an-hbar-bars">
-              {/* PART 1 — Item 1: "LY Tgt" (was "LY Tgt" — already correct, keeping) */}
+              {}
               <div className="sh-an-hbar-bar-row">
                 <span className="sh-an-hbar-tag ly">LY Tgt</span>
                 <div className="sh-an-hbar-track">
@@ -62,7 +41,7 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
                 </div>
                 <span className="sh-an-hbar-end">{metric === 'revenue' ? '₹' : ''}{Utils.formatCompact(item.lyValue || 0)}</span>
               </div>
-              {/* PART 1 — Item 1: "LY Ahv" (was "LY Ach") */}
+              {}
               <div className="sh-an-hbar-bar-row">
                 <span className="sh-an-hbar-tag ach">LY Ahv</span>
                 <div className="sh-an-hbar-track">
@@ -90,8 +69,6 @@ function HorizontalBar({ items, maxVal, metric, showLabels = true, colorMap = {}
     </div>
   );
 }
-
-// ==================== STACKED BAR CHART (unchanged) ====================
 
 function StackedBarChart({ data, categories, metric }) {
   if (!data.length) return <div className="sh-an-empty">No data</div>;
@@ -134,8 +111,6 @@ function StackedBarChart({ data, categories, metric }) {
   );
 }
 
-// ==================== RADAR CHART (unchanged) ====================
-
 function RadarChart({ dataA, dataB, labels, nameA, nameB, size = 280 }) {
   if (!labels.length) return null;
   const cx = size / 2, cy = size / 2, r = size * 0.38;
@@ -175,8 +150,6 @@ function RadarChart({ dataA, dataB, labels, nameA, nameB, size = 280 }) {
     </svg>
   );
 }
-
-// ==================== MONTHLY COMPARISON CHART (unchanged) ====================
 
 function MonthlyComparisonChart({ dataA, dataB, nameA, nameB, metric }) {
   if (!dataA.length) return null;

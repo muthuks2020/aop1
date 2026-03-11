@@ -7,8 +7,8 @@ function CategoryList({ categories, products, expandedCategories, searchTerm, st
     let filtered = productList;
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
-      filtered = filtered.filter(p => 
-        p.name.toLowerCase().includes(search) || 
+      filtered = filtered.filter(p =>
+        p.name.toLowerCase().includes(search) ||
         p.code.toLowerCase().includes(search) ||
         (p.subcategory && p.subcategory.toLowerCase().includes(search))
       );
@@ -66,7 +66,7 @@ function CategoryList({ categories, products, expandedCategories, searchTerm, st
                 <div className={`category-growth ${categoryTotals.growth >= 0 ? 'positive' : 'negative'}`}>{Utils.formatGrowth(categoryTotals.growth)}</div>
               </div>
             </div>
-            
+
             {isExpanded && (
               <div className="category-content">
                 {subcategories.length > 0 ? (

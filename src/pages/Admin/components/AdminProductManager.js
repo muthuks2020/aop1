@@ -1,18 +1,3 @@
-/**
- * AdminProductManager Component
- * Add / Edit / Toggle Active-Inactive / Delete products
- * Products marked active will show across all existing screens
- *
- * Features:
- * - Product table with search and category filter
- * - Add/Edit form as slide-over panel
- * - Active/Inactive toggle with visual indicator
- * - List price entry with currency formatting
- * - Bulk status operations
- *
- * @version 1.0.0
- */
-
 import React, { useState, useMemo } from 'react';
 import { AdminApiService } from '../../../services/adminApi';
 
@@ -29,15 +14,14 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
   const [formData, setFormData] = useState({ ...EMPTY_PRODUCT });
   const [isSaving, setIsSaving] = useState(false);
 
-  // Filtered products
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchSearch = !searchTerm || 
+      const matchSearch = !searchTerm ||
         p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         p.code.toLowerCase().includes(searchTerm.toLowerCase());
       const matchCategory = categoryFilter === 'all' || p.categoryId === categoryFilter;
-      const matchStatus = statusFilter === 'all' || 
-        (statusFilter === 'active' && p.isActive) || 
+      const matchStatus = statusFilter === 'all' ||
+        (statusFilter === 'active' && p.isActive) ||
         (statusFilter === 'inactive' && !p.isActive);
       return matchSearch && matchCategory && matchStatus;
     });
@@ -58,14 +42,12 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
     return cat ? cat.color : '#6B7280';
   };
 
-  // Open add form
   const handleAddNew = () => {
     setEditingProduct(null);
     setFormData({ ...EMPTY_PRODUCT });
     setShowForm(true);
   };
 
-  // Open edit form
   const handleEdit = (product) => {
     setEditingProduct(product);
     setFormData({
@@ -80,7 +62,6 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
     setShowForm(true);
   };
 
-  // Save (create or update)
   const handleSave = async () => {
     if (!formData.name.trim()) { showToast('Validation', 'Product name is required.', 'warning'); return; }
     if (!formData.code.trim()) { showToast('Validation', 'Product code is required.', 'warning'); return; }
@@ -107,7 +88,6 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
     setIsSaving(false);
   };
 
-  // Toggle active/inactive
   const handleToggleStatus = async (product) => {
     const action = product.isActive ? 'deactivate' : 'activate';
     showModal(
@@ -126,7 +106,6 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
     );
   };
 
-  // Delete product
   const handleDelete = (product) => {
     showModal(
       'Delete Product',
@@ -146,7 +125,7 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
 
   return (
     <div className="adm-product-section">
-      {/* Toolbar */}
+      {}
       <div className="adm-toolbar">
         <div className="adm-toolbar-left">
           <div className="adm-search-box">
@@ -174,12 +153,12 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
         </button>
       </div>
 
-      {/* Product Count */}
+      {}
       <div className="adm-result-count">
         Showing {filteredProducts.length} of {products.length} products
       </div>
 
-      {/* Product Table */}
+      {}
       <div className="adm-table-wrapper">
         <table className="adm-table">
           <thead>
@@ -245,7 +224,7 @@ function AdminProductManager({ products, categories, onRefresh, showToast, showM
         </table>
       </div>
 
-      {/* Slide-over Form */}
+      {}
       {showForm && (
         <div className="adm-panel-overlay" onClick={() => setShowForm(false)}>
           <div className="adm-panel" onClick={(e) => e.stopPropagation()}>

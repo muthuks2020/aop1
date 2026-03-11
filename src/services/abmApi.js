@@ -1,11 +1,3 @@
-/**
- * ABM API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest } from './apiClient';
 import {
   normalizeCategory, normalizeSubmission, normalizeGeoTarget,
@@ -14,14 +6,10 @@ import {
 
 export const ABMApiService = {
 
-  // ==================== CATEGORIES ====================
-
   async getCategories() {
     const raw = await apiRequest('/categories');
     return normalizeArray(raw, normalizeCategory);
   },
-
-  // ==================== TBM SUBMISSIONS ====================
 
   async getTBMSubmissions(filters = {}) {
     const params = new URLSearchParams();
@@ -32,8 +20,6 @@ export const ABMApiService = {
     const raw = await apiRequest(`/abm/tbm-submissions${query ? '?' + query : ''}`);
     return normalizeArray(raw, normalizeSubmission);
   },
-
-  // ==================== APPROVALS ====================
 
   async approveTBMTarget(submissionId, corrections = null) {
     return apiRequest(`/abm/approve-tbm/${submissionId}`, {
@@ -55,8 +41,6 @@ export const ABMApiService = {
       body: JSON.stringify({ submissionIds }),
     });
   },
-
-  // ==================== ABM AREA TARGETS ====================
 
   async getABMTargets() {
     const raw = await apiRequest('/abm/area-targets');
@@ -84,8 +68,6 @@ export const ABMApiService = {
     });
   },
 
-  // ==================== TEAM YEARLY TARGETS ====================
-
   async getTeamMembers() {
     return apiRequest('/abm/team-members');
   },
@@ -101,13 +83,9 @@ export const ABMApiService = {
     });
   },
 
-  // ==================== HIERARCHY DRILL-DOWN ====================
-
   async getTBMHierarchy() {
     return apiRequest('/abm/tbm-hierarchy');
   },
-
-  // ==================== DASHBOARD ====================
 
   async getDashboardStats() {
     return apiRequest('/abm/dashboard-stats');

@@ -1,12 +1,3 @@
-/**
- * TBM API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- * ★ Team target + yearly target methods integrated
- *
- * @version 5.1.0
- */
-
 import { apiRequest, API_URL } from './apiClient';
 import {
   normalizeProduct, normalizeCategory, normalizeSubmission,
@@ -38,8 +29,6 @@ export const TBM_API_CONFIG = {
 
 export const TBMApiService = {
 
-  // ==================== CATEGORIES & PRODUCTS ====================
-
   async getCategories() {
     const raw = await apiRequest('/categories');
     return normalizeArray(raw, normalizeCategory);
@@ -50,8 +39,6 @@ export const TBMApiService = {
     return normalizeArray(raw, normalizeProduct);
   },
 
-  // ==================== SALES REP SUBMISSIONS ====================
-
   async getSalesRepSubmissions(filters = {}) {
     const params = new URLSearchParams();
     if (filters.status) params.set('status', filters.status);
@@ -61,8 +48,6 @@ export const TBMApiService = {
     const raw = await apiRequest(`/tbm/sales-rep-submissions${query ? '?' + query : ''}`);
     return normalizeArray(raw, normalizeSubmission);
   },
-
-  // ==================== APPROVALS ====================
 
   async approveSalesRepTarget(submissionId, corrections = null) {
     return apiRequest(`/tbm/approve-sales-rep/${submissionId}`, {
@@ -92,8 +77,6 @@ export const TBMApiService = {
     });
   },
 
-  // ==================== TBM TERRITORY TARGETS ====================
-
   async getTBMTargets() {
     const raw = await apiRequest('/tbm/territory-targets');
     return normalizeArray(raw, normalizeProduct);
@@ -113,8 +96,6 @@ export const TBMApiService = {
     });
   },
 
-  // ==================== TBM INDIVIDUAL TARGETS ====================
-
   async getTBMIndividualTargets() {
     const raw = await apiRequest('/tbm/individual-targets');
     return normalizeArray(raw, normalizeProduct);
@@ -133,8 +114,6 @@ export const TBMApiService = {
       body: JSON.stringify({ targetIds }),
     });
   },
-
-  // ==================== TEAM YEARLY TARGETS ====================
 
   async getYearlyTargets(fiscalYear) {
     return apiRequest(`/tbm/yearly-targets?fy=${fiscalYear}`);
@@ -166,8 +145,6 @@ export const TBMApiService = {
     });
   },
 
-  // ==================== TEAM MEMBERS ====================
-
   async getTeamMembers() {
     return apiRequest('/tbm/team-members');
   },
@@ -182,8 +159,6 @@ export const TBMApiService = {
       body: JSON.stringify({ targets }),
     });
   },
-
-  // ==================== DASHBOARD ====================
 
   async getTBMDashboardStats() {
     return apiRequest('/tbm/dashboard-stats');

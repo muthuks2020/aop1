@@ -1,25 +1,18 @@
-/* ========================================================================== */
-/* TBM DASHBOARD - APPASAMY ASSOCIATES CORPORATE THEME                        */
-/* Brand: Appasamy Associates - Empowering Vision Through Innovation          */
-/* ========================================================================== */
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
 @import './tbmOverallTargetBar.css';
 @import './tbmDashboard_4tab_additions.css';
-/* ==================== APPASAMY BRAND COLORS ==================== */
+
 :root {
-  /* Primary Brand Colors - Deep Corporate Navy */
+
   --primary: #0C2340;
   --primary-dark: #061527;
   --primary-light: #1A3A5C;
-  
-  /* Accent - Professional Teal (Eye Care Theme) */
+
   --accent: #0097A7;
   --accent-dark: #00838F;
   --accent-light: #B2EBF2;
   --accent-glow: rgba(0, 151, 167, 0.15);
-  
-  /* Success, Warning, Danger */
+
   --success: #2E7D32;
   --success-light: #E8F5E9;
   --warning: #ED6C02;
@@ -28,8 +21,7 @@
   --danger-light: #FFEBEE;
   --info: #0288D1;
   --info-light: #E1F5FE;
-  
-  /* Quarter Colors - Subtle Professional */
+
   --q1-color: #1565C0;
   --q1-bg: #E3F2FD;
   --q1-border: #42A5F5;
@@ -42,8 +34,7 @@
   --q4-color: #C62828;
   --q4-bg: #FFEBEE;
   --q4-border: #EF5350;
-  
-  /* Neutrals - Refined Grays */
+
   --white: #FFFFFF;
   --gray-25: #FCFCFD;
   --gray-50: #F8FAFC;
@@ -56,22 +47,19 @@
   --gray-700: #334155;
   --gray-800: #1E293B;
   --gray-900: #0F172A;
-  
-  /* Effects */
+
   --shadow-sm: 0 1px 2px rgba(12, 35, 64, 0.05);
   --shadow: 0 1px 3px rgba(12, 35, 64, 0.1), 0 1px 2px rgba(12, 35, 64, 0.06);
   --shadow-md: 0 4px 6px -1px rgba(12, 35, 64, 0.1), 0 2px 4px -1px rgba(12, 35, 64, 0.06);
   --shadow-lg: 0 10px 15px -3px rgba(12, 35, 64, 0.1), 0 4px 6px -2px rgba(12, 35, 64, 0.05);
   --shadow-xl: 0 20px 25px -5px rgba(12, 35, 64, 0.1), 0 10px 10px -5px rgba(12, 35, 64, 0.04);
   --shadow-glow: 0 0 20px rgba(0, 151, 167, 0.15);
-  
-  /* Radius */
+
   --radius-sm: 6px;
   --radius: 8px;
   --radius-lg: 12px;
   --radius-xl: 16px;
-  
-  /* Transitions */
+
   --transition-fast: 0.15s ease;
   --transition: 0.2s ease;
   --transition-slow: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -79,7 +67,6 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* ==================== MAIN LAYOUT ==================== */
 .tbm-dashboard {
   min-height: 100vh;
   background: linear-gradient(180deg, var(--gray-50) 0%, var(--gray-100) 100%);
@@ -93,7 +80,6 @@
   margin: 0 auto;
 }
 
-/* ==================== OFFLINE BANNER ==================== */
 .offline-banner {
   display: none;
   background: linear-gradient(135deg, var(--warning) 0%, #F57C00 100%);
@@ -110,7 +96,6 @@
 .offline-banner.show { display: flex; }
 .offline-banner i { font-size: 1.125rem; }
 
-/* ==================== TAB NAVIGATION - REFINED ==================== */
 .tbm-tabs {
   display: flex;
   gap: 0.5rem;
@@ -208,7 +193,6 @@
   50% { transform: scale(1.05); }
 }
 
-/* ==================== STATS OVERVIEW - ELEGANT CARDS ==================== */
 .tbm-stats-overview {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -304,7 +288,6 @@
   margin-top: 0.375rem;
 }
 
-/* ==================== APPROVAL CONTAINER - MAIN CARD ==================== */
 .tbm-approval-container {
   background: var(--white);
   border-radius: var(--radius-xl);
@@ -404,7 +387,6 @@
   transform: none !important;
 }
 
-/* ==================== FILTERS - CLEAN TOOLBAR ==================== */
 .approval-filters {
   display: flex;
   gap: 1rem;
@@ -492,7 +474,6 @@
   box-shadow: 0 0 0 3px var(--accent-glow);
 }
 
-/* ==================== TABLE - EXCEL-LIKE PROFESSIONAL ==================== */
 .table-container {
   overflow-x: auto;
   max-height: calc(100vh - 400px);
@@ -506,7 +487,6 @@
   min-width: 1400px;
 }
 
-/* Table Header */
 .approval-table thead {
   position: sticky;
   top: 0;
@@ -561,7 +541,6 @@
   background: var(--gray-100);
 }
 
-/* Table Body */
 .approval-table tbody tr {
   border-bottom: 1px solid var(--gray-100);
   transition: var(--transition);
@@ -614,7 +593,6 @@
 .approval-table td.td-product { left: 0; z-index: 2; }
 .approval-table td.td-rep { left: 200px; z-index: 1; border-left: 1px solid var(--gray-100); }
 
-/* Product Cell */
 .product-cell {
   display: flex;
   flex-direction: column;
@@ -635,7 +613,6 @@
   font-weight: 500;
 }
 
-/* Rep Cell */
 .rep-cell {
   display: flex;
   align-items: center;
@@ -673,7 +650,6 @@
   color: var(--gray-500);
 }
 
-/* Month Cells */
 .approval-table td.td-month {
   font-weight: 500;
   border-right: 1px solid var(--gray-50);
@@ -684,7 +660,6 @@
 .approval-table td.td-month.q3 { background: rgba(230, 81, 0, 0.03); }
 .approval-table td.td-month.q4 { background: rgba(198, 40, 40, 0.03); }
 
-/* Total & Growth */
 .approval-table td.td-total {
   font-weight: 700;
   color: var(--success);
@@ -720,7 +695,6 @@
   font-size: 0.625rem;
 }
 
-/* Actions */
 .action-btns {
   display: flex;
   gap: 0.375rem;
@@ -787,7 +761,6 @@
   color: var(--danger);
 }
 
-/* ==================== TBM TARGETS CONTAINER ==================== */
 .tbm-targets-container {
   background: var(--white);
   border-radius: var(--radius-xl);
@@ -926,7 +899,6 @@
   cursor: not-allowed;
 }
 
-/* TBM Grid Wrapper */
 .tbm-grid-wrapper {
   overflow-x: auto;
   max-height: calc(100vh - 380px);
@@ -937,7 +909,6 @@
   min-width: 1400px;
 }
 
-/* TBM Grid Header Row */
 .tbm-grid-header-row {
   display: grid;
   grid-template-columns: 220px repeat(12, minmax(60px, 1fr)) repeat(4, 70px) 85px 85px;
@@ -999,7 +970,6 @@
 .tbm-header-cell.total-header { background: var(--success-light); color: var(--success); border-left: 2px solid var(--success); }
 .tbm-header-cell.growth-header { background: var(--warning-light); color: #E65100; }
 
-/* TBM Category Section */
 .tbm-category-section { border-bottom: 1px solid var(--gray-100); }
 
 .tbm-category-header-row {
@@ -1044,7 +1014,6 @@
 .category-count { font-size: 0.6875rem; color: var(--gray-500); margin-left: 0.375rem; font-weight: 500; }
 .revenue-badge { font-size: 0.5625rem; background: var(--warning-light); color: #E65100; padding: 0.1875rem 0.5rem; border-radius: 4px; margin-left: 0.5rem; font-weight: 700; }
 
-/* TBM Product Rows */
 .tbm-products-container { background: var(--white); }
 
 .tbm-product-rows { border-bottom: 1px solid var(--gray-100); transition: var(--transition); }
@@ -1097,7 +1066,6 @@
 .status-indicator.approved { background: var(--success-light); color: var(--success); }
 .status-indicator.rejected { background: var(--danger-light); color: var(--danger); }
 
-/* TBM Month Cells */
 .tbm-month-cell {
   padding: 0.5rem 0.375rem;
   text-align: center;
@@ -1135,7 +1103,6 @@
 
 .cell-value { display: block; }
 
-/* TBM Quarter Cells */
 .tbm-quarter-cell {
   padding: 0.5rem 0.375rem;
   text-align: center;
@@ -1152,7 +1119,6 @@
 .tbm-quarter-cell.ly { opacity: 0.7; font-weight: 500; }
 .tbm-quarter-cell.category-total { font-weight: 800; }
 
-/* TBM Total & Growth Cells */
 .tbm-total-cell {
   padding: 0.5rem 0.375rem;
   text-align: center;
@@ -1189,7 +1155,6 @@
 .growth-badge.positive { background: var(--success-light); color: var(--success); }
 .growth-badge.negative { background: var(--danger-light); color: var(--danger); }
 
-/* Status Badge Large */
 .status-badge-large {
   display: inline-flex;
   align-items: center;
@@ -1205,7 +1170,6 @@
 .status-badge-large.rejected { background: var(--danger-light); color: var(--danger); }
 .status-badge-large.draft { background: #E3F2FD; color: #1565C0; }
 
-/* ==================== EMPTY STATE ==================== */
 .empty-state {
   display: flex;
   flex-direction: column;
@@ -1241,7 +1205,6 @@
   max-width: 400px;
 }
 
-/* ==================== REJECTION MODAL ==================== */
 .rejection-modal-overlay {
   position: fixed;
   inset: 0;
@@ -1362,7 +1325,6 @@
   cursor: not-allowed;
 }
 
-/* ==================== LOADING ==================== */
 .loading-overlay {
   position: fixed;
   inset: 0;
@@ -1386,7 +1348,6 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ==================== TOAST ==================== */
 .toast-container {
   position: fixed;
   bottom: 1.5rem;
@@ -1397,7 +1358,6 @@
   z-index: 1001;
 }
 
-/* ==================== SCROLLBAR ==================== */
 .table-container::-webkit-scrollbar,
 .tbm-grid-wrapper::-webkit-scrollbar {
   width: 8px;
@@ -1421,7 +1381,6 @@
   background: var(--gray-400);
 }
 
-/* ==================== RESPONSIVE ==================== */
 @media (max-width: 1440px) {
   .tbm-stats-overview { grid-template-columns: repeat(2, 1fr); }
 }

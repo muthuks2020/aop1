@@ -1,9 +1,3 @@
-/**
- * Login.js — Email + Password login
- *
- * @version 6.0.0 - Email-based login, forgot password link, no SSO
- */
-
 import React, { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -38,7 +32,6 @@ function Login() {
     finally { setLoading(false); }
   };
 
-
   return (
     <div className="login-page">
       <div className="login-bg-pattern">
@@ -47,7 +40,7 @@ function Login() {
         <div className="pattern-circle pattern-3"></div>
       </div>
       <div className="login-container">
-        {/* ── Left: Branding Panel ───────────────────────────────── */}
+        {}
         <div className="login-branding">
           <div className="branding-content">
             <div className="brand-logo">
@@ -82,7 +75,7 @@ function Login() {
           </div>
         </div>
 
-        {/* ── Right: Form Panel ──────────────────────────────────── */}
+        {}
         <div className="login-form-section">
           <div className="login-form-container">
             <div className="form-header">
@@ -138,7 +131,7 @@ function Login() {
                 </div>
               </div>
 
-              {/* Forgot Password link */}
+              {}
               <div className="forgot-password-link">
                 <Link to="/forgot-password">Forgot Password?</Link>
               </div>

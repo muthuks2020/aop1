@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { SpecialistApiService } from '../../services/specialistApi';
@@ -12,13 +10,11 @@ import Toast from '../../components/common/Toast';
 import Modal from '../../components/common/Modal';
 import '../../styles/specialist/specialistDashboard.css';
 
-
-const OVERALL_YEARLY_TARGET_VALUE = 30000000; // ₹3 Crore — from ABM
+const OVERALL_YEARLY_TARGET_VALUE = 30000000;
 
 function SpecialistDashboard() {
   const { user } = useAuth();
 
-  // ==================== STATE ====================
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [activeTab, setActiveTab] = useState('overview');
@@ -28,7 +24,6 @@ function SpecialistDashboard() {
     isOpen: false, title: '', message: '', type: 'info', onConfirm: null
   });
 
-  // ==================== DATA LOADING ====================
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -45,7 +40,6 @@ function SpecialistDashboard() {
     loadData();
   }, []);
 
-  // ==================== ONLINE / OFFLINE ====================
   useEffect(() => {
     const handleOnline = () => {
       setIsOnline(true);
@@ -63,7 +57,6 @@ function SpecialistDashboard() {
     };
   }, []);
 
-  // ==================== TOAST ====================
   const showToast = useCallback((title, message, type = 'success') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, title, message, type }]);
@@ -74,11 +67,6 @@ function SpecialistDashboard() {
     setToasts(prev => prev.filter(t => t.id !== id));
   }, []);
 
-  // ==================== HANDLERS ====================
-
-  /**
-   * Update a single cell in the target entry grid
-   */
   const handleUpdateTarget = useCallback((productId, month, value) => {
     setProducts(prev => prev.map(p => {
       if (p.id === productId) {
@@ -92,9 +80,6 @@ function SpecialistDashboard() {
     }));
   }, []);
 
-  /**
-   * Save all draft targets
-   */
   const handleSaveAll = useCallback(async () => {
     try {
       await SpecialistApiService.saveAllDrafts(products);
@@ -104,9 +89,6 @@ function SpecialistDashboard() {
     }
   }, [products, showToast]);
 
-  /**
-   * Submit all targets to ABM for review
-   */
   const handleSubmitAll = useCallback(() => {
     setModalConfig({
       isOpen: true,
@@ -117,7 +99,7 @@ function SpecialistDashboard() {
         try {
           const productIds = products.map(p => p.id);
           await SpecialistApiService.submitMultipleProducts(productIds);
-          // Update local state to reflect submission
+
           setProducts(prev => prev.map(p => ({ ...p, status: 'submitted' })));
           showToast('Submitted', 'All targets submitted to ABM for review', 'success');
         } catch (error) {
@@ -132,13 +114,11 @@ function SpecialistDashboard() {
     setModalConfig(prev => ({ ...prev, isOpen: false }));
   }, []);
 
-  // ==================== COMPUTED ====================
   const totalProducts = products.length;
   const submittedCount = products.filter(p => p.status === 'submitted').length;
   const approvedCount = products.filter(p => p.status === 'approved').length;
   const pendingCount = products.filter(p => p.status === 'draft' || p.status === 'not_started').length;
 
-  // ==================== RENDER TABS ====================
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':

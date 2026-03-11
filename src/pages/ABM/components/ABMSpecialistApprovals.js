@@ -1,5 +1,3 @@
-
-
 import React, { useState, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
 
@@ -18,8 +16,6 @@ function ABMSpecialistApprovals({
   const [specialistFilter, setSpecialistFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-
-  // ==================== DERIVED DATA ====================
 
   const uniqueSpecialists = useMemo(() => {
     const map = {};
@@ -53,8 +49,6 @@ function ABMSpecialistApprovals({
     });
   }, [submissions, specialistFilter, categoryFilter, searchTerm]);
 
-  // ==================== HANDLERS ====================
-
   const handleApprove = useCallback((submissionId) => {
     if (onApprove) onApprove(submissionId);
   }, [onApprove]);
@@ -70,11 +64,9 @@ function ABMSpecialistApprovals({
     return 'q4';
   };
 
-  // ==================== RENDER ====================
-
   return (
     <div className="abm-specialist-approvals">
-      {/* Stats */}
+      {}
       <div className="abm-approval-stats">
         <div className="abm-stat-card">
           <i className="fas fa-inbox"></i>
@@ -99,7 +91,7 @@ function ABMSpecialistApprovals({
         </div>
       </div>
 
-      {/* Filters */}
+      {}
       <div className="abm-approval-filters">
         <div className="abm-filter-group">
           <label>Specialist:</label>
@@ -135,7 +127,7 @@ function ABMSpecialistApprovals({
         )}
       </div>
 
-      {/* Submissions Table */}
+      {}
       <div className="abm-approval-table-container">
         {filteredSubmissions.length === 0 ? (
           <div className="abm-empty-state">

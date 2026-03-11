@@ -1,24 +1,12 @@
-/**
- * ZBM API Service — v5 Live Backend
- *
- * ★ FIELD NORMALIZATION via shared normalizers.js
- *
- * @version 5.1.0
- */
-
 import { apiRequest } from './apiClient';
 import { normalizeCategory, normalizeSubmission, normalizeArray } from './normalizers';
 
 export const ZBMApiService = {
 
-  // ==================== CATEGORIES ====================
-
   async getCategories() {
     const raw = await apiRequest('/categories');
     return normalizeArray(raw, normalizeCategory);
   },
-
-  // ==================== ABM SUBMISSIONS ====================
 
   async getABMSubmissions(filters = {}) {
     const params = new URLSearchParams();
@@ -29,8 +17,6 @@ export const ZBMApiService = {
     const raw = await apiRequest(`/zbm/abm-submissions${query ? '?' + query : ''}`);
     return normalizeArray(raw, normalizeSubmission);
   },
-
-  // ==================== APPROVALS ====================
 
   async approveABMTarget(submissionId, corrections = null) {
     return apiRequest(`/zbm/approve-abm/${submissionId}`, {
@@ -53,13 +39,9 @@ export const ZBMApiService = {
     });
   },
 
-  // ==================== HIERARCHY DRILL-DOWN ====================
-
   async getABMHierarchy() {
     return apiRequest('/zbm/abm-hierarchy');
   },
-
-  // ==================== TEAM YEARLY TARGETS ====================
 
   async getTeamMembers() {
     return apiRequest('/zbm/team-members');
@@ -75,8 +57,6 @@ export const ZBMApiService = {
       body: JSON.stringify({ targets }),
     });
   },
-
-  // ==================== DASHBOARD ====================
 
   async getDashboardStats() {
     return apiRequest('/zbm/dashboard-stats');

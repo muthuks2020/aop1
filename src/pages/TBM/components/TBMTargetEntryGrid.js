@@ -1,12 +1,3 @@
-/**
- * TBMTargetEntryGrid Component
- * Mirrors Sales Rep TargetEntryGrid — same CSS classes, same layout.
- * TBM enters territory-level monthly targets → submits to ABM for approval.
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 3.0.0 — Rewritten to match Sales Rep grid (fixes broken layout)
- */
-
 import React, { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Utils } from '../../../utils/helpers';
 
@@ -42,8 +33,6 @@ function TBMTargetEntryGrid({
     }
   }, [activeCell]);
 
-  // ==================== HELPERS ====================
-
   const isEditable = useCallback((product) => {
     const status = product.status || 'draft';
     return status === 'draft' || status === 'rejected';
@@ -70,8 +59,6 @@ function TBMTargetEntryGrid({
     }
   }, []);
 
-  // ==================== FILTERED DATA ====================
-
   const filteredProducts = useMemo(() => {
     let result = products;
     if (searchTerm.trim()) {
@@ -83,7 +70,7 @@ function TBMTargetEntryGrid({
       );
     }
     if (showOnlyEntered) result = result.filter(p => hasAnyCYValue(p));
-    // dedupe
+
     const seen = new Set();
     result = result.filter(p => {
       const key = `${p.categoryId}__${p.subcategory}__${p.name.trim().toLowerCase()}`;
@@ -101,8 +88,6 @@ function TBMTargetEntryGrid({
     });
     return Array.from(subs);
   }, [filteredProducts]);
-
-  // ==================== CALCULATIONS ====================
 
   const calculateYearlyTotal = useCallback((productId, year) => {
     const product = products.find(p => p.id === productId);
@@ -128,8 +113,6 @@ function TBMTargetEntryGrid({
     return Utils.calcGrowth(ly, cy);
   }, [calculateYearlyTotal]);
 
-  // ==================== SUMMARY BAR ====================
-
   const overallSummary = useMemo(() => {
     let totalCYQty = 0, totalLYQty = 0, totalCYRev = 0;
     let draftCount = 0, submittedCount = 0, approvedCount = 0, rejectedCount = 0;
@@ -153,8 +136,6 @@ function TBMTargetEntryGrid({
       qtyGrowth: Utils.calcGrowth(totalLYQty, totalCYQty),
     };
   }, [products]);
-
-  // ==================== EVENT HANDLERS ====================
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories(prev => {
@@ -237,8 +218,6 @@ function TBMTargetEntryGrid({
     searchInputRef.current?.focus();
   };
 
-  // ==================== RENDER: PRODUCT ROWS ====================
-
   const renderProductRows = (product) => {
     const canEdit    = isEditable(product);
     const statusInfo = getStatusInfo(product.status);
@@ -248,7 +227,7 @@ function TBMTargetEntryGrid({
         key={product.id}
         className={`product-rows ${product.status ? `status-${product.status}` : 'status-draft'}`}
       >
-        {/* CY Row */}
+        {}
         <div className="product-row cy-row">
           <div className="product-name-cell">
             <span className="product-name" title={product.name}>{product.name}</span>
@@ -317,7 +296,7 @@ function TBMTargetEntryGrid({
           </div>
         </div>
 
-        {/* LY Row */}
+        {}
         <div className="product-row ly-row">
           <div className="product-name-cell ly-label">
             <span>LY Qty</span>
@@ -340,8 +319,6 @@ function TBMTargetEntryGrid({
     );
   };
 
-  // ==================== RENDER: CATEGORY ====================
-
   const renderCategory = (category) => {
     const isExpanded    = expandedCategories.has(category.id);
     const subcategories = getSubcategories(category.id);
@@ -350,7 +327,7 @@ function TBMTargetEntryGrid({
 
     return (
       <div key={category.id} className="category-section">
-        {/* Category header row */}
+        {}
         <div className="category-header-row" onClick={() => toggleCategory(category.id)}>
           <div className="category-name-cell">
             <i className={`fas fa-chevron-${isExpanded ? 'down' : 'right'} chevron-icon`}></i>
@@ -376,7 +353,7 @@ function TBMTargetEntryGrid({
           <div className="growth-cell"></div>
         </div>
 
-        {/* Subcategories / Products */}
+        {}
         {isExpanded && (
           subcategories.length > 0 ? subcategories.map(sub => {
             const subKey      = `${category.id}__${sub}`;
@@ -417,15 +394,13 @@ function TBMTargetEntryGrid({
     );
   };
 
-  // ==================== MAIN RENDER ====================
-
   const { totalCYQty, totalLYQty, draftCount, submittedCount, approvedCount, rejectedCount, qtyGrowth } = overallSummary;
   const submittableCount = draftCount + rejectedCount;
 
   return (
     <div className="target-entry-container">
 
-      {/* ── Header ── */}
+      {}
       <div className="grid-header" style={{ background: 'linear-gradient(135deg, #0F4C75 0%, #1B4D7A 50%, #0D9488 100%)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
@@ -453,7 +428,7 @@ function TBMTargetEntryGrid({
             }}>FY {fiscalYear}</span>
           </div>
 
-          {/* Stats pills */}
+          {}
           <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
             {[
               { label: 'Draft',     count: draftCount,     color: '#60A5FA' },
@@ -472,7 +447,7 @@ function TBMTargetEntryGrid({
           </div>
         </div>
 
-        {/* Summary cards */}
+        {}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '0.75rem', marginTop: '1rem' }}>
           {[
             { label: 'TERRITORY TARGET (FY ' + fiscalYear + ')', value: 'Not Set', sub: null },
@@ -494,7 +469,7 @@ function TBMTargetEntryGrid({
           ))}
         </div>
 
-        {/* Actions */}
+        {}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.625rem', marginTop: '0.875rem' }}>
           {lastSaved && (
             <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)' }}>
@@ -533,7 +508,7 @@ function TBMTargetEntryGrid({
         </div>
       </div>
 
-      {/* ── Search & Filter Bar ── */}
+      {}
       <div className="grid-search-bar" style={{
         display: 'flex', flexWrap: 'wrap', gap: '8px',
         padding: '0.625rem 1rem', borderBottom: '1px solid #E5E7EB',
@@ -593,7 +568,7 @@ function TBMTargetEntryGrid({
         </div>
       </div>
 
-      {/* ── Excel Grid ── */}
+      {}
       <div className="excel-grid">
         <div className="grid-header-row">
           <div className="header-cell product-header">Product / Territory Target</div>
@@ -617,7 +592,7 @@ function TBMTargetEntryGrid({
         )}
       </div>
 
-      {/* ── Footer ── */}
+      {}
       <div className="grid-footer-info" style={{
         padding: '0.75rem 1.5rem', background: '#F9FAFB',
         borderTop: '1px solid #E5E7EB',

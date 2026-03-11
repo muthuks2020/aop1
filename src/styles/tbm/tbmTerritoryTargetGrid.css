@@ -1,23 +1,3 @@
-/**
- * TBM Territory & Area Target Grid Styles
- * Replicated from Sales Rep TargetEntryGrid with TERRITORY FLAVOUR
- * Uses 'tgt-' prefix to avoid conflicts with Sales Rep ('') and Individual ('ind-') grids
- *
- * SHARED BY:
- * - TBMTerritoryTargetGrid.js (Territory Target tab)
- * - ABMAreaTargetGrid.js (Area Target tab) — same tgt-* classes, different labels
- *
- * TERRITORY / AREA COLOUR SCHEME:
- * - Primary: Navy (#1B4D7A) + Teal (#00A19B)
- * - Territory accent: #0D9488 (deeper teal)
- * - Submitted to ABM: Blue (#3B82F6)
- *
- * @author Appasamy Associates - Product Commitment PWA
- * @version 1.1.0 — Added Area Target grid support (footer, progress, ly-row, readonly)
- */
-
-/* ==================== CSS VARIABLES ==================== */
-
 .tgt-territory-container {
   --tgt-primary: #1B4D7A;
   --tgt-primary-dark: #0D2E4D;
@@ -37,7 +17,6 @@
   --tgt-border: #E5E7EB;
   --tgt-font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', monospace;
 
-  /* Quarter colors */
   --tgt-q1: #3B82F6;
   --tgt-q2: #22C55E;
   --tgt-q3: #F59E0B;
@@ -55,8 +34,6 @@
   margin: 1rem 0;
   border: 1px solid var(--tgt-gray-200);
 }
-
-/* ==================== GRID HEADER ==================== */
 
 .tgt-grid-header {
   background: linear-gradient(135deg, #0F4C75 0%, #1B4D7A 50%, #0D9488 100%);
@@ -132,7 +109,6 @@
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-/* Info Banner */
 .tgt-info-banner {
   display: flex;
   align-items: flex-start;
@@ -158,7 +134,6 @@
   color: #5EEAD4;
 }
 
-/* Actions */
 .tgt-grid-actions {
   display: flex;
   align-items: center;
@@ -218,8 +193,6 @@
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.5);
 }
-
-/* ==================== OVERALL TARGET BAR ==================== */
 
 .tgt-overall-target-bar {
   background: linear-gradient(180deg, #F0FDFA 0%, #F0F9FF 100%);
@@ -309,7 +282,6 @@
 .tgt-positive { color: #059669 !important; }
 .tgt-negative { color: #DC2626 !important; }
 
-/* Progress */
 .tgt-otb-progress-wrapper {
   margin-bottom: 0.75rem;
 }
@@ -336,7 +308,6 @@
   font-weight: 600;
 }
 
-/* Quarter Chips */
 .tgt-otb-quarter-breakdown {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -381,7 +352,6 @@
   font-weight: 600;
 }
 
-/* Month Breakdown */
 .tgt-otb-month-breakdown {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -429,8 +399,6 @@
   color: var(--tgt-accent-deep);
   font-weight: 600;
 }
-
-/* ==================== SEARCH BAR ==================== */
 
 .tgt-grid-search-bar {
   display: flex;
@@ -492,8 +460,6 @@
   color: var(--tgt-gray-500);
 }
 
-/* ==================== MONTHLY COLUMN TOTALS ROW ==================== */
-
 .tgt-monthly-totals-row {
   display: grid;
   grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
@@ -553,14 +519,11 @@
   background: transparent;
 }
 
-/* ==================== EXCEL GRID ==================== */
-
 .tgt-excel-grid {
   min-width: 1400px;
   overflow-x: auto;
 }
 
-/* Header Row */
 .tgt-grid-header-row {
   display: grid;
   grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
@@ -624,8 +587,6 @@
   color: var(--tgt-white);
   font-size: 0.75rem;
 }
-
-/* ==================== CATEGORY SECTION ==================== */
 
 .tgt-category-section {
   border-bottom: 2px solid var(--tgt-border);
@@ -713,7 +674,6 @@
   color: #B45309;
 }
 
-/* Category total cells */
 .tgt-category-total-cell {
   font-weight: 700 !important;
   color: var(--tgt-gray-700) !important;
@@ -721,8 +681,6 @@
   font-family: var(--tgt-font-mono);
   font-size: 0.8125rem;
 }
-
-/* ==================== PRODUCT ROWS ==================== */
 
 .tgt-products-container {
   border-top: 1px solid var(--tgt-gray-100);
@@ -742,7 +700,6 @@
   grid-template-columns: 280px repeat(12, 1fr) 90px 90px;
 }
 
-/* Product Name Cell */
 .tgt-product-name-cell {
   display: flex;
   align-items: center;
@@ -795,8 +752,6 @@
   color: var(--tgt-gray-500);
 }
 
-/* ==================== MONTH CELLS ==================== */
-
 .tgt-month-cell {
   padding: 0.25rem;
   text-align: center;
@@ -809,7 +764,6 @@
   min-height: 36px;
 }
 
-/* Editable cells - territory teal border */
 .tgt-month-cell.tgt-editable {
   cursor: pointer;
   padding: 2px;
@@ -841,7 +795,6 @@
   background: rgba(0, 161, 155, 0.08);
 }
 
-/* Cell input */
 .tgt-cell-input {
   width: 100%;
   padding: 4px 6px;
@@ -859,21 +812,17 @@
   box-sizing: border-box;
 }
 
-/* LY cells */
 .tgt-month-cell.tgt-ly-value {
   color: var(--tgt-gray-400);
   font-size: 0.75rem;
   font-weight: 500;
 }
 
-/* Search highlight */
 .tgt-search-highlight {
   background: #FEF08A;
   padding: 0 2px;
   border-radius: 2px;
 }
-
-/* ==================== TOTAL & GROWTH CELLS ==================== */
 
 .tgt-total-cell {
   padding: 0.5rem;
@@ -911,8 +860,6 @@
 .tgt-growth-value.tgt-positive { color: #059669; }
 .tgt-growth-value.tgt-negative { color: #DC2626; }
 
-/* ==================== REVENUE ONLY SECTION ==================== */
-
 .tgt-revenue-only-section .tgt-category-header-row {
   background: linear-gradient(180deg, #FFFBEB 0%, #FEF3C7 50%);
 }
@@ -921,14 +868,10 @@
   background: linear-gradient(180deg, #FEF3C7 0%, #FDE68A 50%);
 }
 
-/* ==================== GROWTH ICON (OTB Card) ==================== */
-
 .tgt-growth-icon {
   background: linear-gradient(135deg, #059669 0%, #34D399 100%) !important;
   color: var(--tgt-white) !important;
 }
-
-/* ==================== LY ROW ==================== */
 
 .tgt-ly-row {
   background: var(--tgt-gray-50);
@@ -938,7 +881,6 @@
   justify-content: flex-end;
 }
 
-/* Read-only cell (LY values) */
 .tgt-readonly-cell {
   cursor: default;
 }
@@ -956,14 +898,10 @@
   font-weight: 500 !important;
 }
 
-/* ==================== CY ROW ==================== */
-
 .tgt-cy-row {
   background: var(--tgt-white);
   border-bottom: 1px dashed var(--tgt-gray-200);
 }
-
-/* ==================== PROGRESS SECTION (Overall Target Bar) ==================== */
 
 .tgt-otb-progress-section {
   margin-top: 0.75rem;
@@ -986,8 +924,6 @@
   color: var(--tgt-accent-deep);
   font-family: var(--tgt-font-mono);
 }
-
-/* ==================== GRID FOOTER ==================== */
 
 .tgt-grid-footer {
   display: flex;
@@ -1033,8 +969,6 @@
   font-size: 0.6875rem;
   color: var(--tgt-accent);
 }
-
-/* ==================== RESPONSIVE ==================== */
 
 @media (max-width: 1200px) {
   .tgt-grid-header {
@@ -1104,8 +1038,6 @@
   }
 }
 
-/* ==================== PRINT ==================== */
-
 @media print {
   .tgt-grid-header,
   .tgt-grid-search-bar,
@@ -1125,7 +1057,6 @@
   }
 }
 
-/* ==================== SUBCATEGORY GROUPING ==================== */
 .tgt-subcategory-section {
   border-bottom: 1px solid #e8f4f4;
 }
@@ -1164,7 +1095,6 @@
   background: #f0faf9;
 }
 
-/* ==================== SUBGROUP GROUPING ==================== */
 .tgt-subgroup-section {}
 
 .tgt-subgroup-header-row {

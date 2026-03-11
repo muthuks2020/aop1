@@ -1,26 +1,3 @@
-/**
- * TBM Dashboard Component v2
- * Territory Business Manager Dashboard
- * 
- * FOUR tabs:
- * 1. Sales Rep Approvals — Review/correct/approve Sales Rep submissions (with pie chart)
- * 2. Overview & Summary — Territory-level KPIs
- * 3. Territory Target — Territory-level target entry grid
- * 4. Team Yearly Targets — Set yearly targets for Sales Reps
- * 
- * HIERARCHY: Sales Rep → TBM → ABM → ZBM → Sales Head
- * TBM reviews Sales Rep submissions, enters territory targets for ABM
- * 
- * CHANGES v2:
- * - Removed className="abm-approval-stats" from approvals tab
- * - Added SalesRepGrowthPieChart showing cumulative growth % per Sales Rep
- * - Reuses Sales Rep OverviewStats Recharts pie chart pattern
- * - Backend ready with documented API endpoints
- * 
- * @author Appasamy Associates - Product Commitment PWA
- * @version 2.1.0 — Sales Rep Growth Pie Chart + no abm-approval-stats
- */
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { TBMApiService } from '../../services/tbmApi';
@@ -41,7 +18,6 @@ const MONTH_LABELS = ['APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC','JAN
 function TBMDashboard() {
   const { user } = useAuth();
 
-  // ==================== STATE ====================
   const [activeTab, setActiveTab] = useState('targets');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,14 +31,12 @@ function TBMDashboard() {
   const [modalConfig, setModalConfig] = useState({ isOpen: false, title: '', message: '', type: 'warning', onConfirm: null });
   const [editedCells, setEditedCells] = useState(new Set());
 
-  // ==================== TOAST ====================
   const showToast = useCallback((title, message, type = 'info') => {
     const id = Date.now();
     setToasts(prev => [...prev, { id, title, message, type }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 4000);
   }, []);
 
-  // ==================== ONLINE/OFFLINE ====================
   useEffect(() => {
     const on = () => { setIsOnline(true); showToast('Online', 'Connection restored.', 'success'); };
     const off = () => { setIsOnline(false); showToast('Offline', 'Working offline.', 'warning'); };
@@ -70,7 +44,6 @@ function TBMDashboard() {
     return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off); };
   }, [showToast]);
 
-  // ==================== DATA LOADING ====================
   const loadInitialData = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -91,7 +64,6 @@ function TBMDashboard() {
 
   useEffect(() => { loadInitialData(); }, [loadInitialData]);
 
-  // ==================== COMPUTED VALUES ====================
   const approvalStats = useMemo(() => {
     const total = salesRepSubmissions.length;
     const pending = salesRepSubmissions.filter(s => s.status === 'submitted').length;
@@ -126,7 +98,6 @@ function TBMDashboard() {
     return f;
   }, [salesRepSubmissions, repFilter, categoryFilter, searchTerm]);
 
-  // ==================== HANDLERS ====================
   const handleApproveSubmission = useCallback(async (submissionId) => {
     try {
       const sub = salesRepSubmissions.find(s => s.id === submissionId);
@@ -209,8 +180,6 @@ function TBMDashboard() {
   const closeModal = useCallback(() => { setModalConfig(p => ({ ...p, isOpen: false })); }, []);
   const getQC = (i) => i < 3 ? 'q1' : i < 6 ? 'q2' : i < 9 ? 'q3' : 'q4';
 
-  // ==================== YEARLY TARGETS API SERVICE ====================
-  // Must be defined before any early returns (Rules of Hooks)
   const tbmYearlyApiService = useMemo(() => {
     const BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api/v1';
     const authHeaders = () => {
@@ -249,7 +218,6 @@ function TBMDashboard() {
     };
   }, []);
 
-  // ==================== LOADING ====================
   if (isLoading) {
     return (
       <div className="tbm-dashboard">
@@ -258,7 +226,6 @@ function TBMDashboard() {
     );
   }
 
-  // ==================== RENDER ====================
   return (
     <div className="tbm-dashboard">
       {!isOnline && <div className="offline-banner show"><i className="fas fa-wifi-slash"></i><span>You're offline.</span></div>}
