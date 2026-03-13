@@ -305,6 +305,7 @@ function ABMDashboard() {
           <i className="fas fa-users-cog"></i><span>Team Yearly Targets</span>
         </button>
         {/* ─── STEP 6: 2 new specialist tab buttons ──────────────── */}
+        {/* HIDDEN — Specialist tabs (to be re-enabled later)
         <button className={`abm-tab ${activeTab === 'specialistApprovals' ? 'active' : ''}`} onClick={() => setActiveTab('specialistApprovals')}>
           <i className="fas fa-user-tie"></i><span>Specialist Approvals</span>
           {specialistApprovalStats.pending > 0 && <span className="tab-badge pending">{specialistApprovalStats.pending}</span>}
@@ -312,6 +313,7 @@ function ABMDashboard() {
         <button className={`abm-tab ${activeTab === 'specialistYearly' ? 'active' : ''}`} onClick={() => setActiveTab('specialistYearly')}>
           <i className="fas fa-user-cog"></i><span>Specialist Yearly Targets</span>
         </button>
+        */}
         {/* ───────────────────────────────────────────────────────── */}
       </div>
 

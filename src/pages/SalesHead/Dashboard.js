@@ -8,7 +8,7 @@ import Modal from '../../components/common/Modal';
 import SalesHeadOverview from './components/SalesHeadOverview';
 import SalesHeadDrilldown from './components/SalesHeadDrilldown';
 import SalesHeadAnalytics from './components/SalesHeadAnalytics';
-import TeamYearlyTargets from '../TBM/components/TeamYearlyTargets';
+import SalesHeadTeamYearlyTargets from './components/SalesHeadTeamYearlyTargets';
 import '../../styles/saleshead/shDashboard.css';
 
 const MONTHS = ['apr','may','jun','jul','aug','sep','oct','nov','dec','jan','feb','mar'];
@@ -401,18 +401,7 @@ function SalesHeadDashboard() {
 
             {}
             {activeTab === 'targets' && (
-              <TeamYearlyTargets
-                role="SH"
-                fiscalYear="2026-27"
-                teamMembers={uniqueZBMs.map(z => ({
-                  id: z.id,
-                  name: z.name,
-                  territory: z.territory,
-                  designation: 'ZBM',
-                }))}
-                showToast={showToast}
-                managerName={user?.name || 'Sales Head'}
-              />
+              <SalesHeadTeamYearlyTargets showToast={showToast} />
             )}
 
             {/* TAB: Organization Drill-Down */}

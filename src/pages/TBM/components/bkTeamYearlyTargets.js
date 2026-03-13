@@ -293,8 +293,8 @@ function TeamYearlyTargets({
     setHasUnsavedChanges(true);
   }, []);
 
-  const handleEditStart = useCallback((memberId, field, currentValue, categoryId = null) => {
-    setEditingCell({ memberId, field, categoryId });
+  const handleEditStart = useCallback((memberId, field, currentValue) => {
+    setEditingCell({ memberId, field });
     setEditValue(String(currentValue || ''));
   }, []);
 
@@ -629,10 +629,8 @@ function TeamYearlyTargets({
     return 'neutral';
   };
 
-  const renderEditableCell = (memberId, field, value, prefix = '', suffix = '', categoryId = null) => {
-    const isEditing = editingCell?.memberId === memberId &&
-                      editingCell?.field === field &&
-                      (categoryId === null ? !editingCell?.categoryId : editingCell?.categoryId === categoryId);
+  const renderEditableCell = (memberId, field, value, prefix = '', suffix = '') => {
+    const isEditing = editingCell?.memberId === memberId && editingCell?.field === field;
 
     if (isEditing) {
       return (
@@ -652,7 +650,7 @@ function TeamYearlyTargets({
     return (
       <span
         className="tyt-editable-value"
-        onClick={() => handleEditStart(memberId, field, value, categoryId)}
+        onClick={() => handleEditStart(memberId, field, value)}
         title="Click to edit"
       >
         {prefix}{typeof value === 'number' && value > 0 ? Utils.formatNumber(value, 0) : '—'}{suffix}
@@ -660,10 +658,8 @@ function TeamYearlyTargets({
     );
   };
 
-  const renderEditableValueCell = (memberId, field, value, categoryId = null) => {
-    const isEditing = editingCell?.memberId === memberId &&
-                      editingCell?.field === field &&
-                      (categoryId === null ? !editingCell?.categoryId : editingCell?.categoryId === categoryId);
+  const renderEditableValueCell = (memberId, field, value) => {
+    const isEditing = editingCell?.memberId === memberId && editingCell?.field === field;
 
     if (isEditing) {
       return (
@@ -685,7 +681,7 @@ function TeamYearlyTargets({
     return (
       <span
         className={`tyt-editable-value ${value > 0 ? 'tyt-has-value' : 'tyt-empty-target'}`}
-        onClick={() => handleEditStart(memberId, field, value > 0 ? parseFloat((value / 10000000).toFixed(4)) : '', categoryId)}
+        onClick={() => handleEditStart(memberId, field, value > 0 ? parseFloat((value / 10000000).toFixed(4)) : '')}
         title="Click to edit (enter value in Crores)"
       >
         {value > 0 ? Utils.formatShortCurrency(value) : '₹ Enter Target'}
@@ -874,7 +870,7 @@ function TeamYearlyTargets({
                           </span>
                         </td>
                         <td className="tyt-cat-value tyt-editable-cell">
-                          {renderEditableValueCell(member.id, `cat_${cat.id}_cyTargetValue`, cat.cyTargetValue, cat.id)}
+                          {renderEditableValueCell(member.id, `cat_${cat.id}_cyTargetValue`, cat.cyTargetValue)}
                         </td>
                         <td className="tyt-cat-value">
                           {cat.cyTargetValue > 0 ? (
